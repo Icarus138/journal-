@@ -751,6 +751,52 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
 
+  <!-- ============================================================
+       VISUALISATION PSYCHOLOGIE & CALIBRATION
+  ============================================================ -->
+  <div class="panel" id="panel-cal-charts" style="display:none">
+    <div class="panel-header">
+      <span class="panel-title">&#128200; Visualisation psychologie &amp; calibration</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Trades clôturés uniquement · Données réelles</span>
+    </div>
+    <div class="panel-body">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="panel" style="background:var(--bg3);border-color:var(--b0)">
+          <div class="panel-header" style="background:var(--bg4)">
+            <span class="panel-title">R moyen par calibration setup</span>
+          </div>
+          <div style="padding:12px;position:relative;height:220px">
+            <canvas id="chart-cal-bar"></canvas>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--bg3);border-color:var(--b0)">
+          <div class="panel-header" style="background:var(--bg4)">
+            <span class="panel-title">Score mental vs R réel</span>
+            <span style="font-family:var(--mono);font-size:.58rem;color:var(--t3)">1 point = 1 trade</span>
+          </div>
+          <div style="padding:12px;position:relative;height:220px">
+            <canvas id="chart-cal-scatter"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="background:var(--bg3);border-color:var(--b0);margin-bottom:14px">
+        <div class="panel-header" style="background:var(--bg4)">
+          <span class="panel-title">Equity curve R cumulé par calibration</span>
+          <span style="font-family:var(--mono);font-size:.58rem;color:var(--t3)">Global · Alignés · Surévalués · Sous-évalués</span>
+        </div>
+        <div style="padding:12px;position:relative;height:240px">
+          <canvas id="chart-cal-equity"></canvas>
+        </div>
+      </div>
+
+      <div id="cal-chart-insights" style="margin-bottom:12px"></div>
+      <div id="cal-rules"></div>
+
+    </div>
+  </div>
+
 </div><!-- /page-dashboard -->
 
 </div><!-- /app -->
@@ -1960,6 +2006,8 @@ function renderDashboard(){
     ['pnl-best-trade-info','pnl-worst-trade-info'].forEach(id=>{const el=$(id);if(el)el.textContent='--';});
     if(window._chartPnlEq){window._chartPnlEq.destroy();window._chartPnlEq=null;}
     if(window._chartPnlBar){window._chartPnlBar.destroy();window._chartPnlBar=null;}
+    destroyCalibrationCharts();
+    const pcc = $('panel-cal-charts'); if(pcc) pcc.style.display='none';
     return;
   }
 
@@ -2134,6 +2182,7 @@ function renderDashboard(){
   }
 
   generateInsights(st, filtered, calTrades);
+  renderCalibrationCharts(filtered);
 }
 
 /* ============================================================
@@ -2317,6 +2366,350 @@ function generateInsights(st, tradeSet, calTrades = []){
       <div class="insight-text">${i.text}</div>
     </div>`
   ).join('');
+}
+
+/* ============================================================
+   CALIBRATION CHARTS — Psychologie & Setup Visualisation
+============================================================ */
+
+/* Références des 3 charts calibration */
+let _cCalBar = null, _cCalScatter = null, _cCalEquity = null;
+
+function destroyCalibrationCharts(){
+  [_cCalBar, _cCalScatter, _cCalEquity].forEach(c => { if(c){ c.destroy(); } });
+  _cCalBar = null; _cCalScatter = null; _cCalEquity = null;
+}
+
+/**
+ * Calcule les stats par catégorie de calibration.
+ * Entrée : array de trades clôturés avec quality + setupGrade + setupEvaluationGap.
+ */
+function calculateCalibrationStats(calTrades){
+  const groups = { aligned:[], overestimated:[], underestimated:[] };
+  calTrades.forEach(t => {
+    const g = t.setupEvaluationGap;
+    if(groups[g]) groups[g].push(t);
+  });
+
+  const stat = set => {
+    if(!set.length) return null;
+    const rs   = set.map(signedR);
+    const avgR = rs.reduce((a,b)=>a+b,0) / rs.length;
+    const pnls = set.map(t=>t.pnl||0).filter(v=>v!==0);
+    const avgP = pnls.length ? pnls.reduce((a,b)=>a+b,0)/pnls.length : null;
+    const wr   = set.filter(t=>t.result==='Win').length / set.length * 100;
+    return { n: set.length, avgR, avgP, wr, trades: set };
+  };
+
+  return {
+    aligned       : stat(groups.aligned),
+    overestimated : stat(groups.overestimated),
+    underestimated: stat(groups.underestimated),
+  };
+}
+
+/**
+ * Génère les insights et les règles opérationnelles dans les conteneurs dédiés.
+ */
+function generateCalibrationInsights(calStats, filtered){
+  const rFmt = v => v != null ? (v>=0?'+':'')+v.toFixed(2)+'R' : '--';
+  const insightItems = [];
+  const rules = [];
+
+  /* Insights surévaluation */
+  if(calStats.overestimated && calStats.overestimated.n >= 2){
+    const s = calStats.overestimated;
+    insightItems.push({
+      color:'var(--loss)',
+      text: `<strong>Tes setups surévalués (${s.n} trades) ont un R moyen de ${rFmt(s.avgR)}.</strong>` +
+        (s.avgR < 0 ? ' Quand tu penses être meilleur que le scoring, tu perds.' : ' Impact limité sur cette période.')
+    });
+    if(s.avgR < 0){
+      rules.push({ color:'var(--loss)', icon:'⛔', text:'Si qualité perçue > qualité calculée, trade interdit ou taille ×0.5.' });
+    }
+  }
+
+  /* Insights alignement */
+  if(calStats.aligned && calStats.aligned.n >= 2){
+    const s = calStats.aligned;
+    const isPositive = s.avgR > 0;
+    insightItems.push({
+      color: isPositive ? 'var(--win)' : 'var(--be)',
+      text: `<strong>Quand ton intuition et le scoring sont alignés (${s.n} trades) :</strong> ${s.wr.toFixed(0)}% WR, ${rFmt(s.avgR)} de R moyen.` +
+        (isPositive ? ' Ton expectancy est positive dans ce cas. Priorité à ces configurations.' : ' Même alignés, les résultats sont mitigés — revoir la qualité des confluences.')
+    });
+    if(isPositive){
+      rules.push({ color:'var(--win)', icon:'✓', text:'Priorité absolue aux trades où perception et scoring sont alignés.' });
+    }
+  }
+
+  /* Insights sous-évaluation */
+  if(calStats.underestimated && calStats.underestimated.n >= 2){
+    const s = calStats.underestimated;
+    insightItems.push({
+      color:'var(--blue)',
+      text: `<strong>Tes setups sous-évalués (${s.n} trades) : ${rFmt(s.avgR)} de R moyen.</strong>` +
+        (s.avgR > 0 ? ' Tu manques peut-être de confiance sur certains bons setups. Ne réduis pas le risque ou ne coupe pas trop tôt.' : ' La sous-évaluation ne garantit pas la performance.')
+    });
+  }
+
+  /* Insights psycho score */
+  const hasPsycho = filtered.filter(t => t.psycho != null && t.result);
+  if(hasPsycho.length >= 5){
+    const lowPsycho = hasPsycho.filter(t => t.psycho < 50);
+    const highPsycho = hasPsycho.filter(t => t.psycho >= 65);
+    if(lowPsycho.length >= 2){
+      const rLow  = lowPsycho.reduce((a,t)=>a+signedR(t),0)/lowPsycho.length;
+      const rHigh = highPsycho.length ? highPsycho.reduce((a,t)=>a+signedR(t),0)/highPsycho.length : null;
+      insightItems.push({
+        color: rLow < 0 ? 'var(--loss)' : 'var(--be)',
+        text: `<strong>Les trades avec score mental < 50 (${lowPsycho.length} trades) ont un R moyen de ${rFmt(rLow)}.</strong>` +
+          (rHigh !== null ? ` Vs ${rFmt(rHigh)} quand score ≥ 65.` : '') +
+          (rLow < 0 ? ` L'état mental influence directement la performance.` : '')
+      });
+      if(rLow < 0){
+        rules.push({ color:'var(--loss)', icon:'⚠', text:'Aucun trade si score mental < 50.' });
+      }
+    }
+  }
+
+  /* Rendu insights */
+  const insEl = $('cal-chart-insights');
+  if(insEl){
+    insEl.innerHTML = insightItems.length
+      ? insightItems.map(i => `
+          <div class="insight-item" style="margin-bottom:6px">
+            <div class="insight-dot" style="background:${i.color}"></div>
+            <div class="insight-text">${i.text}</div>
+          </div>`).join('')
+      : '';
+  }
+
+  /* Rendu règles opérationnelles */
+  const rulesEl = $('cal-rules');
+  if(rulesEl && rules.length){
+    rulesEl.innerHTML = `
+      <div style="border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;margin-top:4px">
+        <div style="padding:8px 14px;background:var(--bg4);border-bottom:1px solid var(--b1)">
+          <span style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)">
+            &#9654; Règles issues de tes données
+          </span>
+        </div>
+        <div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">
+          ${rules.map(r => `
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:1rem;flex-shrink:0">${r.icon}</span>
+              <span style="font-family:var(--mono);font-size:.72rem;color:var(--t1);
+                border-left:2px solid ${r.color};padding-left:10px">${r.text}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else if(rulesEl){
+    rulesEl.innerHTML = '';
+  }
+}
+
+/**
+ * Construit les 3 charts calibration. Détruit les instances précédentes d'abord.
+ * N'affiche le panel que si assez de données exploitables.
+ */
+function renderCalibrationCharts(filtered){
+  destroyCalibrationCharts();
+
+  // Trades exploitables : clôturés, avec psycho valide OU gap valide
+  const calTrades = filtered.filter(t =>
+    t.quality && t.setupGrade && t.setupEvaluationGap && t.result
+  );
+  const scatterTrades = filtered.filter(t =>
+    t.psycho != null && t.result && (t.result === 'Win' || t.result === 'Loss' || t.result === 'BE')
+  );
+
+  const hasEnough = calTrades.length >= 2 || scatterTrades.length >= 3;
+  const panel = $('panel-cal-charts');
+  if(panel) panel.style.display = hasEnough ? '' : 'none';
+  if(!hasEnough) return;
+
+  const calStats = calculateCalibrationStats(calTrades);
+  const CHART_OPTS_BASE = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#6a84a8', font:{size:10,family:'Consolas,monospace'}, boxWidth:10, padding:10 }, position:'bottom' } },
+    scales:{
+      x:{ ticks:{color:'#3a5070',font:{size:9}}, grid:{color:'rgba(30,45,68,.6)'} },
+      y:{ ticks:{color:'#3a5070',font:{size:9}}, grid:{color:'rgba(30,45,68,.6)'}, border:{dash:[3,3]} },
+    }
+  };
+
+  /* ── Chart 1 : Bar — R moyen par calibration ───────────────────────────── */
+  if(calTrades.length >= 2){
+    const cats = [
+      { key:'aligned',        label:'✓ Alignés',      color:'rgba(34,197,94,.75)',  border:'rgba(34,197,94,1)'  },
+      { key:'overestimated',  label:'↓ Surévalués',   color:'rgba(239,68,68,.75)',  border:'rgba(239,68,68,1)'  },
+      { key:'underestimated', label:'↑ Sous-évalués', color:'rgba(59,130,246,.75)', border:'rgba(59,130,246,1)' },
+    ];
+    const labels   = cats.map(c => c.label);
+    const rValues  = cats.map(c => calStats[c.key] ? parseFloat(calStats[c.key].avgR.toFixed(2)) : 0);
+    const nValues  = cats.map(c => calStats[c.key]?.n || 0);
+    const pnlVals  = cats.map(c => calStats[c.key]?.avgP != null ? parseFloat(calStats[c.key].avgP.toFixed(0)) : null);
+
+    _cCalBar = new Chart($('chart-cal-bar'), {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          label:'R moyen',
+          data: rValues,
+          backgroundColor: cats.map(c => c.color),
+          borderColor:     cats.map(c => c.border),
+          borderWidth:1.5, borderRadius:4,
+        }]
+      },
+      options:{
+        ...CHART_OPTS_BASE,
+        plugins:{
+          ...CHART_OPTS_BASE.plugins,
+          legend:{ display:false },
+          tooltip:{
+            callbacks:{
+              label: ctx => {
+                const i = ctx.dataIndex;
+                const rv = rValues[i];
+                const n  = nValues[i];
+                const p  = pnlVals[i];
+                const lines = [`R moyen : ${rv >= 0?'+':''}${rv}R`, `Trades : ${n}`];
+                if(p != null) lines.push(`PnL moyen : ${p >= 0?'+':''}${p}$`);
+                return lines;
+              }
+            }
+          }
+        },
+        scales:{
+          x:{ ticks:{color:'#3a5070',font:{size:10}}, grid:{color:'rgba(30,45,68,.6)'} },
+          y:{
+            ticks:{color:'#3a5070',font:{size:9}, callback: v => (v>=0?'+':'')+v+'R'},
+            grid:{color:'rgba(30,45,68,.6)'}, border:{dash:[3,3]},
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Chart 2 : Scatter — Score mental vs R réel ────────────────────────── */
+  if(scatterTrades.length >= 3){
+    const emotColors = {
+      Calme:'rgba(34,197,94,.85)', Confiance:'rgba(59,130,246,.85)',
+      FOMO:'rgba(239,68,68,.85)',  Stress:'rgba(245,158,11,.85)',
+      Fatigue:'rgba(107,114,128,.85)', Revenge:'rgba(239,68,68,.95)',
+    };
+    const points = scatterTrades.map(t => ({
+      x    : t.psycho,
+      y    : parseFloat(signedR(t).toFixed(2)),
+      _t   : t,
+      color: emotColors[t.emotion] || 'rgba(107,114,128,.6)',
+    }));
+
+    _cCalScatter = new Chart($('chart-cal-scatter'), {
+      type:'scatter',
+      data:{
+        datasets:[{
+          label:'Trades',
+          data: points,
+          backgroundColor: points.map(p => p.color),
+          pointRadius:5, pointHoverRadius:7,
+        }]
+      },
+      options:{
+        ...CHART_OPTS_BASE,
+        plugins:{
+          legend:{ display:false },
+          tooltip:{
+            callbacks:{
+              label: ctx => {
+                const t = ctx.raw._t;
+                return [
+                  `${t.asset||'--'} · ${t.date||'--'}`,
+                  `Émotion : ${t.emotion||'--'}`,
+                  `Grade calc. : ${t.setupGrade||'--'} · Perçue : ${t.quality||'--'}`,
+                  `R réel : ${ctx.raw.y >= 0?'+':''}${ctx.raw.y}R`,
+                  t.pnl ? `PnL : ${t.pnl >= 0?'+':''}${t.pnl}$` : '',
+                ].filter(Boolean);
+              },
+              title: () => ''
+            }
+          }
+        },
+        scales:{
+          x:{
+            title:{ display:true, text:'Score mental', color:'#3a5070', font:{size:9} },
+            min:0, max:100,
+            ticks:{color:'#3a5070',font:{size:8}}, grid:{color:'rgba(30,45,68,.6)'},
+          },
+          y:{
+            title:{ display:true, text:'R signé', color:'#3a5070', font:{size:9} },
+            ticks:{color:'#3a5070',font:{size:8}, callback: v => (v>=0?'+':'')+v+'R'},
+            grid:{color:'rgba(30,45,68,.6)'}, border:{dash:[3,3]},
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Chart 3 : Multi-line equity par calibration ───────────────────────── */
+  if(calTrades.length >= 2){
+    // Ordonner tous les trades clôturés chronologiquement
+    const chrono = sortedByDateTime(filtered, true);
+
+    const buildEquity = (set) => {
+      // Recalcule le R cumulé dans l'ordre chronologique global
+      // On inclut un point pour chaque trade de `set` dans l'ordre
+      const pts = []; let cum = 0;
+      chrono.forEach(t => {
+        if(set.some(s => Number(s.id) === Number(t.id))){
+          cum += signedR(t);
+          pts.push(parseFloat(cum.toFixed(2)));
+        }
+      });
+      return pts;
+    };
+
+    const alignedSet  = calTrades.filter(t => t.setupEvaluationGap === 'aligned');
+    const overSet     = calTrades.filter(t => t.setupEvaluationGap === 'overestimated');
+    const underSet    = calTrades.filter(t => t.setupEvaluationGap === 'underestimated');
+
+    // Labels = index trade global
+    const maxLen = Math.max(filtered.length, 1);
+    const globalLabels = filtered.map((_,i) => '#'+(i+1));
+    const globalEquity = []; let gc = 0;
+    sortedByDateTime(filtered, true).forEach(t => { gc += signedR(t); globalEquity.push(parseFloat(gc.toFixed(2))); });
+
+    const datasets = [
+      { label:'Global',          data:globalEquity,      borderColor:'rgba(107,114,128,.7)',  fill:false, borderWidth:1.5, borderDash:[4,3], pointRadius:0, tension:.3 },
+      { label:'✓ Alignés',      data:buildEquity(alignedSet),  borderColor:'rgba(34,197,94,.9)', fill:false, borderWidth:2, pointRadius:0, tension:.3 },
+      { label:'↓ Surévalués',   data:buildEquity(overSet),     borderColor:'rgba(239,68,68,.9)', fill:false, borderWidth:2, pointRadius:0, tension:.3 },
+      { label:'↑ Sous-évalués', data:buildEquity(underSet),    borderColor:'rgba(59,130,246,.9)',fill:false, borderWidth:2, pointRadius:0, tension:.3 },
+    ].filter(d => d.data.length > 0);
+
+    _cCalEquity = new Chart($('chart-cal-equity'), {
+      type:'line',
+      data:{ labels: globalLabels, datasets },
+      options:{
+        ...CHART_OPTS_BASE,
+        plugins:{
+          ...CHART_OPTS_BASE.plugins,
+          legend:{ ...CHART_OPTS_BASE.plugins.legend, display:true },
+        },
+        scales:{
+          x:{ ticks:{color:'#3a5070',font:{size:8},maxTicksLimit:12}, grid:{color:'rgba(30,45,68,.6)'} },
+          y:{
+            ticks:{color:'#3a5070',font:{size:9}, callback: v => (v>=0?'+':'')+v+'R'},
+            grid:{color:'rgba(30,45,68,.6)'}, border:{dash:[3,3]},
+          }
+        }
+      }
+    });
+  }
+
+  /* Insights + règles */
+  generateCalibrationInsights(calStats, filtered);
 }
 
 /* ============================================================
