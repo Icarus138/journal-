@@ -3,233 +3,81 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Trading Journal</title>
+<title>Trading Journal v2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ============================================================
    VARIABLES
 ============================================================ */
 :root {
-  --bg0: #060810;
-  --bg1: #0a0d14;
-  --bg2: #0e1320;
-  --bg3: #131a28;
-  --bg4: #182030;
-  --bg5: #1d2738;
-
-  --b0:  #192030;
-  --b1:  #1f2a3e;
-  --b2:  #283650;
-  --b3:  #324060;
-
-  --t1: #e0e8f8;
-  --t2: #6a84a8;
-  --t3: #3a5070;
-  --t4: #1e2d44;
-
-  --win:  #22c55e;
-  --win-d: rgba(34,197,94,.10);
-  --win-b: rgba(34,197,94,.20);
-  --loss: #ef4444;
-  --loss-d: rgba(239,68,68,.10);
-  --loss-b: rgba(239,68,68,.22);
-  --be:   #f59e0b;
-  --be-d: rgba(245,158,11,.10);
-  --blue: #3b82f6;
-  --blue-d: rgba(59,130,246,.12);
+  --bg0: #060810; --bg1: #0a0d14; --bg2: #0e1320; --bg3: #131a28;
+  --bg4: #182030; --bg5: #1d2738;
+  --b0: #192030; --b1: #1f2a3e; --b2: #283650; --b3: #324060;
+  --t1: #e0e8f8; --t2: #6a84a8; --t3: #3a5070; --t4: #1e2d44;
+  --win: #22c55e; --win-d: rgba(34,197,94,.10); --win-b: rgba(34,197,94,.20);
+  --loss: #ef4444; --loss-d: rgba(239,68,68,.10); --loss-b: rgba(239,68,68,.22);
+  --be: #f59e0b; --be-d: rgba(245,158,11,.10);
+  --blue: #3b82f6; --blue-d: rgba(59,130,246,.12);
   --violet: #8b5cf6;
-
-  --long:  #22c55e;
-  --short: #ef4444;
-
+  --long: #22c55e; --short: #ef4444;
   --font: 'Helvetica Neue', Helvetica, -apple-system, sans-serif;
   --mono: 'SF Mono','Fira Code','Cascadia Code','Consolas',monospace;
-
-  --r: 8px;
-  --rl: 12px;
-  --tr: 130ms ease;
+  --r: 8px; --rl: 12px; --tr: 130ms ease;
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:14px;-webkit-text-size-adjust:100%}
-body{
-  background:var(--bg0);
-  color:var(--t1);
-  font-family:var(--font);
-  min-height:100vh;
-  overflow-x:hidden;
-}
+body{background:var(--bg0);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
 
-/* ============================================================
-   SCROLLBAR
-============================================================ */
+/* ============================================================ SCROLLBAR */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--bg1)}
 ::-webkit-scrollbar-thumb{background:var(--b1);border-radius:2px}
 
-/* ============================================================
-   LAYOUT
-============================================================ */
+/* ============================================================ LAYOUT */
 .app{display:flex;flex-direction:column;min-height:100vh}
 
-/* TOP NAV */
 .nav{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 20px;
-  height:52px;
-  background:var(--bg1);
-  border-bottom:1px solid var(--b0);
-  position:sticky;
-  top:0;
-  z-index:100;
-  gap:12px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:52px;background:var(--bg1);border-bottom:1px solid var(--b0);
+  position:sticky;top:0;z-index:100;gap:12px;
 }
-.nav-brand{
-  font-family:var(--mono);
-  font-size:.72rem;
-  font-weight:700;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:var(--blue);
-  white-space:nowrap;
-}
-.nav-tabs{
-  display:flex;
-  gap:2px;
-  background:var(--bg2);
-  border:1px solid var(--b0);
-  border-radius:var(--r);
-  padding:3px;
-}
-.nav-tab{
-  padding:5px 14px;
-  border:none;
-  background:transparent;
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.65rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  cursor:pointer;
-  border-radius:6px;
-  transition:all var(--tr);
-  white-space:nowrap;
-}
+.nav-brand{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);white-space:nowrap;}
+.nav-tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--b0);border-radius:var(--r);padding:3px;}
+.nav-tab{padding:5px 14px;border:none;background:transparent;color:var(--t3);font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all var(--tr);white-space:nowrap;}
 .nav-tab.active{background:var(--bg4);color:var(--t1)}
 .nav-tab:hover:not(.active){color:var(--t2)}
-
-.nav-clock{
-  font-family:var(--mono);
-  font-size:.68rem;
-  color:var(--t3);
-  white-space:nowrap;
-  text-align:right;
-}
+.nav-clock{font-family:var(--mono);font-size:.68rem;color:var(--t3);white-space:nowrap;text-align:right;}
 #nav-time{display:block;color:var(--t2);font-size:.75rem}
 
-/* PAGES */
 .page{display:none;padding:20px;max-width:1200px;margin:0 auto;width:100%}
 .page.active{display:block}
 
-/* ============================================================
-   STAT CARDS
-============================================================ */
-.stats-row{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:10px;
-  margin-bottom:16px;
-}
-.stat-card{
-  background:var(--bg2);
-  border:1px solid var(--b0);
-  border-radius:var(--rl);
-  padding:14px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-.stat-label{
-  font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--t3);
-}
-.stat-value{
-  font-family:var(--mono);
-  font-size:1.35rem;
-  font-weight:700;
-  color:var(--t1);
-  line-height:1;
-}
+/* ============================================================ STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stat-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);}
+.stat-value{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--t1);line-height:1;}
 .stat-sub{font-size:.68rem;color:var(--t3);margin-top:2px}
 
-/* ============================================================
-   PANELS
-============================================================ */
-.panel{
-  background:var(--bg2);
-  border:1px solid var(--b0);
-  border-radius:var(--rl);
-  overflow:hidden;
-  margin-bottom:14px;
-}
-.panel-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:11px 16px 10px;
-  background:var(--bg3);
-  border-bottom:1px solid var(--b0);
-}
-.panel-title{
-  font-family:var(--mono);
-  font-size:.63rem;
-  letter-spacing:.13em;
-  text-transform:uppercase;
-  color:var(--t2);
-}
+/* ============================================================ PANELS */
+.panel{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:11px 16px 10px;background:var(--bg3);border-bottom:1px solid var(--b0);}
+.panel-title{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--t2);}
 .panel-body{padding:16px}
 
-/* ============================================================
-   FORMULAIRE TRADE
-============================================================ */
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-}
-.form-grid-2{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-}
+/* ============================================================ FORMULAIRE */
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.form-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .form-col-span-2{grid-column:span 2}
 .form-col-span-4{grid-column:span 4}
 
 .field{display:flex;flex-direction:column;gap:5px}
-.field-label{
-  font-family:var(--mono);
-  font-size:.6rem;
-  letter-spacing:.10em;
-  text-transform:uppercase;
-  color:var(--t3);
-}
+.field-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.10em;text-transform:uppercase;color:var(--t3);}
 
-input[type=text],input[type=number],input[type=date],
-input[type=time],select,textarea{
-  background:var(--bg4);
-  border:1px solid var(--b1);
-  border-radius:var(--r);
-  color:var(--t1);
-  font-family:var(--font);
-  font-size:.83rem;
-  padding:9px 11px;
-  outline:none;
-  width:100%;
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
+  background:var(--bg4);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);
+  font-family:var(--font);font-size:.83rem;padding:9px 11px;outline:none;width:100%;
   transition:border-color var(--tr);
 }
 input:focus,select:focus,textarea:focus{border-color:var(--b3)}
@@ -238,74 +86,44 @@ select option{background:#0a0d14}
 select{appearance:none;cursor:pointer}
 textarea{resize:vertical;min-height:52px}
 
-/* Pill toggle group */
-.toggle-group{
-  display:flex;
-  gap:5px;
-  flex-wrap:wrap;
-}
+/* Toggle groups */
+.toggle-group{display:flex;gap:5px;flex-wrap:wrap;}
 .tgl{
-  padding:7px 12px;
-  border:1px solid var(--b1);
-  border-radius:6px;
-  background:var(--bg4);
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.68rem;
-  font-weight:600;
-  cursor:pointer;
-  transition:all var(--tr);
-  white-space:nowrap;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
+  padding:7px 12px;border:1px solid var(--b1);border-radius:6px;background:var(--bg4);
+  color:var(--t3);font-family:var(--mono);font-size:.68rem;font-weight:600;cursor:pointer;
+  transition:all var(--tr);white-space:nowrap;-webkit-tap-highlight-color:transparent;user-select:none;
 }
 .tgl:hover{color:var(--t2);border-color:var(--b2)}
 
-.tgl.active-win,.tgl[data-val="Win"].active{background:var(--win-b);border-color:rgba(34,197,94,.4);color:var(--win)}
-.tgl.active-loss,.tgl[data-val="Loss"].active{background:var(--loss-b);border-color:rgba(239,68,68,.4);color:var(--loss)}
-.tgl.active-be,.tgl[data-val="BE"].active{background:var(--be-d);border-color:rgba(245,158,11,.35);color:var(--be)}
-.tgl.active-long,.tgl[data-val="Long"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
-.tgl.active-short,.tgl[data-val="Short"].active{background:var(--loss-d);border-color:rgba(239,68,68,.3);color:var(--loss)}
-.tgl.active-ap,.tgl[data-val="A+"].active{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa}
-.tgl.active-a,.tgl[data-val="A"].active{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
-.tgl.active-b,.tgl[data-val="B"].active{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--be)}
-.tgl.active-c,.tgl[data-val="C"].active{background:var(--loss-d);border-color:rgba(239,68,68,.2);color:#f87171}
-.tgl.active-yes,.tgl[data-val="Oui"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
-.tgl.active-no,.tgl[data-val="Non"].active{background:var(--loss-d);border-color:rgba(239,68,68,.3);color:var(--loss)}
-.tgl.active-neutral{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
-.tgl.active-bad{background:var(--loss-d);border-color:rgba(239,68,68,.25);color:#f87171}
+.tgl[data-val="Win"].active{background:var(--win-b);border-color:rgba(34,197,94,.4);color:var(--win)}
+.tgl[data-val="Loss"].active{background:var(--loss-b);border-color:rgba(239,68,68,.4);color:var(--loss)}
+.tgl[data-val="BE"].active{background:var(--be-d);border-color:rgba(245,158,11,.35);color:var(--be)}
+.tgl[data-val="Long"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
+.tgl[data-val="Short"].active{background:var(--loss-d);border-color:rgba(239,68,68,.3);color:var(--loss)}
+.tgl[data-val="A+"].active{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa}
+.tgl[data-val="A"].active{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
+.tgl[data-val="B"].active{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--be)}
+.tgl[data-val="C"].active{background:var(--loss-d);border-color:rgba(239,68,68,.2);color:#f87171}
+.tgl[data-val="D"].active{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.15);color:#f87171}
+.tgl[data-val="Oui"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
+.tgl[data-val="Non"].active{background:var(--loss-d);border-color:rgba(239,68,68,.3);color:var(--loss)}
 .tgl[data-val="Scalping"].active,.tgl[data-val="Intraday"].active,.tgl[data-val="Swing"].active{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
 .tgl[data-val="Calme"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
 .tgl[data-val="Confiance"].active{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
-.tgl[data-val="FOMO"].active,.tgl[data-val="Stress"].active,.tgl[data-val="Fatigue"].active{background:var(--loss-d);border-color:rgba(239,68,68,.25);color:#f87171}
+.tgl[data-val="FOMO"].active,.tgl[data-val="Stress"].active,.tgl[data-val="Fatigue"].active,.tgl[data-val="Revenge"].active{background:var(--loss-d);border-color:rgba(239,68,68,.25);color:#f87171}
+/* Status toggles */
+.tgl[data-val="closed"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
+.tgl[data-val="open"].active{background:var(--be-d);border-color:rgba(245,158,11,.35);color:var(--be)}
 
-/* Confluences checkboxes */
+/* Confluences */
 .conf-grid{display:flex;gap:6px;flex-wrap:wrap}
 .conf-cb{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 10px;
-  background:var(--bg4);
-  border:1px solid var(--b1);
-  border-radius:6px;
-  cursor:pointer;
-  user-select:none;
-  -webkit-tap-highlight-color:transparent;
-  transition:all var(--tr);
+  display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg4);
+  border:1px solid var(--b1);border-radius:6px;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;transition:all var(--tr);
 }
 .conf-cb input{display:none}
-.conf-cb-box{
-  width:14px;height:14px;
-  border:1.5px solid var(--b2);
-  border-radius:3px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.55rem;
-  transition:all var(--tr);
-}
+.conf-cb-box{width:14px;height:14px;border:1.5px solid var(--b2);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.55rem;transition:all var(--tr);}
 .conf-cb.checked{border-color:rgba(59,130,246,.4);background:var(--blue-d)}
 .conf-cb.checked .conf-cb-box{background:var(--blue);border-color:var(--blue);color:#000;font-weight:900}
 .conf-cb-label{font-family:var(--mono);font-size:.65rem;color:var(--t2)}
@@ -313,94 +131,58 @@ textarea{resize:vertical;min-height:52px}
 
 /* Submit */
 .btn-submit{
-  width:100%;
-  padding:12px;
-  background:var(--blue);
-  border:none;
-  border-radius:var(--r);
-  color:#fff;
-  font-family:var(--mono);
-  font-size:.75rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  cursor:pointer;
-  transition:opacity var(--tr);
-  margin-top:4px;
+  width:100%;padding:12px;background:var(--blue);border:none;border-radius:var(--r);color:#fff;
+  font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:opacity var(--tr);margin-top:4px;
 }
 .btn-submit:hover{opacity:.85}
 .btn-submit:active{opacity:.7}
 
-/* PSYCHO SCORE auto */
-.psycho-score{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 14px;
-  background:var(--bg3);
-  border:1px solid var(--b0);
-  border-radius:var(--r);
-  margin-top:4px;
+/* Psycho / Setup score bars */
+.score-bar-wrap{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);
+  border:1px solid var(--b0);border-radius:var(--r);margin-top:4px;
 }
-.psycho-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
-.psycho-bar{flex:1;height:4px;background:var(--bg5);border-radius:99px;overflow:hidden}
-.psycho-fill{height:100%;border-radius:99px;transition:width .3s ease,background .3s ease}
-.psycho-val{font-family:var(--mono);font-size:.72rem;font-weight:700;min-width:36px;text-align:right}
+.score-bar-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.score-bar{flex:1;height:4px;background:var(--bg5);border-radius:99px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:99px;transition:width .3s ease,background .3s ease}
+.score-bar-val{font-family:var(--mono);font-size:.72rem;font-weight:700;min-width:40px;text-align:right}
+.scores-dual{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
-/* ============================================================
-   HISTORIQUE
-============================================================ */
-.history-filters{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-bottom:12px;
-  align-items:center;
+/* Edit banner */
+.edit-banner-wrap{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);
 }
+.edit-banner-text{font-family:var(--mono);font-size:.72rem;color:var(--be);}
+.btn-cancel-edit{
+  padding:4px 12px;background:transparent;border:1px solid rgba(245,158,11,.4);border-radius:5px;
+  color:var(--be);font-family:var(--mono);font-size:.62rem;cursor:pointer;transition:all var(--tr);white-space:nowrap;
+}
+.btn-cancel-edit:hover{background:rgba(245,158,11,.12)}
+
+/* Result section dim when open trade */
+.result-dim{opacity:.4;transition:opacity .2s ease;}
+
+/* ============================================================ HISTORIQUE */
+.history-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .filter-select{
-  padding:6px 10px;
-  background:var(--bg3);
-  border:1px solid var(--b1);
-  border-radius:var(--r);
-  color:var(--t2);
-  font-family:var(--mono);
-  font-size:.65rem;
-  cursor:pointer;
-  outline:none;
-  appearance:none;
-  min-width:100px;
+  padding:6px 10px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);
+  color:var(--t2);font-family:var(--mono);font-size:.65rem;cursor:pointer;outline:none;appearance:none;min-width:100px;
 }
 .filter-btn{
-  padding:6px 12px;
-  background:transparent;
-  border:1px solid var(--b1);
-  border-radius:var(--r);
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.65rem;
-  cursor:pointer;
-  transition:all var(--tr);
-  white-space:nowrap;
+  padding:6px 12px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);
+  color:var(--t3);font-family:var(--mono);font-size:.65rem;cursor:pointer;transition:all var(--tr);white-space:nowrap;
 }
 .filter-btn:hover{color:var(--loss);border-color:rgba(239,68,68,.3)}
 .filter-btn.active-f{background:var(--blue-d);border-color:rgba(59,130,246,.3);color:var(--blue)}
 .filter-btn.sort-asc{color:var(--blue);border-color:rgba(59,130,246,.3)}
+.filter-btn.btn-import-style:hover{color:var(--be);border-color:rgba(245,158,11,.3)}
+.filter-btn.btn-restore-style:hover{color:var(--violet);border-color:rgba(139,92,246,.3)}
 
-/* Day separator rows in history */
-.day-sep-row td{
-  padding:10px 10px 4px;
-  background:var(--bg3);
-  border-bottom:none !important;
-  font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--t3);
-}
-.day-sep-row:not(:first-child) td{
-  border-top:1px solid var(--b0) !important;
-  padding-top:14px;
-}
+/* Day separator */
+.day-sep-row td{padding:10px 10px 4px;background:var(--bg3);border-bottom:none !important;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);}
+.day-sep-row:not(:first-child) td{border-top:1px solid var(--b0) !important;padding-top:14px;}
 .day-sep-row:hover td{background:var(--bg3) !important}
 .day-sep-label{color:var(--t2);font-weight:700;font-size:.64rem;letter-spacing:.06em}
 .day-sep-stats{float:right;color:var(--t3);font-size:.58rem}
@@ -408,35 +190,13 @@ textarea{resize:vertical;min-height:52px}
 .day-sep-stats .ds-r-neg{color:var(--loss)}
 
 .trade-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.trade-table th{
-  text-align:left;
-  padding:8px 10px;
-  font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--t3);
-  border-bottom:1px solid var(--b0);
-  white-space:nowrap;
-}
-.trade-table td{
-  padding:9px 10px;
-  border-bottom:1px solid var(--b0);
-  color:var(--t2);
-  vertical-align:middle;
-}
+.trade-table th{text-align:left;padding:8px 10px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--b0);white-space:nowrap;}
+.trade-table td{padding:9px 10px;border-bottom:1px solid var(--b0);color:var(--t2);vertical-align:middle;}
 .trade-table tr:last-child td{border-bottom:none}
 .trade-table tr:not(.day-sep-row):hover td{background:var(--bg3)}
 
-.badge{
-  display:inline-block;
-  padding:2px 8px;
-  border-radius:20px;
-  font-family:var(--mono);
-  font-size:.62rem;
-  font-weight:700;
-  white-space:nowrap;
-}
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-family:var(--mono);font-size:.62rem;font-weight:700;white-space:nowrap;}
 .badge-win{color:var(--win);background:var(--win-d);border:1px solid rgba(34,197,94,.2)}
 .badge-loss{color:var(--loss);background:var(--loss-d);border:1px solid rgba(239,68,68,.2)}
 .badge-be{color:var(--be);background:var(--be-d);border:1px solid rgba(245,158,11,.2)}
@@ -446,204 +206,66 @@ textarea{resize:vertical;min-height:52px}
 .badge-a{color:var(--blue);background:var(--blue-d)}
 .badge-b{color:var(--be)}
 .badge-c{color:#f87171}
+.badge-d{color:#f87171;background:rgba(239,68,68,.06)}
+.badge-open{color:var(--be);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3)}
+.badge-aligned{color:var(--win);font-size:.6rem}
+.badge-over{color:var(--loss);font-size:.6rem}
+.badge-under{color:var(--blue);font-size:.6rem}
 
-.btn-del{
-  padding:3px 8px;
-  background:transparent;
-  border:1px solid transparent;
-  border-radius:5px;
-  color:var(--t4);
-  font-size:.75rem;
-  cursor:pointer;
-  transition:all var(--tr);
+/* Action buttons */
+.btn-del,.btn-edit,.btn-close-trade{
+  padding:3px 7px;background:transparent;border:1px solid transparent;border-radius:5px;
+  color:var(--t4);font-size:.72rem;cursor:pointer;transition:all var(--tr);line-height:1.4;
 }
 .btn-del:hover{color:var(--loss);border-color:rgba(239,68,68,.3)}
+.btn-edit:hover{color:var(--blue);border-color:rgba(59,130,246,.3)}
+.btn-close-trade:hover{color:var(--be);border-color:rgba(245,158,11,.3)}
+.action-btns{display:flex;gap:3px;white-space:nowrap}
 
-.empty-state{
-  text-align:center;
-  padding:40px 20px;
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.75rem;
-}
+.empty-state{text-align:center;padding:40px 20px;color:var(--t3);font-family:var(--mono);font-size:.75rem;}
 
-/* ============================================================
-   DASHBOARD
-============================================================ */
-.charts-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:14px;
-  margin-bottom:14px;
-}
+/* ============================================================ DASHBOARD */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
 .chart-wrap{position:relative;height:220px;padding:10px}
 .chart-wrap canvas{max-height:200px}
-
-.analysis-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  margin-bottom:14px;
-}
-
-/* Mini stat table */
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 .mini-table{width:100%;border-collapse:collapse;font-size:.76rem}
 .mini-table td{padding:7px 8px;border-bottom:1px solid var(--b0);color:var(--t2)}
 .mini-table td:first-child{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
 .mini-table td:last-child{text-align:right;font-weight:600;color:var(--t1)}
 .mini-table tr:last-child td{border-bottom:none}
-
-/* Psycho insights */
 .insight-list{display:flex;flex-direction:column;gap:6px}
-.insight-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:9px 12px;
-  background:var(--bg3);
-  border:1px solid var(--b0);
-  border-radius:var(--r);
-}
-.insight-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.insight-text{font-size:.76rem;color:var(--t2);line-height:1.35}
+.insight-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg3);border:1px solid var(--b0);border-radius:var(--r);}
+.insight-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.insight-text{font-size:.76rem;color:var(--t2);line-height:1.4}
 .insight-text strong{color:var(--t1);font-weight:600}
 
-/* ============================================================
-   FILTRE PERIODE DASHBOARD — nouveau design
-============================================================ */
-.period-bar{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  margin-bottom:14px;
-  flex-wrap:wrap;
-  row-gap:8px;
-}
-.period-label{
-  font-family:var(--mono);
-  font-size:.6rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--t3);
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.period-section{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  flex-wrap:nowrap;
-}
-.period-divider{
-  width:1px;
-  height:18px;
-  background:var(--b1);
-  flex-shrink:0;
-  align-self:center;
-  margin:0 2px;
-}
-.period-btn{
-  padding:5px 11px;
-  background:var(--bg3);
-  border:1px solid var(--b1);
-  border-radius:6px;
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.65rem;
-  font-weight:600;
-  letter-spacing:.05em;
-  cursor:pointer;
-  transition:all var(--tr);
-  white-space:nowrap;
-}
+/* ============================================================ PERIOD BAR */
+.period-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;row-gap:8px;}
+.period-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;flex-shrink:0;}
+.period-section{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;}
+.period-divider{width:1px;height:18px;background:var(--b1);flex-shrink:0;align-self:center;margin:0 2px;}
+.period-btn{padding:5px 11px;background:var(--bg3);border:1px solid var(--b1);border-radius:6px;color:var(--t3);font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:.05em;cursor:pointer;transition:all var(--tr);white-space:nowrap;}
 .period-btn:hover{color:var(--t2);border-color:var(--b2)}
-.period-btn.active{
-  background:var(--blue-d);
-  border-color:rgba(59,130,246,.4);
-  color:var(--blue);
-}
-/* Period selects inline */
-.period-select{
-  padding:5px 8px;
-  background:var(--bg3);
-  border:1px solid var(--b1);
-  border-radius:6px;
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.63rem;
-  cursor:pointer;
-  outline:none;
-  appearance:none;
-  transition:border-color var(--tr), color var(--tr), background var(--tr);
-  min-width:0;
-}
-.period-select:focus{border-color:var(--b3)}
-.period-select.sel-active{
-  background:var(--blue-d);
-  border-color:rgba(59,130,246,.4);
-  color:var(--blue);
-}
-/* Period date inputs */
-.period-date-input{
-  padding:5px 8px;
-  background:var(--bg3);
-  border:1px solid var(--b1);
-  border-radius:6px;
-  color:var(--t3);
-  font-family:var(--mono);
-  font-size:.62rem;
-  outline:none;
-  width:118px;
-  transition:border-color var(--tr), color var(--tr);
-  appearance:none;
-}
-.period-date-input:focus,.period-date-input.sel-active{
-  border-color:rgba(59,130,246,.4);
-  color:var(--t2);
-}
-.period-range-label{
-  font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--t3);
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.period-count{
-  font-family:var(--mono);
-  font-size:.62rem;
-  color:var(--t3);
-  margin-left:auto;
-  white-space:nowrap;
-}
+.period-btn.active{background:var(--blue-d);border-color:rgba(59,130,246,.4);color:var(--blue);}
+.period-select{padding:5px 8px;background:var(--bg3);border:1px solid var(--b1);border-radius:6px;color:var(--t3);font-family:var(--mono);font-size:.63rem;cursor:pointer;outline:none;appearance:none;transition:border-color var(--tr),color var(--tr),background var(--tr);min-width:0;}
+.period-select.sel-active{background:var(--blue-d);border-color:rgba(59,130,246,.4);color:var(--blue);}
+.period-date-input{padding:5px 8px;background:var(--bg3);border:1px solid var(--b1);border-radius:6px;color:var(--t3);font-family:var(--mono);font-size:.62rem;outline:none;width:118px;transition:border-color var(--tr),color var(--tr);appearance:none;}
+.period-date-input:focus,.period-date-input.sel-active{border-color:rgba(59,130,246,.4);color:var(--t2);}
+.period-range-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);white-space:nowrap;flex-shrink:0;}
+.period-count{font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-left:auto;white-space:nowrap;}
 .period-count span{color:var(--t2);font-weight:600}
 
-/* ============================================================
-   TOAST
-============================================================ */
+/* ============================================================ TOAST */
 .toast{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%) translateY(60px);
-  background:var(--bg4);
-  border:1px solid var(--b2);
-  border-radius:var(--r);
-  color:var(--t1);
-  font-family:var(--mono);
-  font-size:.72rem;
-  padding:9px 18px;
-  white-space:nowrap;
-  transition:transform 280ms cubic-bezier(.16,1,.3,1);
-  z-index:999;
-  pointer-events:none;
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--bg4);border:1px solid var(--b2);border-radius:var(--r);color:var(--t1);
+  font-family:var(--mono);font-size:.72rem;padding:9px 18px;white-space:nowrap;
+  transition:transform 280ms cubic-bezier(.16,1,.3,1);z-index:999;pointer-events:none;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* ============================================================
-   RESPONSIVE
-============================================================ */
+/* ============================================================ RESPONSIVE */
 @media(max-width:768px){
   .stats-row{grid-template-columns:repeat(3,1fr)}
   .stats-row .stat-card:nth-child(n+4){display:none}
@@ -656,6 +278,7 @@ textarea{resize:vertical;min-height:52px}
   .nav-brand{display:none}
   .page{padding:12px}
   .period-date-input{width:100px}
+  .scores-dual{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .stats-row{grid-template-columns:1fr 1fr}
@@ -670,9 +293,7 @@ textarea{resize:vertical;min-height:52px}
 <body>
 <div class="app">
 
-<!-- ============================================================
-     NAVIGATION
-============================================================ -->
+<!-- ============================================================ NAV -->
 <nav class="nav">
   <div class="nav-brand">&#9632; Trading Journal</div>
   <div class="nav-tabs">
@@ -686,16 +307,14 @@ textarea{resize:vertical;min-height:52px}
   </div>
 </nav>
 
-<!-- ============================================================
-     PAGE : LOG TRADE
-============================================================ -->
+<!-- ============================================================ PAGE LOG TRADE -->
 <div class="page active" id="page-log">
 
   <div class="stats-row" id="mini-stats">
     <div class="stat-card">
-      <div class="stat-label">Trades</div>
+      <div class="stat-label">Clôturés</div>
       <div class="stat-value" id="s-total">0</div>
-      <div class="stat-sub">enregistres</div>
+      <div class="stat-sub" id="s-total-sub">enregistrés</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Winrate</div>
@@ -705,7 +324,7 @@ textarea{resize:vertical;min-height:52px}
     <div class="stat-card">
       <div class="stat-label">Total R</div>
       <div class="stat-value" id="s-totalr">0.00</div>
-      <div class="stat-sub">cumule</div>
+      <div class="stat-sub">cumulé (clôturés)</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">R moyen</div>
@@ -721,12 +340,31 @@ textarea{resize:vertical;min-height:52px}
 
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-title">&#9998; Nouveau trade</span>
+      <span class="panel-title" id="form-panel-title">&#9998; Nouveau trade</span>
       <span style="font-family:var(--mono);font-size:.6rem;color:var(--t3)">Objectif : &lt; 10 sec</span>
     </div>
     <div class="panel-body">
       <div class="form-grid" id="trade-form">
 
+        <!-- EDIT BANNER -->
+        <div class="form-col-span-4" id="edit-banner-container" style="display:none">
+          <div class="edit-banner-wrap">
+            <span class="edit-banner-text" id="edit-banner-text">&#9998; Modifier le trade</span>
+            <button class="btn-cancel-edit" id="cancel-edit-btn">&#10005; Annuler</button>
+          </div>
+        </div>
+
+        <!-- STATUT -->
+        <div class="field form-col-span-2">
+          <div class="field-label">Statut du trade</div>
+          <div class="toggle-group" data-group="status">
+            <button class="tgl active" data-val="closed">&#10003; Clôturé</button>
+            <button class="tgl" data-val="open">&#9679; En cours</button>
+          </div>
+        </div>
+        <div class="form-col-span-2"></div>
+
+        <!-- LIGNE 1 : date, time, asset, type -->
         <div class="field">
           <div class="field-label">Date</div>
           <input type="date" id="f-date"/>
@@ -739,24 +377,20 @@ textarea{resize:vertical;min-height:52px}
           <div class="field-label">Actif</div>
           <select id="f-asset">
             <option value="">&#8212; Actif &#8212;</option>
-            <option>XAU/USD</option>
-            <option>BTC/USD</option>
-            <option>SP500</option>
-            <option>WTI</option>
-            <option>EUR/USD</option>
-            <option>NAS100</option>
-            <option>Autre</option>
+            <option>XAU/USD</option><option>BTC/USD</option><option>SP500</option>
+            <option>WTI</option><option>EUR/USD</option><option>NAS100</option><option>DXY</option><option>Autre</option>
           </select>
         </div>
         <div class="field">
           <div class="field-label">Type</div>
-          <div class="toggle-group" data-group="type" data-required="true">
+          <div class="toggle-group" data-group="type">
             <button class="tgl" data-val="Scalping">Scalp</button>
             <button class="tgl" data-val="Intraday">Intra</button>
             <button class="tgl" data-val="Swing">Swing</button>
           </div>
         </div>
 
+        <!-- LIGNE 2 : dir, quality, rrPlan, risk -->
         <div class="field">
           <div class="field-label">Direction</div>
           <div class="toggle-group" data-group="dir">
@@ -765,16 +399,17 @@ textarea{resize:vertical;min-height:52px}
           </div>
         </div>
         <div class="field">
-          <div class="field-label">Qualite setup</div>
+          <div class="field-label">Qualité perçue</div>
           <div class="toggle-group" data-group="quality">
             <button class="tgl" data-val="A+">A+</button>
             <button class="tgl" data-val="A">A</button>
             <button class="tgl" data-val="B">B</button>
             <button class="tgl" data-val="C">C</button>
+            <button class="tgl" data-val="D">D</button>
           </div>
         </div>
         <div class="field">
-          <div class="field-label">RR Prevu</div>
+          <div class="field-label">RR Prévu</div>
           <input type="number" id="f-rr-plan" placeholder="Ex : 2.5" step="0.1" min="0"/>
         </div>
         <div class="field">
@@ -782,19 +417,14 @@ textarea{resize:vertical;min-height:52px}
           <input type="number" id="f-risk" placeholder="Ex : 1" step="0.1" min="0"/>
         </div>
 
+        <!-- LIGNE 3 : setup, confluences -->
         <div class="field form-col-span-2">
           <div class="field-label">Setup</div>
           <select id="f-setup">
             <option value="">&#8212; Setup &#8212;</option>
-            <option>ICT Asian KZ</option>
-            <option>London continuation</option>
-            <option>NY reversal</option>
-            <option>FVG continuation</option>
-            <option>OB reversal</option>
-            <option>Sweep + displacement</option>
-            <option>BOS + retest</option>
-            <option>Liquidity grab</option>
-            <option>Setup perso</option>
+            <option>ICT Asian KZ</option><option>London continuation</option><option>NY reversal</option>
+            <option>FVG continuation</option><option>OB reversal</option><option>Sweep + displacement</option>
+            <option>BOS + retest</option><option>Liquidity grab</option><option>Setup perso</option>
           </select>
         </div>
         <div class="field form-col-span-2">
@@ -803,43 +433,53 @@ textarea{resize:vertical;min-height:52px}
             <label class="conf-cb"><input type="checkbox" value="HTF"/><div class="conf-cb-box"></div><span class="conf-cb-label">HTF</span></label>
             <label class="conf-cb"><input type="checkbox" value="FVG"/><div class="conf-cb-box"></div><span class="conf-cb-label">FVG</span></label>
             <label class="conf-cb"><input type="checkbox" value="OB"/><div class="conf-cb-box"></div><span class="conf-cb-label">OB</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Liquidity"/><div class="conf-cb-box"></div><span class="conf-cb-label">Liquidity</span></label>
+            <label class="conf-cb"><input type="checkbox" value="Liquidity"/><div class="conf-cb-box"></div><span class="conf-cb-label">Liq.</span></label>
+            <label class="conf-cb"><input type="checkbox" value="Sweep"/><div class="conf-cb-box"></div><span class="conf-cb-label">Sweep</span></label>
+            <label class="conf-cb"><input type="checkbox" value="Displacement"/><div class="conf-cb-box"></div><span class="conf-cb-label">Displ.</span></label>
+            <label class="conf-cb"><input type="checkbox" value="MSS"/><div class="conf-cb-box"></div><span class="conf-cb-label">MSS</span></label>
+            <label class="conf-cb"><input type="checkbox" value="BPR"/><div class="conf-cb-box"></div><span class="conf-cb-label">BPR</span></label>
+            <label class="conf-cb"><input type="checkbox" value="Prem/Disc"/><div class="conf-cb-box"></div><span class="conf-cb-label">Prem/Disc</span></label>
+            <label class="conf-cb"><input type="checkbox" value="Confirmation"/><div class="conf-cb-box"></div><span class="conf-cb-label">Confirm.</span></label>
             <label class="conf-cb"><input type="checkbox" value="Asia"/><div class="conf-cb-box"></div><span class="conf-cb-label">Asia</span></label>
             <label class="conf-cb"><input type="checkbox" value="London"/><div class="conf-cb-box"></div><span class="conf-cb-label">London</span></label>
             <label class="conf-cb"><input type="checkbox" value="NY"/><div class="conf-cb-box"></div><span class="conf-cb-label">NY</span></label>
-            <label class="conf-cb"><input type="checkbox" value="MSS"/><div class="conf-cb-box"></div><span class="conf-cb-label">MSS</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Displacement"/><div class="conf-cb-box"></div><span class="conf-cb-label">Displ.</span></label>
           </div>
         </div>
 
+        <!-- SÉPARATEUR -->
         <div class="form-col-span-4" style="border-top:1px solid var(--b0);margin:4px 0"></div>
 
-        <div class="field">
-          <div class="field-label">Resultat</div>
-          <div class="toggle-group" data-group="result">
-            <button class="tgl" data-val="Win">Win</button>
-            <button class="tgl" data-val="Loss">Loss</button>
-            <button class="tgl" data-val="BE">BE</button>
-          </div>
-        </div>
-        <div class="field">
-          <div class="field-label">RR Reel</div>
-          <input type="number" id="f-rr-real" placeholder="Entrer un R positif, sans signe -" step="0.1" min="0"/>
-        </div>
-        <div class="field">
-          <div class="field-label">PnL ($)</div>
-          <input type="number" id="f-pnl" placeholder="Ex : +125 ou -80" step="0.01"/>
-        </div>
-        <div class="field">
-          <div class="field-label">Resp. plan</div>
-          <div class="toggle-group" data-group="plan">
-            <button class="tgl" data-val="Oui">Oui</button>
-            <button class="tgl" data-val="Non">Non</button>
+        <!-- SECTION RÉSULTAT — dimmable si trade open -->
+        <div class="form-col-span-4" id="result-section">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <div class="field">
+              <div class="field-label">Résultat <span id="result-optional-label" style="display:none;color:var(--t3);font-size:.52rem;font-weight:400">(optionnel)</span></div>
+              <div class="toggle-group" data-group="result">
+                <button class="tgl" data-val="Win">Win</button>
+                <button class="tgl" data-val="Loss">Loss</button>
+                <button class="tgl" data-val="BE">BE</button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">RR Réel</div>
+              <input type="number" id="f-rr-real" placeholder="R positif sans signe -" step="0.1" min="0"/>
+            </div>
+            <div class="field">
+              <div class="field-label">PnL ($)</div>
+              <input type="number" id="f-pnl" placeholder="Ex : +125 ou -80" step="0.01"/>
+            </div>
+            <div class="field">
+              <div class="field-label">Resp. plan</div>
+              <div class="toggle-group" data-group="plan">
+                <button class="tgl" data-val="Oui">Oui</button>
+                <button class="tgl" data-val="Non">Non</button>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="field form-col-span-4">
-          <div class="field-label">Etat emotionnel</div>
+          <div class="field-label">État émotionnel</div>
           <div class="toggle-group" data-group="emotion">
             <button class="tgl" data-val="Calme">&#9679; Calme</button>
             <button class="tgl" data-val="Confiance">&#9650; Confiance</button>
@@ -851,14 +491,22 @@ textarea{resize:vertical;min-height:52px}
         </div>
         <div class="field form-col-span-4">
           <div class="field-label">Note rapide</div>
-          <input type="text" id="f-note" placeholder="1 ligne max — observation cle du trade..."/>
+          <input type="text" id="f-note" placeholder="1 ligne max — observation clé du trade..."/>
         </div>
 
+        <!-- SCORES DUAL : mental + setup -->
         <div class="form-col-span-4">
-          <div class="psycho-score">
-            <div class="psycho-label">Score mental</div>
-            <div class="psycho-bar"><div class="psycho-fill" id="psycho-fill" style="width:0%"></div></div>
-            <div class="psycho-val" id="psycho-val" style="color:var(--t3)">&#8212;</div>
+          <div class="scores-dual">
+            <div class="score-bar-wrap">
+              <div class="score-bar-label">Score mental</div>
+              <div class="score-bar"><div class="score-bar-fill" id="psycho-fill" style="width:0%"></div></div>
+              <div class="score-bar-val" id="psycho-val" style="color:var(--t3)">&#8212;</div>
+            </div>
+            <div class="score-bar-wrap">
+              <div class="score-bar-label">Score setup</div>
+              <div class="score-bar"><div class="score-bar-fill" id="setup-fill" style="width:0%"></div></div>
+              <div class="score-bar-val" id="setup-val" style="color:var(--t3)">&#8212;</div>
+            </div>
           </div>
         </div>
 
@@ -872,10 +520,11 @@ textarea{resize:vertical;min-height:52px}
 
 </div><!-- /page-log -->
 
-<!-- ============================================================
-     PAGE : HISTORIQUE
-============================================================ -->
+<!-- ============================================================ PAGE HISTORIQUE -->
 <div class="page" id="page-history">
+  <!-- Input file caché pour l'import JSON -->
+  <input type="file" id="file-import-json" accept=".json" style="display:none"/>
+
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">&#9776; Historique des trades</span>
@@ -883,81 +532,74 @@ textarea{resize:vertical;min-height:52px}
     </div>
     <div class="panel-body">
       <div class="history-filters">
+        <!-- Filtres existants -->
         <select class="filter-select" id="f-filter-result">
-          <option value="">Tous resultats</option>
-          <option value="Win">Win</option>
-          <option value="Loss">Loss</option>
-          <option value="BE">BE</option>
+          <option value="">Tous résultats</option>
+          <option value="Win">Win</option><option value="Loss">Loss</option><option value="BE">BE</option>
         </select>
         <select class="filter-select" id="f-filter-asset">
           <option value="">Tous actifs</option>
         </select>
         <select class="filter-select" id="f-filter-type">
           <option value="">Tous types</option>
-          <option value="Scalping">Scalping</option>
-          <option value="Intraday">Intraday</option>
-          <option value="Swing">Swing</option>
+          <option value="Scalping">Scalping</option><option value="Intraday">Intraday</option><option value="Swing">Swing</option>
         </select>
-        <!-- Sort toggle -->
-        <button class="filter-btn" id="btn-sort-dir" title="Ordre de tri chronologique">&#8595; Recent</button>
+        <!-- Nouveaux filtres -->
+        <select class="filter-select" id="f-filter-status">
+          <option value="">Tous statuts</option>
+          <option value="closed">Clôturés</option>
+          <option value="open">En cours</option>
+        </select>
+        <select class="filter-select" id="f-filter-grade">
+          <option value="">Tous grades</option>
+          <option value="A+">A+</option><option value="A">A</option>
+          <option value="B">B</option><option value="C">C</option><option value="D">D</option>
+        </select>
+        <!-- Tri + actions -->
+        <button class="filter-btn" id="btn-sort-dir" title="Ordre chronologique">&#8595; Récent</button>
         <button class="filter-btn" id="btn-export-csv">&#8615; CSV</button>
+        <button class="filter-btn btn-import-style" id="btn-export-json">&#8615; JSON</button>
+        <button class="filter-btn btn-import-style" id="btn-import-json">&#8613; Import</button>
+        <button class="filter-btn btn-restore-style" id="btn-restore-backup">&#10227; Backup</button>
         <button class="filter-btn" id="btn-clear-all" style="margin-left:auto">&#128465; Tout effacer</button>
       </div>
       <div id="history-container">
-        <div class="empty-state">Aucun trade enregistre.</div>
+        <div class="empty-state">Aucun trade enregistré.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     PAGE : DASHBOARD
-============================================================ -->
+<!-- ============================================================ PAGE DASHBOARD -->
 <div class="page" id="page-dashboard">
 
-  <!-- ============================================================
-       BARRE DE PERIODE REDESIGN
-  ============================================================ -->
   <div class="period-bar" id="period-bar">
-    <span class="period-label">Periode</span>
-
-    <!-- Section 1 : Raccourcis rapides -->
+    <span class="period-label">Période</span>
     <div class="period-section">
       <button class="period-btn active" data-period="all">Tout</button>
-      <button class="period-btn" data-period="year">Annee</button>
+      <button class="period-btn" data-period="year">Année</button>
       <button class="period-btn" data-period="month">Mois</button>
       <button class="period-btn" data-period="week">Sem.</button>
       <button class="period-btn" data-period="day">Jour</button>
     </div>
-
     <div class="period-divider"></div>
-
-    <!-- Section 2 : Mois précis + Année précise -->
     <div class="period-section">
-      <select class="period-select" id="period-month-sel" title="Selectionner un mois precis">
-        <option value="">Mois...</option>
-      </select>
-      <select class="period-select" id="period-year-sel" title="Selectionner une annee">
-        <option value="">Annee...</option>
-      </select>
+      <select class="period-select" id="period-month-sel" title="Mois précis"><option value="">Mois...</option></select>
+      <select class="period-select" id="period-year-sel" title="Année"><option value="">Année...</option></select>
     </div>
-
     <div class="period-divider"></div>
-
-    <!-- Section 3 : Plage personnalisee -->
     <div class="period-section">
       <span class="period-range-label">De</span>
-      <input type="date" class="period-date-input" id="period-from" title="Date de debut"/>
+      <input type="date" class="period-date-input" id="period-from"/>
       <span class="period-range-label">&#8594;</span>
-      <input type="date" class="period-date-input" id="period-to" title="Date de fin"/>
+      <input type="date" class="period-date-input" id="period-to"/>
     </div>
-
     <span class="period-count" id="period-count"><span>&#8212;</span> trades</span>
   </div>
 
   <div class="stats-row" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
     <div class="stat-card">
-      <div class="stat-label">Trades</div>
+      <div class="stat-label">Trades clôturés</div>
       <div class="stat-value" id="d-total">0</div>
       <div class="stat-sub" id="d-total-sub">&#8212;</div>
     </div>
@@ -969,17 +611,17 @@ textarea{resize:vertical;min-height:52px}
     <div class="stat-card">
       <div class="stat-label">Total R</div>
       <div class="stat-value" id="d-tr">0.00</div>
-      <div class="stat-sub">cumule</div>
+      <div class="stat-sub">cumulé clôturés</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Expectancy</div>
       <div class="stat-value" id="d-exp">&#8212;</div>
-      <div class="stat-sub">R / trade</div>
+      <div class="stat-sub">R / trade clôturé</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Avg Loss R</div>
-      <div class="stat-value" id="d-avgl">&#8212;</div>
-      <div class="stat-sub">pertes moyennes</div>
+      <div class="stat-label">En cours</div>
+      <div class="stat-value" id="d-open-count" style="color:var(--be)">0</div>
+      <div class="stat-sub" id="d-open-sub">trades actifs</div>
     </div>
   </div>
 
@@ -993,63 +635,35 @@ textarea{resize:vertical;min-height:52px}
       <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
     </div>
     <div class="panel">
-      <div class="panel-header"><span class="panel-title">Courbe R cumule</span></div>
+      <div class="panel-header"><span class="panel-title">Courbe R cumulé</span></div>
       <div class="chart-wrap"><canvas id="chart-equity"></canvas></div>
     </div>
   </div>
 
-  <!-- Section PnL ($) -->
+  <!-- PnL Section -->
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-header" style="background:rgba(34,197,94,.04);border-bottom-color:rgba(34,197,94,.15)">
-      <span class="panel-title" style="color:#4ade80">$ PnL &#8212; Suivi en montant</span>
-      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Independant du R · Part de 0</span>
+      <span class="panel-title" style="color:#4ade80">$ PnL — Suivi en montant</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Clôturés uniquement · Repart de 0</span>
     </div>
     <div class="panel-body">
-
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
         <div class="stat-card" style="border-color:rgba(34,197,94,.15)">
-          <div class="stat-label">PnL total</div>
-          <div class="stat-value" id="pnl-total">0.00</div>
-          <div class="stat-sub">depuis le debut</div>
+          <div class="stat-label">PnL total</div><div class="stat-value" id="pnl-total">0.00</div><div class="stat-sub">depuis le début</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">PnL moyen / trade</div>
-          <div class="stat-value" id="pnl-avg">&#8212;</div>
-          <div class="stat-sub">sur la periode</div>
+          <div class="stat-label">PnL moyen / trade</div><div class="stat-value" id="pnl-avg">&#8212;</div><div class="stat-sub">sur la période</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Meilleur trade</div>
-          <div class="stat-value" id="pnl-best-trade">&#8212;</div>
-          <div class="stat-sub" id="pnl-best-trade-info">&#8212;</div>
+          <div class="stat-label">Meilleur trade</div><div class="stat-value" id="pnl-best-trade">&#8212;</div><div class="stat-sub" id="pnl-best-trade-info">&#8212;</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pire trade</div>
-          <div class="stat-value" id="pnl-worst-trade">&#8212;</div>
-          <div class="stat-sub" id="pnl-worst-trade-info">&#8212;</div>
+          <div class="stat-label">Pire trade</div><div class="stat-value" id="pnl-worst-trade">&#8212;</div><div class="stat-sub" id="pnl-worst-trade-info">&#8212;</div>
         </div>
       </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-        <div class="stat-card">
-          <div class="stat-label">Meilleur jour</div>
-          <div class="stat-value" id="pnl-best-day">&#8212;</div>
-          <div class="stat-sub" id="pnl-best-day-date">&#8212;</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Pire jour</div>
-          <div class="stat-value" id="pnl-worst-day">&#8212;</div>
-          <div class="stat-sub" id="pnl-worst-day-date">&#8212;</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Jours positifs</div>
-          <div class="stat-value" id="pnl-pos-days">&#8212;</div>
-          <div class="stat-sub" id="pnl-pos-days-sub">sur la periode</div>
-        </div>
-      </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
-          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">Courbe PnL cumule ($)</div>
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">Courbe PnL cumulé ($)</div>
           <div style="position:relative;height:180px"><canvas id="chart-pnl-equity"></canvas></div>
         </div>
         <div>
@@ -1057,19 +671,18 @@ textarea{resize:vertical;min-height:52px}
           <div style="position:relative;height:180px"><canvas id="chart-pnl-bar"></canvas></div>
         </div>
       </div>
-
     </div>
   </div>
 
   <div class="analysis-grid">
     <div class="panel">
-      <div class="panel-header"><span class="panel-title">Stats avancees</span></div>
+      <div class="panel-header"><span class="panel-title">Stats avancées (clôturés)</span></div>
       <div class="panel-body">
-        <table class="mini-table" id="adv-stats-table">
+        <table class="mini-table">
           <tr><td>Meilleur trade</td><td id="d-best">&#8212;</td></tr>
           <tr><td>Pire trade</td><td id="d-worst">&#8212;</td></tr>
-          <tr><td>Serie gagnante max</td><td id="d-streak-w">&#8212;</td></tr>
-          <tr><td>Serie perdante max</td><td id="d-streak-l">&#8212;</td></tr>
+          <tr><td>Série gagnante max</td><td id="d-streak-w">&#8212;</td></tr>
+          <tr><td>Série perdante max</td><td id="d-streak-l">&#8212;</td></tr>
           <tr><td>R moyen (Win)</td><td id="d-avgw">&#8212;</td></tr>
           <tr><td>R moyen (Loss)</td><td id="d-avgloss">&#8212;</td></tr>
           <tr><td>Setup le + profitable</td><td id="d-best-setup">&#8212;</td></tr>
@@ -1090,17 +703,50 @@ textarea{resize:vertical;min-height:52px}
   </div>
 
   <div class="panel">
-    <div class="panel-header"><span class="panel-title">Performance par qualite de setup</span></div>
+    <div class="panel-header"><span class="panel-title">Performance par grade de setup (clôturés)</span></div>
     <div class="panel-body">
       <table class="mini-table" id="quality-table">
         <thead><tr>
-          <td style="font-weight:600">Qualite</td>
-          <td style="font-weight:600">Trades</td>
-          <td style="font-weight:600">Winrate</td>
-          <td style="font-weight:600">R total</td>
-          <td style="font-weight:600">R moyen</td>
+          <td style="font-weight:600">Grade calc.</td><td style="font-weight:600">Trades</td>
+          <td style="font-weight:600">Winrate</td><td style="font-weight:600">R total</td><td style="font-weight:600">R moyen</td>
         </tr></thead>
         <tbody id="quality-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-calibration">
+    <div class="panel-header">
+      <span class="panel-title">&#127919; Calibration instinct / scoring</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Qualité perçue vs calculée — trades clôturés avec les deux renseignés</span>
+    </div>
+    <div class="panel-body">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        <div class="stat-card" style="border-color:rgba(34,197,94,.15)">
+          <div class="stat-label">&#10003; Alignés</div>
+          <div class="stat-value" id="cal-aligned-pct" style="color:var(--win)">--</div>
+          <div class="stat-sub" id="cal-aligned-n">-- trades</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(239,68,68,.15)">
+          <div class="stat-label">&#8595; Surévalués</div>
+          <div class="stat-value" id="cal-over-pct" style="color:var(--loss)">--</div>
+          <div class="stat-sub" id="cal-over-n">-- trades</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(59,130,246,.15)">
+          <div class="stat-label">&#8593; Sous-évalués</div>
+          <div class="stat-value" id="cal-under-pct" style="color:var(--blue)">--</div>
+          <div class="stat-sub" id="cal-under-n">-- trades</div>
+        </div>
+      </div>
+      <table class="mini-table">
+        <thead><tr>
+          <td style="font-weight:600">Catégorie</td>
+          <td style="font-weight:600">Trades</td>
+          <td style="font-weight:600">WR</td>
+          <td style="font-weight:600">R moyen</td>
+          <td style="font-weight:600">PnL moyen</td>
+        </tr></thead>
+        <tbody id="cal-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -1108,38 +754,47 @@ textarea{resize:vertical;min-height:52px}
 </div><!-- /page-dashboard -->
 
 </div><!-- /app -->
+<div class="toast" id="toast"></div>
 
-<div class="toast" id="toast">Trade enregistre</div>
-
-<!-- ============================================================
-     JAVASCRIPT
-============================================================ -->
+<!-- ============================================================ JAVASCRIPT -->
 <script>
 /* ============================================================
-   CONSTANTES & ETAT
+   CONSTANTES & ÉTAT
 ============================================================ */
 const LS_KEY = 'tj_trades_v1';
 let trades = [];
 
-// Etat tri historique
-let historySortAsc = false; // false = plus recent en premier (defaut)
+// Historique
+let historySortAsc = false;
+let historyFilterStatus = '';
+let historyFilterGrade  = '';
 
-// Etat periode dashboard
-// mode : 'preset' | 'month' | 'year' | 'custom'
+// Formulaire
+let editingTradeId = null;
+let formMode = 'create'; // 'create' | 'edit' | 'close'
+
+// Dashboard période
 let periodMode   = 'preset';
 let periodPreset = 'all';
-let periodMonthSel   = ''; // 'YYYY-MM'
-let periodYearSel    = ''; // 'YYYY'
-let periodCustomFrom = ''; // 'YYYY-MM-DD'
-let periodCustomTo   = ''; // 'YYYY-MM-DD'
+let periodMonthSel   = '';
+let periodYearSel    = '';
+let periodCustomFrom = '';
+let periodCustomTo   = '';
+
+const MONTH_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+// Score max pour la barre visuelle (A+ = 10 pts = ~71% de la barre)
+const SETUP_SCORE_MAX = 14;
+
+// Conversion grade → valeur numérique pour le gap
+const GRADE_VAL = {'A+':5,'A':4,'B':3,'C':2,'D':1};
 
 /* ============================================================
    UTILITAIRES
 ============================================================ */
 const $  = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
-
-function pad(n){ return String(n).padStart(2,'0'); }
+const pad = n => String(n).padStart(2,'0');
 
 function todayISO(){
   const d = new Date();
@@ -1149,25 +804,16 @@ function nowTime(){
   const d = new Date();
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-// Format court : 14/04/2026
 function fmtDate(iso){
   if(!iso) return '--';
   const [y,m,d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
-
-// Format long FR : lundi 14 avril 2026
 function fmtDateLong(iso){
   if(!iso || iso === '?') return 'Date inconnue';
-  // T12:00:00 neutralise les decalages de fuseau horaire
   const d = new Date(iso + 'T12:00:00');
   return d.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 }
-
-// Noms de mois courts FR pour les selects
-const MONTH_FR = ['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'];
-
 function showToast(msg, ms=2200){
   const t = $('toast');
   t.textContent = msg;
@@ -1189,59 +835,204 @@ setInterval(updateClock, 1000);
 /* ============================================================
    NAVIGATION
 ============================================================ */
+function switchToTab(pageId){
+  $$('.nav-tab').forEach(t => t.classList.remove('active'));
+  $$('.page').forEach(p => p.classList.remove('active'));
+  const tab = document.querySelector(`.nav-tab[data-page="${pageId}"]`);
+  if(tab) tab.classList.add('active');
+  const page = $(pageId);
+  if(page) page.classList.add('active');
+}
+
 $$('.nav-tab').forEach(tab => {
   tab.addEventListener('click', function(){
-    $$('.nav-tab').forEach(t => t.classList.remove('active'));
-    $$('.page').forEach(p => p.classList.remove('active'));
-    this.classList.add('active');
-    $(this.dataset.page).classList.add('active');
+    switchToTab(this.dataset.page);
     if(this.dataset.page === 'page-dashboard') renderDashboard();
     if(this.dataset.page === 'page-history')  renderHistory();
   });
 });
 
 /* ============================================================
-   TOGGLE GROUPS FORMULAIRE
+   TOGGLE GROUPS — helpers
 ============================================================ */
+function getToggleVal(group){
+  const active = document.querySelector(`[data-group="${group}"] .tgl.active`);
+  return active ? active.dataset.val : '';
+}
+
+function setToggleVal(group, val){
+  document.querySelectorAll(`[data-group="${group}"] .tgl`).forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+}
+
+// Initialisation des listeners toggle groups
 $$('[data-group]').forEach(group => {
   group.querySelectorAll('.tgl').forEach(btn => {
     btn.addEventListener('click', function(){
       group.querySelectorAll('.tgl').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      if(['emotion','result','quality','plan'].includes(group.dataset.group)){
+      const g = group.dataset.group;
+      if(g === 'status') updateStatusSection();
+      if(['emotion','result','quality','plan','status'].includes(g)){
         updatePsychoScore();
       }
+      // Mise à jour du score setup à chaque interaction form
+      updateSetupScore();
     });
   });
 });
 
+// Confluences
+function getConfluences(){
+  return [...$$('#conf-grid input:checked')].map(i => i.value);
+}
+
 $$('.conf-cb').forEach(cb => {
-  cb.addEventListener('click', function(){
+  cb.addEventListener('click', function(e){
+    e.preventDefault(); // stoppe le toggle auto du navigateur sur label → évite le double-toggle
     const inp = this.querySelector('input');
     inp.checked = !inp.checked;
     this.classList.toggle('checked', inp.checked);
-    const box = this.querySelector('.conf-cb-box');
-    box.textContent = inp.checked ? '✓' : '';
+    this.querySelector('.conf-cb-box').textContent = inp.checked ? '✓' : '';
+    updateSetupScore();
   });
 });
+
+// Score setup mis à jour aussi quand rrPlan change
+$('f-rr-plan').addEventListener('input', updateSetupScore);
+
+/* ============================================================
+   SECTION RÉSULTAT — dim si trade open
+============================================================ */
+function updateStatusSection(){
+  const isOpen = getToggleVal('status') === 'open';
+  const rs = $('result-section');
+  if(rs) rs.classList.toggle('result-dim', isOpen);
+  const ol = $('result-optional-label');
+  if(ol) ol.style.display = isOpen ? 'inline' : 'none';
+}
+
+/* ============================================================
+   SCORE SETUP AUTOMATIQUE
+============================================================ */
+
+/**
+ * calculateSetupScore(trade)
+ * Calcule setupScore (numérique) et setupGrade (A+/A/B/C/D).
+ * Nouvelle grille : A+≥10, A=8-9, B=6-7, C=4-5, D<4
+ * Ne touche jamais au champ `quality` (= qualité perçue).
+ */
+function calculateSetupScore(trade){
+  let score = 0;
+  const conf = Array.isArray(trade.conf) ? trade.conf : [];
+  const rr   = trade.rrPlan || 0;
+
+  // ── Confluences majeures (+2) ──────────────────────────────
+  const major = ['HTF','Liquidity','Sweep','Displacement','MSS','OB','FVG'];
+  major.forEach(c => { if(conf.includes(c)) score += 2; });
+
+  // RR et plan comme majeures
+  if(rr >= 2)              score += 2;
+  if(trade.plan === 'Oui') score += 2;
+
+  // Émotion positive comme majeure
+  if(trade.emotion === 'Calme' || trade.emotion === 'Confiance') score += 2;
+
+  // ── Confluences secondaires (+1) ──────────────────────────
+  const secondary = ['BPR','Prem/Disc','Confirmation','Asia','London','NY'];
+  secondary.forEach(c => { if(conf.includes(c)) score += 1; });
+
+  // ── Malus ─────────────────────────────────────────────────
+  const malus = {FOMO:-2, Revenge:-3, Stress:-1, Fatigue:-1};
+  if(trade.emotion) score += (malus[trade.emotion] || 0);
+  if(trade.plan === 'Non') score -= 3;
+  if(rr > 0 && rr < 1.5)  score -= 2;
+
+  // Score jamais négatif
+  score = Math.max(0, score);
+
+  // ── Grade ─────────────────────────────────────────────────
+  let grade;
+  if(score >= 10)     grade = 'A+';
+  else if(score >= 8) grade = 'A';
+  else if(score >= 6) grade = 'B';
+  else if(score >= 4) grade = 'C';
+  else                grade = 'D';
+
+  return { setupScore: score, setupGrade: grade };
+}
+
+/**
+ * calculateSetupEvaluationGap(trade)
+ * Compare la qualité perçue (quality) vs calculée (setupGrade).
+ * Retourne : 'aligned' | 'overestimated' | 'underestimated' | null
+ */
+function calculateSetupEvaluationGap(trade){
+  const perceived   = trade.quality;
+  const calculated  = trade.setupGrade;
+  if(!perceived || !calculated) return null;
+  const pv = GRADE_VAL[perceived]  || 0;
+  const cv = GRADE_VAL[calculated] || 0;
+  if(pv > cv) return 'overestimated';
+  if(pv < cv) return 'underestimated';
+  return 'aligned';
+}
+
+/* Mise à jour live dans le formulaire */
+function updateSetupScore(){
+  const tmp = {
+    conf    : getConfluences(),
+    rrPlan  : parseFloat($('f-rr-plan').value) || 0,
+    plan    : getToggleVal('plan'),
+    emotion : getToggleVal('emotion'),
+  };
+  const { setupScore, setupGrade } = calculateSetupScore(tmp);
+
+  const fill = $('setup-fill');
+  const val  = $('setup-val');
+  if(!fill || !val) return;
+
+  const pct = Math.min(100, Math.round(setupScore / SETUP_SCORE_MAX * 100));
+  fill.style.width = pct + '%';
+
+  const colors = {'A+':'var(--violet)','A':'var(--blue)','B':'var(--be)','C':'var(--loss)','D':'#7f2020'};
+  const color = colors[setupGrade] || 'var(--t3)';
+  fill.style.background = color;
+  val.style.color = color;
+  val.textContent = `${setupGrade} · ${setupScore}pts`;
+}
 
 /* ============================================================
    PSYCHO SCORE
 ============================================================ */
-function updatePsychoScore(){
+function computePsycho(){
   const emotion  = getToggleVal('emotion');
   const plan     = getToggleVal('plan');
-  const quality  = getToggleVal('quality');
-  let score = 50;
-  const emotionMap = {Calme:20,Confiance:15,FOMO:-25,Stress:-15,Fatigue:-15,Revenge:-30};
-  if(emotion)  score += (emotionMap[emotion] || 0);
-  if(plan==='Oui') score += 15;
-  if(plan==='Non') score -= 20;
-  const qMap = {'A+':10,A:5,B:0,C:-10};
-  if(quality) score += (qMap[quality] || 0);
-  score = Math.max(0, Math.min(100, score));
+  const quality  = getToggleVal('quality'); // qualité perçue — impact limité
+  let s = 50;
+
+  // Émotion — impact principal
+  const em = {Calme:20,Confiance:15,FOMO:-25,Stress:-15,Fatigue:-15,Revenge:-30};
+  if(emotion) s += (em[emotion] || 0);
+
+  // Plan — impact fort
+  if(plan==='Oui') s += 15;
+  if(plan==='Non') s -= 20;
+
+  // Qualité perçue — impact réduit (instinct, pas discipline)
+  // A+/A : +3 max · B : 0 · C/D : -3 max
+  const qm = {'A+':3,'A':3,'B':0,'C':-3,'D':-3};
+  if(quality) s += (qm[quality] || 0);
+
+  return Math.max(0, Math.min(100, s));
+}
+
+function updatePsychoScore(){
+  const score = computePsycho();
   const fill = $('psycho-fill');
   const val  = $('psycho-val');
+  if(!fill || !val) return;
   fill.style.width = score + '%';
   let color, label;
   if(score >= 75){ color='var(--win)'; label=score+'% OK'; }
@@ -1252,123 +1043,332 @@ function updatePsychoScore(){
   val.textContent = label;
 }
 
-function getToggleVal(group){
-  const active = document.querySelector(`[data-group="${group}"] .tgl.active`);
-  return active ? active.dataset.val : '';
-}
-function getConfluences(){
-  return [...$$('#conf-grid input:checked')].map(i => i.value);
-}
-
 /* ============================================================
    RESET FORMULAIRE
 ============================================================ */
 function resetForm(){
-  $('f-date').value = todayISO();
-  $('f-time').value = nowTime();
-  $('f-asset').value = '';
-  $('f-setup').value = '';
-  $('f-rr-plan').value = '';
-  $('f-risk').value = '';
-  $('f-rr-real').value = '';
-  $('f-pnl').value = '';
-  $('f-note').value = '';
+  $('f-date').value       = todayISO();
+  $('f-time').value       = nowTime();
+  $('f-asset').value      = '';
+  $('f-setup').value      = '';
+  $('f-rr-plan').value    = '';
+  $('f-risk').value       = '';
+  $('f-rr-real').value    = '';
+  $('f-pnl').value        = '';
+  $('f-note').value       = '';
+
+  // Remet tous les toggles à zéro, sauf status qui revient à "closed"
   $$('[data-group] .tgl').forEach(b => b.classList.remove('active'));
+  setToggleVal('status', 'closed');
+
   $$('#conf-grid .conf-cb').forEach(cb => {
     cb.querySelector('input').checked = false;
     cb.classList.remove('checked');
     cb.querySelector('.conf-cb-box').textContent = '';
   });
+
+  // Reset bars
   $('psycho-fill').style.width = '0%';
-  $('psycho-val').textContent = '--';
-  $('psycho-val').style.color = 'var(--t3)';
+  $('psycho-val').textContent  = '—';
+  $('psycho-val').style.color  = 'var(--t3)';
+  $('setup-fill').style.width  = '0%';
+  $('setup-val').textContent   = '—';
+  $('setup-val').style.color   = 'var(--t3)';
+
+  updateStatusSection();
 }
+
+/* ============================================================
+   MODE ÉDITION
+============================================================ */
+function enterEditMode(trade, mode = 'edit'){
+  editingTradeId = trade.id;
+  formMode = mode;
+
+  // Switch vers la page formulaire
+  switchToTab('page-log');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Remplir les champs texte/select
+  $('f-date').value        = trade.date        || todayISO();
+  $('f-time').value        = trade.time        || nowTime();
+  $('f-asset').value       = trade.asset       || '';
+  $('f-setup').value       = trade.setup       || '';
+  $('f-rr-plan').value     = trade.rrPlan      != null ? trade.rrPlan : '';
+  $('f-risk').value        = trade.risk        != null ? trade.risk   : '';
+  $('f-rr-real').value     = trade.rrReal      != null ? trade.rrReal : '';
+  $('f-pnl').value         = trade.pnl         != null ? trade.pnl   : '';
+  $('f-note').value        = trade.note        || '';
+
+  // Toggles
+  setToggleVal('type',    trade.type    || '');
+  setToggleVal('dir',     trade.dir     || '');
+  setToggleVal('quality', trade.quality || '');
+  setToggleVal('result',  trade.result  || '');
+  setToggleVal('plan',    trade.plan    || '');
+  setToggleVal('emotion', trade.emotion || '');
+
+  // Statut
+  if(mode === 'close'){
+    setToggleVal('status', 'closed'); // force clôture
+  } else {
+    setToggleVal('status', trade.status || 'closed');
+  }
+
+  // Confluences
+  $$('#conf-grid .conf-cb').forEach(cb => {
+    const inp = cb.querySelector('input');
+    const checked = (trade.conf || []).includes(inp.value);
+    inp.checked = checked;
+    cb.classList.toggle('checked', checked);
+    cb.querySelector('.conf-cb-box').textContent = checked ? '✓' : '';
+  });
+
+  // Banner
+  $('edit-banner-container').style.display = 'block';
+  const labels = { edit: '✏ Modifier le trade', close: '🔒 Clôturer le trade' };
+  $('edit-banner-text').textContent = labels[mode] || labels.edit;
+  $('form-panel-title').textContent = mode === 'close' ? '🔒 Clôturer le trade' : '✏ Modifier le trade';
+  $('btn-submit').textContent = mode === 'close' ? '✓ Clôturer le trade' : '✓ Mettre à jour';
+
+  // Mise à jour visuelle
+  updateStatusSection();
+  updatePsychoScore();
+  updateSetupScore();
+}
+
+function exitEditMode(){
+  editingTradeId = null;
+  formMode = 'create';
+  $('edit-banner-container').style.display = 'none';
+  $('form-panel-title').textContent = '✎ Nouveau trade';
+  $('btn-submit').textContent = '+ Enregistrer le trade';
+  resetForm();
+}
+
+$('cancel-edit-btn').addEventListener('click', exitEditMode);
 
 /* ============================================================
    STOCKAGE
 ============================================================ */
-function saveTrades(){ localStorage.setItem(LS_KEY, JSON.stringify(trades)); }
+function saveTrades(){
+  localStorage.setItem(LS_KEY, JSON.stringify(trades));
+}
+
 function loadTrades(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     const parsed = JSON.parse(raw);
     trades = Array.isArray(parsed) ? parsed : [];
-    // Migration : garantir les champs manquants sur anciens trades
-    trades = trades.map(t => ({
-      id      : t.id || Date.now() + Math.random(),
-      date    : t.date    || '',
-      time    : t.time    || '',
-      asset   : t.asset   || '',
-      type    : t.type    || '',
-      dir     : t.dir     || '',
-      setup   : t.setup   || '',
-      quality : t.quality || '',
-      conf    : Array.isArray(t.conf) ? t.conf : [],
-      rrPlan  : t.rrPlan  != null ? t.rrPlan : 0,
-      risk    : t.risk    != null ? t.risk   : 0,
-      result  : t.result  || '',
-      rrReal  : t.rrReal  != null ? t.rrReal : 0,
-      pnl     : t.pnl     != null ? t.pnl    : 0,
-      plan    : t.plan    || '',
-      emotion : t.emotion || '',
-      note    : t.note    || '',
-      psycho  : t.psycho  != null ? t.psycho : 50,
-    }));
   } catch(e){ trades = []; }
+
+  // S'assurer que tous les champs de base sont présents (sans migration forcée)
+  trades = trades.map(t => ({
+    id      : t.id || Date.now() + Math.random(),
+    date    : t.date    || '',
+    time    : t.time    || '',
+    asset   : t.asset   || '',
+    type    : t.type    || '',
+    dir     : t.dir     || '',
+    setup   : t.setup   || '',
+    quality : t.quality || '',
+    conf    : Array.isArray(t.conf) ? t.conf : [],
+    rrPlan  : t.rrPlan  != null ? t.rrPlan : 0,
+    risk    : t.risk    != null ? t.risk   : 0,
+    result  : t.result  || '',
+    rrReal  : t.rrReal  != null ? t.rrReal : 0,
+    pnl     : t.pnl     != null ? t.pnl    : 0,
+    plan    : t.plan    || '',
+    emotion : t.emotion || '',
+    note    : t.note    || '',
+    psycho  : t.psycho  != null ? t.psycho : 50,
+    // Champs v2
+    status      : t.status     || 'closed',
+    isOpen      : t.isOpen     || false,
+    createdAt   : t.createdAt  || (t.date ? t.date + 'T' + (t.time || '00:00') : new Date().toISOString()),
+    updatedAt   : t.updatedAt  || new Date().toISOString(),
+    entryPrice  : t.entryPrice != null ? t.entryPrice : 0,
+    stopLoss    : t.stopLoss   != null ? t.stopLoss   : 0,
+    takeProfit  : t.takeProfit != null ? t.takeProfit : 0,
+    exitPrice   : t.exitPrice  != null ? t.exitPrice  : 0,
+    setupScore  : t.setupScore != null ? t.setupScore : null, // calculé par migration
+    setupGrade  : t.setupGrade || null,
+  }));
+
+  // Migration conditionnelle — uniquement si des champs v2 manquent
+  migrateTradesData();
 }
 
 /* ============================================================
-   ENREGISTREMENT TRADE
+   MIGRATION SÉCURISÉE
 ============================================================ */
-$('btn-submit').addEventListener('click', () => {
-  const result = getToggleVal('result');
-  if(!result){ showToast('Selectionne un resultat', 2000); return; }
+function migrateTradesData(){
+  if(!trades.length) return;
 
-  const computePsycho = () => {
-    const emotion  = getToggleVal('emotion');
-    const plan     = getToggleVal('plan');
-    const quality  = getToggleVal('quality');
-    let s = 50;
-    const em = {Calme:20,Confiance:15,FOMO:-25,Stress:-15,Fatigue:-15,Revenge:-30};
-    if(emotion) s += (em[emotion] || 0);
-    if(plan==='Oui') s += 15;
-    if(plan==='Non') s -= 20;
-    const qm = {'A+':10,A:5,B:0,C:-10};
-    if(quality) s += (qm[quality] || 0);
-    return Math.max(0, Math.min(100, s));
+  // Vérifie si une migration est nécessaire (score manquant OU gap manquant)
+  const needsMigration = trades.some(t =>
+    t.setupScore === null ||
+    t.setupGrade === null ||
+    (t.quality && t.setupGrade && t.setupEvaluationGap === undefined)
+  );
+  if(!needsMigration) return;
+
+  // Backup AVANT migration (une seule fois)
+  localStorage.setItem(
+    'backup_trades_before_migration_' + Date.now(),
+    JSON.stringify(trades)
+  );
+
+  let migratedCount = 0;
+  trades = trades.map(t => {
+    const needsScore = t.setupScore === null || t.setupGrade === null;
+    const needsGap   = t.setupEvaluationGap === undefined;
+    if(!needsScore && !needsGap) return t;
+
+    const { setupScore, setupGrade } = needsScore
+      ? calculateSetupScore(t)
+      : { setupScore: t.setupScore, setupGrade: t.setupGrade };
+
+    const tWithGrade = { ...t, setupScore, setupGrade };
+    const setupEvaluationGap = calculateSetupEvaluationGap(tWithGrade);
+
+    migratedCount++;
+    return {
+      ...t,
+      status              : t.status    || 'closed',
+      isOpen              : t.isOpen    !== undefined ? t.isOpen : false,
+      createdAt           : t.createdAt || (t.date ? t.date + 'T' + (t.time || '00:00') : new Date().toISOString()),
+      updatedAt           : t.updatedAt || new Date().toISOString(),
+      setupScore,
+      setupGrade,
+      setupEvaluationGap,
+    };
+  });
+
+  saveTrades();
+  if(migratedCount > 0){
+    showToast(`Migration OK — ${migratedCount} trade(s) enrichis`, 3000);
+  }
+}
+
+/* ============================================================
+   CRUD TRADES
+============================================================ */
+
+/**
+ * updateTrade(id, fields)
+ * Merge partiel — préserve tous les champs existants (y compris inconnus)
+ * Ne crée jamais de doublon. Garde l'id identique.
+ */
+function updateTrade(id, fields){
+  const numId = Number(id);
+  const idx = trades.findIndex(t => Number(t.id) === numId);
+  if(idx === -1) return false;
+
+  // Merge : les nouveaux champs écrasent les anciens, l'id est préservé
+  trades[idx] = {
+    ...trades[idx],    // tous les champs existants préservés
+    ...fields,         // nouveaux champs / valeurs modifiées
+    id        : trades[idx].id,  // id immuable
+    createdAt : trades[idx].createdAt, // date de création immuable
+    updatedAt : new Date().toISOString(),
   };
+  saveTrades();
+  return true;
+}
 
-  const trade = {
-    id      : Date.now(),
-    date    : $('f-date').value || todayISO(),
-    time    : $('f-time').value || nowTime(),
-    asset   : $('f-asset').value,
-    type    : getToggleVal('type'),
-    dir     : getToggleVal('dir'),
-    setup   : $('f-setup').value,
-    quality : getToggleVal('quality'),
-    conf    : getConfluences(),
-    rrPlan  : parseFloat($('f-rr-plan').value) || 0,
-    risk    : parseFloat($('f-risk').value)    || 0,
-    result  : result,
-    rrReal  : Math.abs(parseFloat($('f-rr-real').value) || 0),
-    pnl     : parseFloat($('f-pnl').value) || 0,
-    plan    : getToggleVal('plan'),
-    emotion : getToggleVal('emotion'),
-    note    : $('f-note').value,
-    psycho  : computePsycho(),
-  };
-
-  trades.unshift(trade);
+function deleteTrade(id){
+  if(!confirm('Supprimer ce trade ? Cette action est irréversible.')) return;
+  trades = trades.filter(t => Number(t.id) !== Number(id));
   saveTrades();
   updateMiniStats();
   updatePeriodSelectors();
-  resetForm();
-  showToast('Trade #' + trades.length + ' enregistre');
+  renderHistory();
+  showToast('Trade supprimé');
+}
+
+/* ============================================================
+   CONSTRUCTION DU TRADE DEPUIS LE FORMULAIRE
+============================================================ */
+function buildTradeFromForm(existingId = null){
+  const status = getToggleVal('status') || 'closed';
+  const result = getToggleVal('result');
+
+  // Résultat requis uniquement si clôturé
+  if(status === 'closed' && !result){
+    showToast('Résultat requis pour un trade clôturé', 2200);
+    return null;
+  }
+
+  const trade = {
+    date       : $('f-date').value       || todayISO(),
+    time       : $('f-time').value       || nowTime(),
+    asset      : $('f-asset').value,
+    type       : getToggleVal('type'),
+    dir        : getToggleVal('dir'),
+    setup      : $('f-setup').value,
+    quality    : getToggleVal('quality'), // conservé pour compatibilité
+    conf       : getConfluences(),
+    rrPlan     : parseFloat($('f-rr-plan').value)     || 0,
+    risk       : parseFloat($('f-risk').value)        || 0,
+    result     : result || '',
+    rrReal     : Math.abs(parseFloat($('f-rr-real').value) || 0),
+    pnl        : parseFloat($('f-pnl').value)         || 0,
+    plan       : getToggleVal('plan'),
+    emotion    : getToggleVal('emotion'),
+    note       : $('f-note').value,
+    psycho     : computePsycho(),
+    status     : status,
+    isOpen     : status === 'open',
+    updatedAt  : new Date().toISOString(),
+  };
+
+  // Score setup automatique (calculatedSetupGrade)
+  const { setupScore, setupGrade } = calculateSetupScore(trade);
+  trade.setupScore = setupScore;
+  trade.setupGrade = setupGrade;
+
+  // Écart perçu vs calculé
+  trade.setupEvaluationGap = calculateSetupEvaluationGap(trade);
+
+  if(!existingId){
+    trade.id        = Date.now();
+    trade.createdAt = new Date().toISOString();
+  }
+
+  return trade;
+}
+
+/* ============================================================
+   ENREGISTREMENT / MISE À JOUR
+============================================================ */
+$('btn-submit').addEventListener('click', () => {
+  if(formMode === 'create'){
+    const trade = buildTradeFromForm();
+    if(!trade) return;
+    trades.unshift(trade);
+    saveTrades();
+    updateMiniStats();
+    updatePeriodSelectors();
+    resetForm();
+    showToast('Trade #' + trades.length + ' enregistré');
+  } else {
+    // edit ou close
+    const fields = buildTradeFromForm(editingTradeId);
+    if(!fields) return;
+    if(!updateTrade(editingTradeId, fields)){
+      showToast('Erreur : trade introuvable'); return;
+    }
+    const msg = formMode === 'close' ? 'Trade clôturé ✓' : 'Trade mis à jour ✓';
+    exitEditMode();
+    updateMiniStats();
+    updatePeriodSelectors();
+    showToast(msg);
+  }
 });
 
 /* ============================================================
-   CALCULS
+   CALCULS STATS — agit sur n'importe quel tradeSet passé en paramètre
 ============================================================ */
 function signedR(t){
   const abs = Math.abs(t.rrReal || 0);
@@ -1390,34 +1390,37 @@ function calcStats(tradeSet){
   const avgL    = losses.length ? losses.reduce((a,t) => a + Math.abs(signedR(t)), 0) / losses.length : 0;
   const wrDec   = wr / 100;
   const exp     = wrDec * avgW - (1 - wrDec) * avgL;
+
   let maxW=0, maxL=0, curW=0, curL=0;
-  // Calcul streak sur ordre chronologique
   [...tradeSet].reverse().forEach(t => {
     if(t.result==='Win')       { curW++; curL=0; maxW=Math.max(maxW,curW); }
     else if(t.result==='Loss') { curL++; curW=0; maxL=Math.max(maxL,curL); }
     else                       { curW=0; curL=0; }
   });
+
   const best  = rValues.length ? Math.max(...rValues) : 0;
   const worst = rValues.length ? Math.min(...rValues) : 0;
+
   const setupR = {};
   tradeSet.forEach(t => {
     if(!t.setup) return;
     if(!setupR[t.setup]) setupR[t.setup] = {r:0,n:0};
-    setupR[t.setup].r += signedR(t);
-    setupR[t.setup].n++;
+    setupR[t.setup].r += signedR(t); setupR[t.setup].n++;
   });
   const bestSetup = Object.entries(setupR).sort((a,b) => b[1].r - a[1].r)[0];
+
   const assetR = {};
   tradeSet.forEach(t => {
     if(!t.asset) return;
     if(!assetR[t.asset]) assetR[t.asset] = {r:0,n:0};
-    assetR[t.asset].r += signedR(t);
-    assetR[t.asset].n++;
+    assetR[t.asset].r += signedR(t); assetR[t.asset].n++;
   });
   const bestAsset = Object.entries(assetR).sort((a,b) => b[1].r - a[1].r)[0];
+
   const offPlan  = tradeSet.filter(t => t.plan === 'Non');
   const onPlan   = tradeSet.filter(t => t.plan === 'Oui');
   const wrOnPlan = onPlan.length ? onPlan.filter(t => t.result === 'Win').length / onPlan.length * 100 : null;
+
   return {
     total:tradeSet.length, wins:wins.length, losses:losses.length, bes:bes.length,
     wr, totalR, avgR, avgW, avgL, exp, best, worst, maxW, maxL,
@@ -1430,35 +1433,40 @@ function calcStats(tradeSet){
 }
 
 /* ============================================================
-   MINI STATS (page log)
+   MINI STATS (page log) — sur les trades CLÔTURÉS uniquement
 ============================================================ */
 function updateMiniStats(){
-  const st = calcStats(trades);
+  const closedTrades = trades.filter(t => t.status === 'closed');
+  const openCount    = trades.filter(t => t.status === 'open').length;
+  const st = calcStats(closedTrades);
+
   if(!st){
-    $('s-total').textContent   = '0';
-    $('s-wr').textContent      = '—';
-    $('s-wr-sub').textContent  = 'W / L / BE';
-    $('s-totalr').textContent  = '0.00';
-    $('s-avgr').textContent    = '—';
-    $('s-exp').textContent     = '—';
+    $('s-total').textContent    = '0';
+    $('s-total-sub').textContent = openCount > 0 ? `+${openCount} en cours` : 'enregistrés';
+    $('s-wr').textContent       = '—';
+    $('s-wr-sub').textContent   = 'W / L / BE';
+    $('s-totalr').textContent   = '0.00';
+    $('s-avgr').textContent     = '—';
+    $('s-exp').textContent      = '—';
     return;
   }
-  $('s-total').textContent  = st.total;
-  $('s-wr').textContent     = st.wr.toFixed(0) + '%';
-  $('s-wr-sub').textContent = `${st.wins}W / ${st.losses}L / ${st.bes}BE`;
-  $('s-totalr').textContent = (st.totalR>=0?'+':'') + st.totalR.toFixed(2) + 'R';
-  $('s-totalr').style.color = st.totalR >= 0 ? 'var(--win)' : 'var(--loss)';
-  $('s-avgr').textContent   = (st.avgR>=0?'+':'') + st.avgR.toFixed(2) + 'R';
-  $('s-avgr').style.color   = st.avgR >= 0 ? 'var(--win)' : 'var(--loss)';
-  $('s-exp').textContent    = (st.exp>=0?'+':'') + st.exp.toFixed(2) + 'R';
-  $('s-exp').style.color    = st.exp >= 0 ? 'var(--win)' : 'var(--loss)';
+  $('s-total').textContent     = st.total;
+  $('s-total-sub').textContent = openCount > 0 ? `+${openCount} en cours` : 'clôturés';
+  $('s-total-sub').style.color = openCount > 0 ? 'var(--be)' : '';
+  $('s-wr').textContent        = st.wr.toFixed(0) + '%';
+  $('s-wr-sub').textContent    = `${st.wins}W / ${st.losses}L / ${st.bes}BE`;
+  $('s-totalr').textContent    = (st.totalR>=0?'+':'') + st.totalR.toFixed(2) + 'R';
+  $('s-totalr').style.color    = st.totalR >= 0 ? 'var(--win)' : 'var(--loss)';
+  $('s-avgr').textContent      = (st.avgR>=0?'+':'') + st.avgR.toFixed(2) + 'R';
+  $('s-avgr').style.color      = st.avgR >= 0 ? 'var(--win)' : 'var(--loss)';
+  $('s-exp').textContent       = (st.exp>=0?'+':'') + st.exp.toFixed(2) + 'R';
+  $('s-exp').style.color       = st.exp >= 0 ? 'var(--win)' : 'var(--loss)';
 }
 
 /* ============================================================
-   HISTORIQUE — TRI + REGROUPEMENT PAR JOUR
+   HISTORIQUE
 ============================================================ */
 function sortedByDateTime(tradeSet, asc){
-  // Tri fiable date+heure (format ISO permet comparaison lexicographique)
   return [...tradeSet].sort((a, b) => {
     const da = (a.date || '0000-00-00') + 'T' + (a.time || '00:00');
     const db = (b.date || '0000-00-00') + 'T' + (b.time || '00:00');
@@ -1470,26 +1478,32 @@ function renderHistory(){
   const filterResult = $('f-filter-result').value;
   const filterAsset  = $('f-filter-asset').value;
   const filterType   = $('f-filter-type').value;
+  historyFilterStatus = $('f-filter-status').value;
+  historyFilterGrade  = $('f-filter-grade').value;
 
   let filtered = trades.filter(t => {
     if(filterResult && t.result !== filterResult) return false;
     if(filterAsset  && t.asset  !== filterAsset)  return false;
     if(filterType   && t.type   !== filterType)   return false;
+    if(historyFilterStatus && t.status !== historyFilterStatus) return false;
+    if(historyFilterGrade){
+      const grade = t.setupGrade || t.quality || '';
+      if(grade !== historyFilterGrade) return false;
+    }
     return true;
   });
 
-  // Tri chronologique fiable
   filtered = sortedByDateTime(filtered, historySortAsc);
 
-  // Mettre a jour le compteur + bouton tri
   $('hist-count').textContent = filtered.length + ' trade' + (filtered.length !== 1 ? 's' : '');
+
   const sortBtn = $('btn-sort-dir');
   if(sortBtn){
-    sortBtn.textContent = historySortAsc ? '↑ Ancien → Recent' : '↓ Recent → Ancien';
+    sortBtn.textContent = historySortAsc ? '↑ Ancien → Récent' : '↓ Récent → Ancien';
     sortBtn.classList.toggle('sort-asc', historySortAsc);
   }
 
-  // Actualiser le select actif dynamiquement
+  // Actualiser select actifs
   const assets = [...new Set(trades.map(t => t.asset).filter(Boolean))];
   const sel = $('f-filter-asset');
   const cur = sel.value;
@@ -1503,9 +1517,27 @@ function renderHistory(){
 
   const rBadge = {Win:'badge-win',Loss:'badge-loss',BE:'badge-be'};
   const dBadge = {Long:'badge-long',Short:'badge-short'};
-  const qBadge = {'A+':'badge-ap',A:'badge-a',B:'badge-b',C:'badge-c'};
+  const gradeBadgeMap = {'A+':'badge-ap','A':'badge-a','B':'badge-b','C':'badge-c','D':'badge-d'};
+  const emotIcons = {Calme:'😌',Confiance:'💪',FOMO:'⚠️',Stress:'⚡',Fatigue:'😴',Revenge:'💢'};
+
+  // Badge grade simple
+  const gradeBadge = (g) => g
+    ? `<span class="badge ${gradeBadgeMap[g]||''}">${g}</span>`
+    : `<span style="color:var(--t4)">--</span>`;
+
+  // Cellule calibration : Perçue → Calculée + icône écart
+  const gapIcon = { aligned:'<span class="badge-aligned">✓</span>', overestimated:'<span class="badge-over">↓</span>', underestimated:'<span class="badge-under">↑</span>' };
+  const calCell = t => {
+    const pBadge = t.quality    ? gradeBadge(t.quality)    : `<span style="color:var(--t4)">--</span>`;
+    const cBadge = t.setupGrade ? gradeBadge(t.setupGrade) : `<span style="color:var(--t4)">--</span>`;
+    const gap    = t.setupEvaluationGap ? (gapIcon[t.setupEvaluationGap] || '') : '';
+    if(!t.quality && !t.setupGrade) return '--';
+    if(!t.quality) return cBadge;
+    return `${pBadge}<span style="color:var(--t4);font-size:.65rem;margin:0 2px">→</span>${cBadge} ${gap}`;
+  };
 
   const formatR = t => {
+    if(t.status === 'open') return '<span style="color:var(--be);font-family:var(--mono);font-size:.68rem">EN COURS</span>';
     const rv = signedR(t);
     if(rv === 0 && t.result !== 'BE') return '--';
     const v = rv > 0 ? '+' + rv.toFixed(2) : rv.toFixed(2);
@@ -1514,7 +1546,7 @@ function renderHistory(){
   };
 
   // Regroupement par jour
-  const byDay   = {};
+  const byDay = {};
   const dayOrder = [];
   filtered.forEach(t => {
     const d = t.date || '?';
@@ -1523,52 +1555,56 @@ function renderHistory(){
   });
 
   let rows = '';
-
   dayOrder.forEach(d => {
-    const dayTrades = byDay[d];
-    // Stats du jour
-    const dayR    = dayTrades.reduce((a, t) => a + signedR(t), 0);
-    const dayPnl  = dayTrades.reduce((a, t) => a + (t.pnl || 0), 0);
-    const dayWins = dayTrades.filter(t => t.result === 'Win').length;
-    const dayLoss = dayTrades.filter(t => t.result === 'Loss').length;
-    const rStr    = (dayR >= 0 ? '+' : '') + dayR.toFixed(2) + 'R';
+    const dt = byDay[d];
+    // Stats jour — uniquement sur les clôturés
+    const dtClosed = dt.filter(t => t.status === 'closed');
+    const dayR    = dtClosed.reduce((a, t) => a + signedR(t), 0);
+    const dayPnl  = dtClosed.reduce((a, t) => a + (t.pnl || 0), 0);
+    const dayWins = dtClosed.filter(t => t.result === 'Win').length;
+    const dayLoss = dtClosed.filter(t => t.result === 'Loss').length;
+    const dayOpen = dt.filter(t => t.status === 'open').length;
+    const rStr    = dtClosed.length ? (dayR >= 0 ? '+' : '') + dayR.toFixed(2) + 'R' : '';
     const rClass  = dayR >= 0 ? 'ds-r-pos' : 'ds-r-neg';
     const pnlStr  = dayPnl !== 0 ? ` · ${dayPnl >= 0 ? '+' : ''}${dayPnl.toFixed(0)}$` : '';
+    const openStr = dayOpen > 0 ? ` · <span style="color:var(--be)">${dayOpen} en cours</span>` : '';
 
     rows += `<tr class="day-sep-row">
       <td colspan="13">
         <span class="day-sep-label">${fmtDateLong(d)}</span>
         <span class="day-sep-stats">
-          ${dayTrades.length} trade${dayTrades.length>1?'s':''}
-          · <span class="${rClass}">${rStr}</span>${pnlStr}
-          · ${dayWins}W&thinsp;/&thinsp;${dayLoss}L
+          ${dt.length} trade${dt.length>1?'s':''}
+          ${rStr ? `· <span class="${rClass}">${rStr}</span>` : ''}${pnlStr}
+          ${dtClosed.length ? `· ${dayWins}W&thinsp;/&thinsp;${dayLoss}L` : ''}${openStr}
         </span>
       </td>
     </tr>`;
 
-    // Lignes de trades du jour
-    dayTrades.forEach(t => {
+    dt.forEach(t => {
+      const isOpen = t.status === 'open';
+      const resultCell = isOpen
+        ? `<span class="badge badge-open">&#9679; En cours</span>`
+        : `<span class="badge ${rBadge[t.result]||''}">${t.result||'--'}</span>`;
+
       rows += `<tr>
         <td style="font-family:var(--mono);font-size:.7rem">${fmtDate(t.date)}</td>
         <td style="font-family:var(--mono);font-size:.7rem;color:var(--t3)">${t.time||'--'}</td>
         <td style="font-weight:600;color:var(--t1)">${t.asset||'--'}</td>
-        <td style="font-family:var(--mono);font-size:.68rem">${t.type||'--'}</td>
         <td><span class="badge ${dBadge[t.dir]||''}">${t.dir||'--'}</span></td>
-        <td style="font-size:.74rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.setup||'--'}</td>
-        <td><span class="badge ${qBadge[t.quality]||''}">${t.quality||'--'}</span></td>
+        <td>${resultCell}</td>
+        <td style="font-size:.74rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.setup||'--'}</td>
+        <td style="white-space:nowrap">${calCell(t)}</td>
         <td style="font-family:var(--mono);font-size:.72rem">${t.rrPlan ? t.rrPlan+'R' : '--'}</td>
-        <td><span class="badge ${rBadge[t.result]||''}">${t.result}</span></td>
         <td>${formatR(t)}</td>
+        <td style="font-size:.85rem">${emotIcons[t.emotion] || (t.emotion ? t.emotion.slice(0,4) : '--')}</td>
+        <td style="font-size:.73rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3)">${t.note||''}</td>
         <td>
-          <div style="display:flex;align-items:center;gap:5px">
-            <div style="width:40px;height:4px;background:var(--bg5);border-radius:2px;overflow:hidden">
-              <div style="height:100%;width:${t.psycho||0}%;background:${t.psycho>=75?'var(--win)':t.psycho>=50?'var(--be)':'var(--loss)'};border-radius:2px"></div>
-            </div>
-            <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">${t.psycho||0}%</span>
+          <div class="action-btns">
+            <button class="btn-edit" data-id="${t.id}" title="Modifier">&#9998;</button>
+            ${isOpen ? `<button class="btn-close-trade" data-id="${t.id}" title="Clôturer">&#128274;</button>` : ''}
+            <button class="btn-del" data-id="${t.id}" title="Supprimer">&#10005;</button>
           </div>
         </td>
-        <td style="font-size:.73rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3)">${t.note||''}</td>
-        <td><button class="btn-del" data-id="${t.id}">&#10005;</button></td>
       </tr>`;
     });
   });
@@ -1576,35 +1612,39 @@ function renderHistory(){
   $('history-container').innerHTML = `
     <table class="trade-table">
       <thead><tr>
-        <th>Date</th><th>Heure</th><th>Actif</th><th>Type</th><th>Dir</th>
-        <th>Setup</th><th>Qual.</th><th>RR plan</th><th>Resultat</th>
-        <th>R reel</th><th>Psycho</th><th>Note</th><th></th>
+        <th>Date</th><th>Heure</th><th>Actif</th><th>Dir</th>
+        <th>Statut</th><th>Setup</th><th>Perçue → Calc.</th><th>RR plan</th>
+        <th>R réel</th><th>Émo.</th><th>Note</th><th style="min-width:70px">Actions</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 
-  // Ecouteurs suppression
+  // Listeners boutons
+  $$('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const trade = trades.find(t => Number(t.id) === Number(this.dataset.id));
+      if(trade) enterEditMode(trade, 'edit');
+    });
+  });
+  $$('.btn-close-trade').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const trade = trades.find(t => Number(t.id) === Number(this.dataset.id));
+      if(trade) enterEditMode(trade, 'close');
+    });
+  });
   $$('.btn-del').forEach(btn => {
     btn.addEventListener('click', function(){
-      const id = parseInt(this.dataset.id);
-      trades = trades.filter(t => t.id !== id);
-      saveTrades();
-      updateMiniStats();
-      updatePeriodSelectors();
-      renderHistory();
-      showToast('Trade supprime');
+      deleteTrade(this.dataset.id);
     });
   });
 }
 
-// Tri toggle
+// Listeners filtres historique
 $('btn-sort-dir').addEventListener('click', function(){
   historySortAsc = !historySortAsc;
   renderHistory();
 });
-
-// Filtres historique
-['f-filter-result','f-filter-asset','f-filter-type'].forEach(id => {
+['f-filter-result','f-filter-asset','f-filter-type','f-filter-status','f-filter-grade'].forEach(id => {
   $(id).addEventListener('change', renderHistory);
 });
 
@@ -1612,87 +1652,194 @@ $('btn-sort-dir').addEventListener('click', function(){
    EXPORT CSV
 ============================================================ */
 $('btn-export-csv').addEventListener('click', () => {
-  if(!trades.length){ showToast('Aucun trade a exporter'); return; }
-  const headers = ['Date','Heure','Actif','Type','Direction','Setup','Qualite','RR Prevu','Risque%',
-                   'Resultat','R reel (abs)','R signe','PnL','Plan','Emotion','Psycho%','Confluences','Note'];
+  if(!trades.length){ showToast('Aucun trade à exporter'); return; }
+  const headers = ['Date','Heure','Actif','Type','Direction','Setup','Qualité','SetupGrade','SetupScore',
+                   'RR Prévu','Risque%','Statut','Résultat','R réel (abs)','R signé','PnL',
+                   'Plan','Émotion','Psycho%','Confluences','Note'];
   const rows = trades.map(t => [
-    t.date, t.time, t.asset, t.type, t.dir, t.setup, t.quality, t.rrPlan, t.risk,
-    t.result, t.rrReal, signedR(t).toFixed(2), t.pnl, t.plan, t.emotion, t.psycho,
-    (t.conf||[]).join(';'), t.note
-  ].map(v => '"' + (v||'').toString().replace(/"/g,'""') + '"').join(','));
+    t.date, t.time, t.asset, t.type, t.dir, t.setup, t.quality, t.setupGrade, t.setupScore,
+    t.rrPlan, t.risk, t.status, t.result, t.rrReal, signedR(t).toFixed(2), t.pnl,
+    t.plan, t.emotion, t.psycho, (t.conf||[]).join(';'), t.note
+  ].map(v => '"' + (v != null ? v.toString() : '').replace(/"/g,'""') + '"').join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
   a.download = 'trading-journal-' + todayISO() + '.csv';
   a.click();
-  showToast('CSV exporte');
+  showToast('CSV exporté');
 });
 
+/* ============================================================
+   EXPORT JSON
+============================================================ */
+$('btn-export-json').addEventListener('click', () => {
+  if(!trades.length){ showToast('Aucun trade à exporter'); return; }
+  const data = {
+    version    : 2,
+    exportedAt : new Date().toISOString(),
+    count      : trades.length,
+    trades     : trades,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'trading-journal-backup-' + todayISO() + '.json';
+  a.click();
+  showToast('Backup JSON exporté (' + trades.length + ' trades)');
+});
+
+/* ============================================================
+   IMPORT JSON
+============================================================ */
+$('btn-import-json').addEventListener('click', () => {
+  $('file-import-json').value = '';
+  $('file-import-json').click();
+});
+
+$('file-import-json').addEventListener('change', function(){
+  if(!this.files || !this.files[0]) return;
+  const file = this.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const raw = JSON.parse(e.target.result);
+      let importedTrades;
+      if(Array.isArray(raw))                          importedTrades = raw;
+      else if(raw.trades && Array.isArray(raw.trades)) importedTrades = raw.trades;
+      else{ showToast('Format JSON invalide'); return; }
+
+      if(!importedTrades.length){ showToast('Fichier vide ou aucun trade détecté'); return; }
+
+      const ok = confirm(
+        `Importer ${importedTrades.length} trade(s) depuis ce fichier ?\n\n` +
+        `Un backup de l'état actuel (${trades.length} trades) sera créé automatiquement.\n\n` +
+        `Cette action REMPLACE l'historique actuel.`
+      );
+      if(!ok) return;
+
+      // Backup avant import
+      localStorage.setItem('backup_trades_before_migration_' + Date.now(), JSON.stringify(trades));
+
+      trades = importedTrades;
+      saveTrades();
+      migrateTradesData();
+      updateMiniStats();
+      updatePeriodSelectors();
+      renderHistory();
+      showToast(`Import OK — ${trades.length} trades chargés`, 3000);
+    } catch(err){
+      showToast('Erreur de lecture : fichier JSON invalide');
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* ============================================================
+   RESTORE BACKUP
+============================================================ */
+$('btn-restore-backup').addEventListener('click', () => {
+  const backups = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith('backup_trades_before_migration_')){
+      const ts = parseInt(key.replace('backup_trades_before_migration_', ''));
+      try{
+        const raw = localStorage.getItem(key);
+        const parsed = JSON.parse(raw);
+        const arr = Array.isArray(parsed) ? parsed : (typeof parsed === 'string' ? JSON.parse(parsed) : []);
+        backups.push({ key, ts, count: arr.length, data: arr });
+      } catch(e){ /* skip corrupted backup */ }
+    }
+  }
+
+  if(!backups.length){ showToast('Aucun backup disponible'); return; }
+
+  backups.sort((a,b) => b.ts - a.ts);
+
+  const opts = backups.map((b,i) =>
+    `${i+1}. ${new Date(b.ts).toLocaleString('fr-FR')} — ${b.count} trade(s)`
+  ).join('\n');
+
+  const choice = prompt(`${backups.length} backup(s) disponible(s) :\n\n${opts}\n\nEntrez le numéro à restaurer (ou Annuler) :`);
+  if(!choice) return;
+
+  const idx = parseInt(choice) - 1;
+  if(isNaN(idx) || idx < 0 || idx >= backups.length){
+    showToast('Numéro invalide'); return;
+  }
+
+  const ok = confirm(
+    `Restaurer ce backup (${backups[idx].count} trades) ?\n\n` +
+    `L'état actuel (${trades.length} trades) sera sauvegardé d'abord.`
+  );
+  if(!ok) return;
+
+  // Backup de l'état actuel avant restauration
+  localStorage.setItem('backup_trades_before_migration_' + Date.now(), JSON.stringify(trades));
+
+  trades = backups[idx].data;
+  saveTrades();
+  migrateTradesData();
+  updateMiniStats();
+  updatePeriodSelectors();
+  renderHistory();
+  showToast(`Backup restauré — ${trades.length} trades`, 3000);
+});
+
+/* ============================================================
+   CLEAR ALL
+============================================================ */
 $('btn-clear-all').addEventListener('click', () => {
-  if(!confirm('Effacer TOUS les trades ? Action irreversible.')) return;
+  if(!confirm('Effacer TOUS les trades ? Un backup sera créé automatiquement.')) return;
+  localStorage.setItem('backup_trades_before_migration_' + Date.now(), JSON.stringify(trades));
   trades = [];
   saveTrades();
   updateMiniStats();
   updatePeriodSelectors();
   renderHistory();
-  showToast('Historique efface');
+  showToast('Historique effacé (backup créé)');
 });
 
 /* ============================================================
-   PERIODE DASHBOARD — ETAT & FILTRAGE
+   PÉRIODE DASHBOARD
 ============================================================ */
-
-// Remplit les selects Mois/Annee a partir des trades existants
 function updatePeriodSelectors(){
   const mSel = $('period-month-sel');
   const ySel = $('period-year-sel');
   if(!mSel || !ySel) return;
 
-  const months = [...new Set(
-    trades.map(t => t.date ? t.date.slice(0,7) : null).filter(Boolean)
-  )].sort().reverse();
+  const months = [...new Set(trades.map(t => t.date ? t.date.slice(0,7) : null).filter(Boolean))].sort().reverse();
+  const years  = [...new Set(trades.map(t => t.date ? t.date.slice(0,4) : null).filter(Boolean))].sort().reverse();
 
-  const years = [...new Set(
-    trades.map(t => t.date ? t.date.slice(0,4) : null).filter(Boolean)
-  )].sort().reverse();
+  mSel.innerHTML = '<option value="">Mois...</option>' + months.map(m => {
+    const [y,mo] = m.split('-');
+    return `<option value="${m}"${m===periodMonthSel?' selected':''}>${MONTH_FR[parseInt(mo)-1]} ${y}</option>`;
+  }).join('');
 
-  mSel.innerHTML = '<option value="">Mois...</option>' +
-    months.map(m => {
-      const [y, mo] = m.split('-');
-      const label   = MONTH_FR[parseInt(mo)-1] + ' ' + y;
-      return `<option value="${m}"${m === periodMonthSel ? ' selected' : ''}>${label}</option>`;
-    }).join('');
-
-  ySel.innerHTML = '<option value="">Annee...</option>' +
-    years.map(y => `<option value="${y}"${y === periodYearSel ? ' selected' : ''}>${y}</option>`).join('');
+  ySel.innerHTML = '<option value="">Année...</option>' + years.map(y =>
+    `<option value="${y}"${y===periodYearSel?' selected':''}>${y}</option>`
+  ).join('');
 }
 
-// Met a jour l'apparence visuelle de la barre de periode
 function setPeriodActiveState(){
   $$('.period-btn').forEach(b => b.classList.remove('active'));
-  const mSel = $('period-month-sel');
-  const ySel = $('period-year-sel');
+  const mSel  = $('period-month-sel');
+  const ySel  = $('period-year-sel');
   const pFrom = $('period-from');
   const pTo   = $('period-to');
-  if(mSel)  mSel.classList.remove('sel-active');
-  if(ySel)  ySel.classList.remove('sel-active');
-  if(pFrom) pFrom.classList.remove('sel-active');
-  if(pTo)   pTo.classList.remove('sel-active');
+  [mSel,ySel,pFrom,pTo].forEach(el => el && el.classList.remove('sel-active'));
 
   if(periodMode === 'preset'){
     const btn = document.querySelector(`.period-btn[data-period="${periodPreset}"]`);
     if(btn) btn.classList.add('active');
-  } else if(periodMode === 'month'){
-    if(mSel) mSel.classList.add('sel-active');
-  } else if(periodMode === 'year'){
-    if(ySel) ySel.classList.add('sel-active');
-  } else if(periodMode === 'custom'){
+  } else if(periodMode === 'month' && mSel) mSel.classList.add('sel-active');
+  else if(periodMode === 'year'  && ySel) ySel.classList.add('sel-active');
+  else if(periodMode === 'custom'){
     if(periodCustomFrom && pFrom) pFrom.classList.add('sel-active');
     if(periodCustomTo   && pTo)   pTo.classList.add('sel-active');
   }
 }
 
-// Filtre principal — remplace l'ancienne filterByPeriod()
 function filterByActivePeriod(tradeSet){
   if(!tradeSet || !tradeSet.length) return [];
 
@@ -1701,31 +1848,16 @@ function filterByActivePeriod(tradeSet){
     const now = new Date();
     return tradeSet.filter(t => {
       if(!t.date) return false;
-      // T12:00:00 evite les bugs de fuseau horaire
       const d = new Date(t.date + 'T12:00:00');
       if(periodPreset === 'day')   return t.date === todayISO();
-      if(periodPreset === 'week'){
-        const {from, to} = getWeekBounds();
-        return d >= from && d <= to;
-      }
-      if(periodPreset === 'month')
-        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-      if(periodPreset === 'year')
-        return d.getFullYear() === now.getFullYear();
+      if(periodPreset === 'week')  { const {from,to}=getWeekBounds(); return d>=from && d<=to; }
+      if(periodPreset === 'month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      if(periodPreset === 'year')  return d.getFullYear()===now.getFullYear();
       return true;
     });
   }
-
-  if(periodMode === 'month'){
-    if(!periodMonthSel) return tradeSet;
-    return tradeSet.filter(t => t.date && t.date.slice(0,7) === periodMonthSel);
-  }
-
-  if(periodMode === 'year'){
-    if(!periodYearSel) return tradeSet;
-    return tradeSet.filter(t => t.date && t.date.slice(0,4) === periodYearSel);
-  }
-
+  if(periodMode === 'month') return periodMonthSel ? tradeSet.filter(t => t.date && t.date.slice(0,7)===periodMonthSel) : tradeSet;
+  if(periodMode === 'year')  return periodYearSel  ? tradeSet.filter(t => t.date && t.date.slice(0,4)===periodYearSel)  : tradeSet;
   if(periodMode === 'custom'){
     return tradeSet.filter(t => {
       if(!t.date) return false;
@@ -1734,123 +1866,49 @@ function filterByActivePeriod(tradeSet){
       return true;
     });
   }
-
   return tradeSet;
 }
 
 function getWeekBounds(){
   const now = new Date();
-  const day = now.getDay() || 7; // 1=Lun .. 7=Dim
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - day + 1);
-  mon.setHours(0,0,0,0);
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  sun.setHours(23,59,59,999);
+  const day = now.getDay() || 7;
+  const mon = new Date(now); mon.setDate(now.getDate() - day + 1); mon.setHours(0,0,0,0);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
   return { from: mon, to: sun };
 }
 
-// Label periode pour period-count
 function periodLabel(){
-  if(periodMode === 'preset'){
-    const labels = {all:'total',day:'aujourd\'hui',week:'cette semaine',month:'ce mois',year:'cette annee'};
-    return labels[periodPreset] || '';
-  }
-  if(periodMode === 'month' && periodMonthSel){
-    const [y, mo] = periodMonthSel.split('-');
-    return MONTH_FR[parseInt(mo)-1] + ' ' + y;
-  }
-  if(periodMode === 'year' && periodYearSel){
-    return periodYearSel;
-  }
-  if(periodMode === 'custom'){
-    const f = periodCustomFrom ? fmtDate(periodCustomFrom) : '...';
-    const t = periodCustomTo   ? fmtDate(periodCustomTo)   : '...';
-    return f + ' → ' + t;
-  }
+  if(periodMode==='preset'){ const l={all:'total',day:'aujourd\'hui',week:'cette semaine',month:'ce mois',year:'cette année'}; return l[periodPreset]||''; }
+  if(periodMode==='month' && periodMonthSel){ const [y,mo]=periodMonthSel.split('-'); return MONTH_FR[parseInt(mo)-1]+' '+y; }
+  if(periodMode==='year'  && periodYearSel) return periodYearSel;
+  if(periodMode==='custom'){ return (periodCustomFrom?fmtDate(periodCustomFrom):'...')+' → '+(periodCustomTo?fmtDate(periodCustomTo):'...'); }
   return '';
 }
 
-/* ============================================================
-   ECOUTEURS BARRE DE PERIODE
-============================================================ */
-
-// Raccourcis rapides
+// Listeners période
 $$('.period-btn').forEach(btn => {
   btn.addEventListener('click', function(){
-    periodMode   = 'preset';
-    periodPreset = this.dataset.period;
-    // Reinit autres selectors
-    periodMonthSel = ''; periodYearSel = '';
-    periodCustomFrom = ''; periodCustomTo = '';
-    const mSel = $('period-month-sel');
-    const ySel = $('period-year-sel');
-    const pFrom = $('period-from');
-    const pTo   = $('period-to');
-    if(mSel) mSel.value = '';
-    if(ySel) ySel.value = '';
-    if(pFrom) pFrom.value = '';
-    if(pTo)   pTo.value   = '';
-    setPeriodActiveState();
-    renderDashboard();
+    periodMode='preset'; periodPreset=this.dataset.period;
+    periodMonthSel=''; periodYearSel=''; periodCustomFrom=''; periodCustomTo='';
+    [$('period-month-sel'),$('period-year-sel'),$('period-from'),$('period-to')].forEach(el => el && (el.value=''));
+    setPeriodActiveState(); renderDashboard();
   });
 });
-
-// Selecteur mois precis
 $('period-month-sel').addEventListener('change', function(){
-  if(this.value){
-    periodMode     = 'month';
-    periodMonthSel = this.value;
-    periodYearSel  = '';
-    periodCustomFrom = ''; periodCustomTo = '';
-    $('period-year-sel').value = '';
-    $('period-from').value = '';
-    $('period-to').value   = '';
-  } else {
-    // Retour au preset "tout"
-    periodMode     = 'preset';
-    periodPreset   = 'all';
-    periodMonthSel = '';
-  }
-  setPeriodActiveState();
-  renderDashboard();
+  if(this.value){ periodMode='month'; periodMonthSel=this.value; periodYearSel=''; periodCustomFrom=''; periodCustomTo=''; $('period-year-sel').value=''; $('period-from').value=''; $('period-to').value=''; }
+  else { periodMode='preset'; periodPreset='all'; periodMonthSel=''; }
+  setPeriodActiveState(); renderDashboard();
 });
-
-// Selecteur annee precise
 $('period-year-sel').addEventListener('change', function(){
-  if(this.value){
-    periodMode    = 'year';
-    periodYearSel = this.value;
-    periodMonthSel  = '';
-    periodCustomFrom = ''; periodCustomTo = '';
-    $('period-month-sel').value = '';
-    $('period-from').value = '';
-    $('period-to').value   = '';
-  } else {
-    periodMode    = 'preset';
-    periodPreset  = 'all';
-    periodYearSel = '';
-  }
-  setPeriodActiveState();
-  renderDashboard();
+  if(this.value){ periodMode='year'; periodYearSel=this.value; periodMonthSel=''; periodCustomFrom=''; periodCustomTo=''; $('period-month-sel').value=''; $('period-from').value=''; $('period-to').value=''; }
+  else { periodMode='preset'; periodPreset='all'; periodYearSel=''; }
+  setPeriodActiveState(); renderDashboard();
 });
-
-// Plage personnalisee
 function onCustomDateChange(){
-  periodCustomFrom = $('period-from').value;
-  periodCustomTo   = $('period-to').value;
-  if(!periodCustomFrom && !periodCustomTo){
-    // Retour au preset all si tout efface
-    periodMode   = 'preset';
-    periodPreset = 'all';
-  } else {
-    periodMode     = 'custom';
-    periodMonthSel = ''; periodYearSel = '';
-    $('period-month-sel').value = '';
-    $('period-year-sel').value  = '';
-  }
-  setPeriodActiveState();
-  renderDashboard();
+  periodCustomFrom=$('period-from').value; periodCustomTo=$('period-to').value;
+  if(!periodCustomFrom && !periodCustomTo){ periodMode='preset'; periodPreset='all'; }
+  else { periodMode='custom'; periodMonthSel=''; periodYearSel=''; $('period-month-sel').value=''; $('period-year-sel').value=''; }
+  setPeriodActiveState(); renderDashboard();
 }
 $('period-from').addEventListener('change', onCustomDateChange);
 $('period-to').addEventListener('change', onCustomDateChange);
@@ -1861,354 +1919,399 @@ $('period-to').addEventListener('change', onCustomDateChange);
 let chartPie=null, chartBar=null, chartEquity=null;
 
 /* ============================================================
-   DASHBOARD — RENDU COMPLET
+   DASHBOARD — RENDU COMPLET (uniquement sur trades CLÔTURÉS)
 ============================================================ */
 function renderDashboard(){
-  // Mettre a jour les selects de periode (mois/annee disponibles)
   updatePeriodSelectors();
   setPeriodActiveState();
 
-  // Filtrer selon la periode active
-  // On trie d'abord chronologiquement (plus ancien en premier) pour les courbes
   const chronoTrades = sortedByDateTime(trades, true);
-  const filtered = filterByActivePeriod(chronoTrades);
+  const allFiltered  = filterByActivePeriod(chronoTrades);
 
-  // Compteur + label
+  // Séparation open / closed
+  const filtered     = allFiltered.filter(t => t.status === 'closed');
+  const openFiltered = allFiltered.filter(t => t.status === 'open');
+  const openCount    = openFiltered.length;
+
+  // Compteur période
   const pLabel = periodLabel();
   const countEl = $('period-count');
-  if(countEl){
-    countEl.innerHTML = `<span>${filtered.length}</span> trade${filtered.length!==1?'s':''}${pLabel?' · '+pLabel:''}`;
-  }
+  if(countEl) countEl.innerHTML = `<span>${allFiltered.length}</span> trade${allFiltered.length!==1?'s':''}${pLabel?' · '+pLabel:''}`;
 
-  // Cas vide : reset tous les blocs
+  // Affichage trades en cours
+  $('d-open-count').textContent = openCount;
+  $('d-open-count').style.color = openCount > 0 ? 'var(--be)' : 'var(--t3)';
+  $('d-open-sub').textContent   = openCount > 0 ? `${openCount} actif${openCount>1?'s':''}` : 'aucun actif';
+
+  // Cas vide (pas de clôturés)
   if(!filtered.length){
-    ['d-total','d-wr','d-tr','d-exp','d-avgl'].forEach(id => {
-      const el = $(id);
-      if(el){ el.textContent = '--'; el.style.color = ''; }
+    ['d-total','d-wr','d-tr','d-exp'].forEach(id => {
+      const el=$(id); if(el){el.textContent='--';el.style.color='';}
     });
-    $('d-total-sub').textContent = '--';
-    $('d-wr-sub').textContent    = '--';
-    $('quality-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--t4)">Aucun trade sur cette periode</td></tr>';
-    $('insight-list').innerHTML  = '<div class="empty-state" style="padding:20px 0">Aucun trade sur cette periode.</div>';
-    ['d-best','d-worst','d-streak-w','d-streak-l','d-avgw','d-avgloss',
-     'd-best-setup','d-best-asset','d-off-plan','d-wr-plan'].forEach(id => {
-      const el = $(id); if(el){ el.textContent='--'; el.style.color=''; }
-    });
-    if(chartPie)    { chartPie.destroy();    chartPie=null; }
-    if(chartBar)    { chartBar.destroy();    chartBar=null; }
-    if(chartEquity) { chartEquity.destroy(); chartEquity=null; }
-    ['pnl-total','pnl-avg','pnl-best-trade','pnl-worst-trade',
-     'pnl-best-day','pnl-worst-day','pnl-pos-days'].forEach(id => {
-      const el = $(id); if(el){ el.textContent='--'; el.style.color=''; }
-    });
-    ['pnl-best-trade-info','pnl-worst-trade-info','pnl-best-day-date',
-     'pnl-worst-day-date','pnl-pos-days-sub'].forEach(id => {
-      const el = $(id); if(el) el.textContent = '--';
-    });
-    if(window._chartPnlEq)  { window._chartPnlEq.destroy();  window._chartPnlEq=null;  }
-    if(window._chartPnlBar) { window._chartPnlBar.destroy(); window._chartPnlBar=null; }
+    $('d-total-sub').textContent = openCount > 0 ? `+${openCount} en cours` : '--';
+    $('d-wr-sub').textContent = '--';
+    $('quality-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--t4)">Aucun trade clôturé sur cette période</td></tr>';
+    $('insight-list').innerHTML  = '<div class="empty-state" style="padding:20px 0">Aucun trade clôturé sur cette période.</div>';
+    ['d-best','d-worst','d-streak-w','d-streak-l','d-avgw','d-avgloss','d-best-setup','d-best-asset','d-off-plan','d-wr-plan'].forEach(id=>{const el=$(id);if(el){el.textContent='--';el.style.color='';}});
+    if(chartPie){chartPie.destroy();chartPie=null;}
+    if(chartBar){chartBar.destroy();chartBar=null;}
+    if(chartEquity){chartEquity.destroy();chartEquity=null;}
+    ['pnl-total','pnl-avg','pnl-best-trade','pnl-worst-trade'].forEach(id=>{const el=$(id);if(el){el.textContent='--';el.style.color='';}});
+    ['pnl-best-trade-info','pnl-worst-trade-info'].forEach(id=>{const el=$(id);if(el)el.textContent='--';});
+    if(window._chartPnlEq){window._chartPnlEq.destroy();window._chartPnlEq=null;}
+    if(window._chartPnlBar){window._chartPnlBar.destroy();window._chartPnlBar=null;}
     return;
   }
 
   const st = calcStats(filtered);
   if(!st) return;
 
-  /* -- Stats principales -- */
+  /* Stats principales */
   $('d-total').textContent     = st.total;
-  $('d-total-sub').textContent = `${st.wins}W / ${st.losses}L / ${st.bes}BE`;
+  $('d-total-sub').textContent = openCount > 0 ? `+${openCount} en cours` : `${st.wins}W / ${st.losses}L / ${st.bes}BE`;
+  $('d-total-sub').style.color = openCount > 0 ? 'var(--be)' : '';
   $('d-wr').textContent        = st.wr.toFixed(0) + '%';
   $('d-wr-sub').textContent    = st.wins + ' victoires';
   $('d-tr').textContent        = (st.totalR>=0?'+':'') + st.totalR.toFixed(2) + 'R';
   $('d-tr').style.color        = st.totalR >= 0 ? 'var(--win)' : 'var(--loss)';
   $('d-exp').textContent       = (st.exp>=0?'+':'') + st.exp.toFixed(2) + 'R';
   $('d-exp').style.color       = st.exp >= 0 ? 'var(--win)' : 'var(--loss)';
-  $('d-avgl').textContent      = st.losses ? '-' + st.avgL.toFixed(2) + 'R' : '--';
 
-  /* -- Stats avancees -- */
-  $('d-best').textContent      = (st.best>=0?'+':'') + st.best.toFixed(2) + 'R';
-  $('d-best').style.color      = 'var(--win)';
-  $('d-worst').textContent     = st.worst.toFixed(2) + 'R';
-  $('d-worst').style.color     = 'var(--loss)';
-  $('d-streak-w').textContent  = st.maxW + ' trades';
-  $('d-streak-l').textContent  = st.maxL + ' trades';
-  $('d-streak-l').style.color  = st.maxL >= 3 ? 'var(--loss)' : 'var(--t1)';
-  $('d-avgw').textContent      = '+' + st.avgW.toFixed(2) + 'R';
-  $('d-avgw').style.color      = 'var(--win)';
-  $('d-avgloss').textContent   = '-' + st.avgL.toFixed(2) + 'R';
-  $('d-avgloss').style.color   = 'var(--loss)';
+  /* Stats avancées */
+  $('d-best').textContent       = (st.best>=0?'+':'') + st.best.toFixed(2) + 'R';
+  $('d-best').style.color       = 'var(--win)';
+  $('d-worst').textContent      = st.worst.toFixed(2) + 'R';
+  $('d-worst').style.color      = 'var(--loss)';
+  $('d-streak-w').textContent   = st.maxW + ' trades';
+  $('d-streak-l').textContent   = st.maxL + ' trades';
+  $('d-streak-l').style.color   = st.maxL >= 3 ? 'var(--loss)' : 'var(--t1)';
+  $('d-avgw').textContent       = '+' + st.avgW.toFixed(2) + 'R';
+  $('d-avgw').style.color       = 'var(--win)';
+  $('d-avgloss').textContent    = '-' + st.avgL.toFixed(2) + 'R';
+  $('d-avgloss').style.color    = 'var(--loss)';
   $('d-best-setup').textContent = st.bestSetup;
   $('d-best-asset').textContent = st.bestAsset;
-  $('d-off-plan').textContent  = st.offPlan + ' (' + (st.offPlan/st.total*100).toFixed(0) + '%)';
-  $('d-off-plan').style.color  = st.offPlan > st.total*.2 ? 'var(--loss)' : 'var(--t1)';
-  $('d-wr-plan').textContent   = st.wrOnPlan != null ? st.wrOnPlan.toFixed(0) + '%' : '--';
+  $('d-off-plan').textContent   = st.offPlan + ' (' + (st.offPlan/st.total*100).toFixed(0) + '%)';
+  $('d-off-plan').style.color   = st.offPlan > st.total*.2 ? 'var(--loss)' : 'var(--t1)';
+  $('d-wr-plan').textContent    = st.wrOnPlan != null ? st.wrOnPlan.toFixed(0) + '%' : '--';
 
-  /* -- Pie Win/Loss/BE -- */
+  /* Pie */
   if(chartPie) chartPie.destroy();
   chartPie = new Chart($('chart-pie'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Win','Loss','BE'],
-      datasets: [{
-        data: [st.wins, st.losses, st.bes],
-        backgroundColor: ['rgba(34,197,94,.7)','rgba(239,68,68,.7)','rgba(245,158,11,.7)'],
-        borderColor:     ['rgba(34,197,94,1)', 'rgba(239,68,68,1)', 'rgba(245,158,11,1)'],
-        borderWidth: 1.5
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#6a84a8',font:{size:11,family:'Consolas,monospace'},padding:14},position:'bottom'}},
-      cutout:'65%'
-    }
+    type:'doughnut',
+    data:{ labels:['Win','Loss','BE'], datasets:[{ data:[st.wins,st.losses,st.bes], backgroundColor:['rgba(34,197,94,.7)','rgba(239,68,68,.7)','rgba(245,158,11,.7)'], borderColor:['rgba(34,197,94,1)','rgba(239,68,68,1)','rgba(245,158,11,1)'], borderWidth:1.5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#6a84a8',font:{size:11,family:'Consolas,monospace'},padding:14},position:'bottom'}}, cutout:'65%' }
   });
 
-  /* -- Bar R par jour (ordre chronologique) -- */
-  const dayR = {};
-  filtered.forEach(t => {
-    const d = t.date || '?';
-    if(!dayR[d]) dayR[d] = 0;
-    dayR[d] += signedR(t);
-  });
-  const allDays = Object.keys(dayR).sort(); // tri chronologique
-  const days    = (periodMode==='preset' && periodPreset==='all') ? allDays.slice(-20) : allDays;
+  /* Bar R par jour */
+  const dayR={};
+  filtered.forEach(t => { const d=t.date||'?'; if(!dayR[d])dayR[d]=0; dayR[d]+=signedR(t); });
+  const allDays = Object.keys(dayR).sort();
+  const days    = (periodMode==='preset'&&periodPreset==='all') ? allDays.slice(-20) : allDays;
   const dayVals = days.map(d => parseFloat(dayR[d].toFixed(2)));
-
   if(chartBar) chartBar.destroy();
   chartBar = new Chart($('chart-bar'), {
     type:'bar',
-    data:{
-      labels: days.map(d => d.slice(5)),
-      datasets:[{
-        label:'R/jour', data:dayVals,
-        backgroundColor: dayVals.map(v => v>=0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.6)'),
-        borderColor:     dayVals.map(v => v>=0 ? 'rgba(34,197,94,1)'  : 'rgba(239,68,68,1)'),
-        borderWidth:1, borderRadius:3
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'}},
-        y:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}}
-      }
-    }
+    data:{ labels:days.map(d=>d.slice(5)), datasets:[{ label:'R/jour', data:dayVals, backgroundColor:dayVals.map(v=>v>=0?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)'), borderColor:dayVals.map(v=>v>=0?'rgba(34,197,94,1)':'rgba(239,68,68,1)'), borderWidth:1, borderRadius:3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'}}, y:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}} } }
   });
 
-  /* -- Equity R cumule (ordre chronologique = filtered est deja trie asc) -- */
-  let cumR = 0;
-  const eqLabels = [], eqData = [];
-  filtered.forEach((t, i) => {
-    cumR += signedR(t);
-    eqLabels.push('#' + (i+1));
-    eqData.push(parseFloat(cumR.toFixed(2)));
-  });
-  const lastEq    = eqData[eqData.length-1] ?? 0;
-  const eqColor   = lastEq >= 0 ? 'rgba(59,130,246,.8)' : 'rgba(239,68,68,.7)';
+  /* Equity R */
+  let cumR=0; const eqLabels=[],eqData=[];
+  filtered.forEach((t,i) => { cumR+=signedR(t); eqLabels.push('#'+(i+1)); eqData.push(parseFloat(cumR.toFixed(2))); });
+  const lastEq=eqData[eqData.length-1]??0;
+  const eqColor=lastEq>=0?'rgba(59,130,246,.8)':'rgba(239,68,68,.7)';
   if(chartEquity) chartEquity.destroy();
   chartEquity = new Chart($('chart-equity'), {
     type:'line',
-    data:{
-      labels: eqLabels,
-      datasets:[{
-        label:'R cumule', data:eqData,
-        borderColor: eqColor, borderWidth:2,
-        backgroundColor: eqColor.replace('.8',',.12').replace('.7',',.12'),
-        fill:true, pointRadius:eqData.length>50?0:2, tension:.3
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#3a5070',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(30,45,68,.6)'}},
-        y:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}}
-      }
-    }
+    data:{ labels:eqLabels, datasets:[{ label:'R cumulé', data:eqData, borderColor:eqColor, borderWidth:2, backgroundColor:eqColor.replace('.8',',.12').replace('.7',',.12'), fill:true, pointRadius:eqData.length>50?0:2, tension:.3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#3a5070',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(30,45,68,.6)'}}, y:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}} } }
   });
 
-  /* -- Qualite setup -- */
-  const qBadgeMap = {'A+':'badge-ap',A:'badge-a',B:'badge-b',C:'badge-c'};
-  $('quality-tbody').innerHTML = ['A+','A','B','C'].map(q => {
-    const qt = filtered.filter(t => t.quality === q);
-    if(!qt.length) return `<tr><td><span class="badge ${qBadgeMap[q]}">${q}</span></td><td style="color:var(--t4)">0</td><td>--</td><td>--</td><td>--</td></tr>`;
-    const qst = calcStats(qt);
+  /* Tableau grades (A+/A/B/C/D) — clôturés uniquement */
+  const gradeBadgeMap = {'A+':'badge-ap','A':'badge-a','B':'badge-b','C':'badge-c','D':'badge-d'};
+  $('quality-tbody').innerHTML = ['A+','A','B','C','D'].map(g => {
+    // Utilise setupGrade si disponible, sinon quality pour les anciens
+    const gt = filtered.filter(t => (t.setupGrade || t.quality) === g);
+    if(!gt.length) return `<tr><td><span class="badge ${gradeBadgeMap[g]}">${g}</span></td><td style="color:var(--t4)">0</td><td>--</td><td>--</td><td>--</td></tr>`;
+    const gst = calcStats(gt);
     return `<tr>
-      <td><span class="badge ${qBadgeMap[q]}">${q}</span></td>
-      <td style="font-family:var(--mono)">${qst.total}</td>
-      <td style="font-family:var(--mono);color:${qst.wr>=60?'var(--win)':qst.wr>=45?'var(--be)':'var(--loss)'}">${qst.wr.toFixed(0)}%</td>
-      <td style="font-family:var(--mono);color:${qst.totalR>=0?'var(--win)':'var(--loss)'}">${(qst.totalR>=0?'+':'')+qst.totalR.toFixed(2)}R</td>
-      <td style="font-family:var(--mono);color:${qst.avgR>=0?'var(--win)':'var(--loss)'}">${(qst.avgR>=0?'+':'')+qst.avgR.toFixed(2)}R</td>
+      <td><span class="badge ${gradeBadgeMap[g]}">${g}</span></td>
+      <td style="font-family:var(--mono)">${gst.total}</td>
+      <td style="font-family:var(--mono);color:${gst.wr>=60?'var(--win)':gst.wr>=45?'var(--be)':'var(--loss)'}">${gst.wr.toFixed(0)}%</td>
+      <td style="font-family:var(--mono);color:${gst.totalR>=0?'var(--win)':'var(--loss)'}">${(gst.totalR>=0?'+':'')+gst.totalR.toFixed(2)}R</td>
+      <td style="font-family:var(--mono);color:${gst.avgR>=0?'var(--win)':'var(--loss)'}">${(gst.avgR>=0?'+':'')+gst.avgR.toFixed(2)}R</td>
     </tr>`;
   }).join('');
 
-  /* -- Section PnL ($) -- */
+  /* PnL section */
   const fmtPnl   = v => (v>=0?'+':'') + v.toFixed(2) + '$';
-  const pnlColor = v => v>=0 ? 'var(--win)' : 'var(--loss)';
+  const pnlColor = v => v>=0?'var(--win)':'var(--loss)';
   const pnlValues = filtered.map(t => t.pnl || 0);
-  const totalPnl  = pnlValues.reduce((a,b) => a+b, 0);
-  const avgPnl    = pnlValues.length ? totalPnl / pnlValues.length : 0;
-  const pnlSorted = [...filtered].filter(t => t.pnl !== 0 && t.pnl != null).sort((a,b) => (b.pnl||0) - (a.pnl||0));
-  const bestTrade  = pnlSorted[0] || null;
-  const worstTrade = pnlSorted[pnlSorted.length-1] || null;
+  const totalPnl  = pnlValues.reduce((a,b)=>a+b,0);
+  const avgPnl    = pnlValues.length ? totalPnl/pnlValues.length : 0;
+  const pnlSorted = [...filtered].filter(t => t.pnl!==0&&t.pnl!=null).sort((a,b)=>(b.pnl||0)-(a.pnl||0));
+  const bestTrade  = pnlSorted[0]||null;
+  const worstTrade = pnlSorted[pnlSorted.length-1]||null;
 
-  const dayPnl = {};
-  filtered.forEach(t => {
-    const d = t.date || '?';
-    if(!dayPnl[d]) dayPnl[d] = 0;
-    dayPnl[d] += (t.pnl || 0);
-  });
-  const dayPnlEntries = Object.entries(dayPnl);
-  const bestDay  = dayPnlEntries.length ? dayPnlEntries.reduce((a,b) => b[1]>a[1]?b:a) : null;
-  const worstDay = dayPnlEntries.length ? dayPnlEntries.reduce((a,b) => b[1]<a[1]?b:a) : null;
-  const posDays  = dayPnlEntries.filter(([,v]) => v>0).length;
-
-  $('pnl-total').textContent = fmtPnl(totalPnl);
-  $('pnl-total').style.color = pnlColor(totalPnl);
-  $('pnl-avg').textContent   = pnlValues.some(v => v !== 0) ? fmtPnl(avgPnl) : '--';
-  $('pnl-avg').style.color   = pnlColor(avgPnl);
-
-  if(bestTrade){
-    $('pnl-best-trade').textContent     = fmtPnl(bestTrade.pnl);
-    $('pnl-best-trade').style.color     = 'var(--win)';
-    $('pnl-best-trade-info').textContent = (bestTrade.asset||'--') + ' · ' + (bestTrade.date||'').slice(5);
-  } else { $('pnl-best-trade').textContent='--'; $('pnl-best-trade-info').textContent='--'; }
-
-  if(worstTrade){
-    $('pnl-worst-trade').textContent     = fmtPnl(worstTrade.pnl);
-    $('pnl-worst-trade').style.color     = 'var(--loss)';
-    $('pnl-worst-trade-info').textContent = (worstTrade.asset||'--') + ' · ' + (worstTrade.date||'').slice(5);
-  } else { $('pnl-worst-trade').textContent='--'; $('pnl-worst-trade-info').textContent='--'; }
-
-  if(bestDay){
-    $('pnl-best-day').textContent = fmtPnl(bestDay[1]);
-    $('pnl-best-day').style.color = 'var(--win)';
-    $('pnl-best-day-date').textContent = fmtDate(bestDay[0]);
-  } else { $('pnl-best-day').textContent='--'; $('pnl-best-day-date').textContent='--'; }
-
-  if(worstDay){
-    $('pnl-worst-day').textContent = fmtPnl(worstDay[1]);
-    $('pnl-worst-day').style.color = 'var(--loss)';
-    $('pnl-worst-day-date').textContent = fmtDate(worstDay[0]);
-  } else { $('pnl-worst-day').textContent='--'; $('pnl-worst-day-date').textContent='--'; }
-
-  $('pnl-pos-days').textContent = dayPnlEntries.length ? posDays + '/' + dayPnlEntries.length : '--';
-  $('pnl-pos-days').style.color = posDays > dayPnlEntries.length/2 ? 'var(--win)' : 'var(--loss)';
-  $('pnl-pos-days-sub').textContent = 'jours positifs';
+  $('pnl-total').textContent = fmtPnl(totalPnl); $('pnl-total').style.color = pnlColor(totalPnl);
+  $('pnl-avg').textContent   = pnlValues.some(v=>v!==0) ? fmtPnl(avgPnl) : '--'; $('pnl-avg').style.color = pnlColor(avgPnl);
+  if(bestTrade){ $('pnl-best-trade').textContent=fmtPnl(bestTrade.pnl); $('pnl-best-trade').style.color='var(--win)'; $('pnl-best-trade-info').textContent=(bestTrade.asset||'--')+' · '+(bestTrade.date||'').slice(5); }
+  else { $('pnl-best-trade').textContent='--'; $('pnl-best-trade-info').textContent='--'; }
+  if(worstTrade){ $('pnl-worst-trade').textContent=fmtPnl(worstTrade.pnl); $('pnl-worst-trade').style.color='var(--loss)'; $('pnl-worst-trade-info').textContent=(worstTrade.asset||'--')+' · '+(worstTrade.date||'').slice(5); }
+  else { $('pnl-worst-trade').textContent='--'; $('pnl-worst-trade-info').textContent='--'; }
 
   /* PnL equity curve */
-  let cumPnl = 0;
-  const pnlEqLabels = [], pnlEqData = [];
-  filtered.forEach((t, i) => {
-    cumPnl += (t.pnl || 0);
-    pnlEqLabels.push('#' + (i+1));
-    pnlEqData.push(parseFloat(cumPnl.toFixed(2)));
-  });
-  const lastPnl    = pnlEqData[pnlEqData.length-1] ?? 0;
-  const pnlEqColor = lastPnl >= 0 ? 'rgba(34,197,94,.85)' : 'rgba(239,68,68,.75)';
+  let cumPnl=0; const pnlEqLabels=[],pnlEqData=[];
+  filtered.forEach((t,i) => { cumPnl+=(t.pnl||0); pnlEqLabels.push('#'+(i+1)); pnlEqData.push(parseFloat(cumPnl.toFixed(2))); });
+  const lastPnl=pnlEqData[pnlEqData.length-1]??0;
+  const pnlEqColor=lastPnl>=0?'rgba(34,197,94,.85)':'rgba(239,68,68,.75)';
   if(window._chartPnlEq) window._chartPnlEq.destroy();
   window._chartPnlEq = new Chart($('chart-pnl-equity'), {
     type:'line',
-    data:{
-      labels: pnlEqLabels,
-      datasets:[{
-        label:'PnL cumule ($)', data:pnlEqData,
-        borderColor:pnlEqColor, borderWidth:2,
-        backgroundColor:pnlEqColor.replace('.85',',.10').replace('.75',',.10'),
-        fill:true, pointRadius:pnlEqData.length>50?0:2, tension:.3
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#3a5070',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(30,45,68,.6)'}},
-        y:{ticks:{color:'#3a5070',font:{size:9},callback:v=>v+'$'},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}}
-      }
-    }
+    data:{ labels:pnlEqLabels, datasets:[{ label:'PnL cumulé ($)', data:pnlEqData, borderColor:pnlEqColor, borderWidth:2, backgroundColor:pnlEqColor.replace('.85',',.10').replace('.75',',.10'), fill:true, pointRadius:pnlEqData.length>50?0:2, tension:.3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#3a5070',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(30,45,68,.6)'}}, y:{ticks:{color:'#3a5070',font:{size:9},callback:v=>v+'$'},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}} } }
   });
 
-  /* PnL bar par jour (ordre chronologique) */
-  const pnlDaysAll  = Object.keys(dayPnl).sort();
-  const pnlDays     = (periodMode==='preset' && periodPreset==='all') ? pnlDaysAll.slice(-20) : pnlDaysAll;
-  const pnlDayVals  = pnlDays.map(d => parseFloat(dayPnl[d].toFixed(2)));
+  /* PnL bar par jour */
+  const dayPnl={};
+  filtered.forEach(t => { const d=t.date||'?'; if(!dayPnl[d])dayPnl[d]=0; dayPnl[d]+=(t.pnl||0); });
+  const pnlDaysAll=Object.keys(dayPnl).sort();
+  const pnlDays=(periodMode==='preset'&&periodPreset==='all')?pnlDaysAll.slice(-20):pnlDaysAll;
+  const pnlDayVals=pnlDays.map(d=>parseFloat(dayPnl[d].toFixed(2)));
   if(window._chartPnlBar) window._chartPnlBar.destroy();
   window._chartPnlBar = new Chart($('chart-pnl-bar'), {
     type:'bar',
-    data:{
-      labels: pnlDays.map(d => d.slice(5)),
-      datasets:[{
-        label:'PnL ($)', data:pnlDayVals,
-        backgroundColor: pnlDayVals.map(v => v>=0 ? 'rgba(34,197,94,.55)' : 'rgba(239,68,68,.55)'),
-        borderColor:     pnlDayVals.map(v => v>=0 ? 'rgba(34,197,94,1)'   : 'rgba(239,68,68,1)'),
-        borderWidth:1, borderRadius:3
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'}},
-        y:{ticks:{color:'#3a5070',font:{size:9},callback:v=>v+'$'},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}}
-      }
-    }
+    data:{ labels:pnlDays.map(d=>d.slice(5)), datasets:[{ label:'PnL ($)', data:pnlDayVals, backgroundColor:pnlDayVals.map(v=>v>=0?'rgba(34,197,94,.55)':'rgba(239,68,68,.55)'), borderColor:pnlDayVals.map(v=>v>=0?'rgba(34,197,94,1)':'rgba(239,68,68,1)'), borderWidth:1, borderRadius:3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#3a5070',font:{size:9}},grid:{color:'rgba(30,45,68,.6)'}}, y:{ticks:{color:'#3a5070',font:{size:9},callback:v=>v+'$'},grid:{color:'rgba(30,45,68,.6)'},border:{dash:[3,3]}} } }
   });
 
-  generateInsights(st, filtered);
+  /* ── Section Calibration instinct / scoring ─────────────────────────────
+     Uniquement sur trades clôturés ayant BOTH quality (perçue) et setupGrade (calculée)
+  ──────────────────────────────────────────────────────────────────────── */
+  const calTrades = filtered.filter(t => t.quality && t.setupGrade);
+  if(calTrades.length >= 2){
+    const aligned   = calTrades.filter(t => t.setupEvaluationGap === 'aligned');
+    const over      = calTrades.filter(t => t.setupEvaluationGap === 'overestimated');
+    const under     = calTrades.filter(t => t.setupEvaluationGap === 'underestimated');
+    const calN      = calTrades.length;
+    const pct       = n => calN ? (n/calN*100).toFixed(0)+'%' : '--';
+    const avgRCal   = s => s.length ? (s.reduce((a,t)=>a+signedR(t),0)/s.length).toFixed(2) : '--';
+    const avgPnlCal = s => s.length ? (s.reduce((a,t)=>a+(t.pnl||0),0)/s.length).toFixed(0) : '--';
+    const wrCal     = s => s.length ? (s.filter(t=>t.result==='Win').length/s.length*100).toFixed(0)+'%' : '--';
+    const rFmtCal   = v => v !== '--' ? (parseFloat(v)>=0?'+':'')+v+'R' : '--';
+
+    $('cal-aligned-pct').textContent = pct(aligned.length);
+    $('cal-aligned-n').textContent   = aligned.length + ' trade' + (aligned.length!==1?'s':'');
+    $('cal-over-pct').textContent    = pct(over.length);
+    $('cal-over-n').textContent      = over.length + ' trade' + (over.length!==1?'s':'');
+    $('cal-under-pct').textContent   = pct(under.length);
+    $('cal-under-n').textContent     = under.length + ' trade' + (under.length!==1?'s':'');
+
+    const calRows = [
+      { label:'✓ Alignés',      set:aligned, color:'var(--win)'  },
+      { label:'↓ Surévalués',   set:over,    color:'var(--loss)' },
+      { label:'↑ Sous-évalués', set:under,   color:'var(--blue)' },
+    ];
+    $('cal-tbody').innerHTML = calRows.map(row => {
+      const rV = avgRCal(row.set);
+      return `<tr>
+        <td style="color:${row.color};font-weight:600">${row.label}</td>
+        <td style="font-family:var(--mono)">${row.set.length}</td>
+        <td style="font-family:var(--mono)">${wrCal(row.set)}</td>
+        <td style="font-family:var(--mono);color:${rV!=='--'&&parseFloat(rV)>=0?'var(--win)':'var(--loss)'}">${rFmtCal(rV)}</td>
+        <td style="font-family:var(--mono)">${avgPnlCal(row.set)!=='--' ? (parseFloat(avgPnlCal(row.set))>=0?'+':'')+avgPnlCal(row.set)+'$' : '--'}</td>
+      </tr>`;
+    }).join('');
+
+    $('panel-calibration').style.display = '';
+  } else {
+    // Pas assez de trades avec les deux grades renseignés
+    $('panel-calibration').style.display = calTrades.length === 0 ? 'none' : '';
+    if($('cal-tbody')) $('cal-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--t4)">Renseigne la qualité perçue sur au moins 2 trades clôturés pour voir la calibration.</td></tr>`;
+    ['cal-aligned-pct','cal-over-pct','cal-under-pct'].forEach(id => { const el=$(id); if(el) el.textContent='--'; });
+    ['cal-aligned-n','cal-over-n','cal-under-n'].forEach(id => { const el=$(id); if(el) el.textContent='--'; });
+  }
+
+  generateInsights(st, filtered, calTrades);
 }
 
 /* ============================================================
-   INSIGHTS PSYCHO
+   INSIGHTS — data-driven avec mesure d'impact réel
 ============================================================ */
-function generateInsights(st, tradeSet){
+function generateInsights(st, tradeSet, calTrades = []){
   const insights = [];
-  if(st.wr >= 65)
-    insights.push({color:'var(--win)',text:`<strong>Winrate solide a ${st.wr.toFixed(0)}%</strong> — selection de setups excellente. Maintiens ce niveau.`});
-  else if(st.wr < 45 && st.total >= 10)
-    insights.push({color:'var(--loss)',text:`<strong>Winrate bas (${st.wr.toFixed(0)}%)</strong> — attends des setups A+ uniquement et reduis la frequence.`});
+  if(!tradeSet || !tradeSet.length){ $('insight-list').innerHTML = '<div class="empty-state" style="padding:20px 0">Pas assez de données.</div>'; return; }
+
+  /* Helper: R moyen d'un sous-ensemble */
+  const avgR = set => set.length ? set.reduce((a,t) => a+signedR(t),0)/set.length : null;
+  const pct   = (n,d) => d ? (n/d*100).toFixed(0)+'%' : '--';
+  const rFmt  = v => v!=null ? (v>=0?'+':'')+v.toFixed(2)+'R' : '--';
+
+  /* 1. FOMO vs calme */
+  const fomoT = tradeSet.filter(t => t.emotion==='FOMO');
+  const calmeT = tradeSet.filter(t => t.emotion==='Calme'||t.emotion==='Confiance');
+  if(fomoT.length >= 2 && calmeT.length >= 2){
+    const rFomo  = avgR(fomoT);
+    const rCalme = avgR(calmeT);
+    const worse = rFomo < rCalme;
+    insights.push({
+      color: worse ? 'var(--loss)' : 'var(--be)',
+      text: `<strong>FOMO (${fomoT.length} trades) : ${rFmt(rFomo)}</strong> vs calme/confiance : ${rFmt(rCalme)}.` +
+        (worse ? ` Tu perds <strong>${(rCalme-rFomo).toFixed(2)}R/trade</strong> en état FOMO. <em>Action : règle de no-trade si FOMO détecté.</em>` : ' Impact FOMO limité sur cette période.')
+    });
+  }
+
+  /* 2. Revenge trading */
+  const revengeT = tradeSet.filter(t => t.emotion==='Revenge');
+  if(revengeT.length >= 1){
+    const rRevenge = avgR(revengeT);
+    insights.push({
+      color:'var(--loss)',
+      text:`<strong>Revenge trading : ${revengeT.length} trade(s), R moyen ${rFmt(rRevenge)}.</strong>` +
+        ` <em>Action : pause obligatoire après tout trade revenge. Stop trading journée.</em>`
+    });
+  }
+
+  /* 3. Plan respecté vs hors plan */
+  const onPlanT  = tradeSet.filter(t => t.plan==='Oui');
+  const offPlanT = tradeSet.filter(t => t.plan==='Non');
+  if(onPlanT.length >= 3 && offPlanT.length >= 2){
+    const wrOn  = onPlanT.filter(t=>t.result==='Win').length/onPlanT.length*100;
+    const wrOff = offPlanT.filter(t=>t.result==='Win').length/offPlanT.length*100;
+    const rOn   = avgR(onPlanT);
+    const rOff  = avgR(offPlanT);
+    insights.push({
+      color: wrOn > wrOff ? 'var(--blue)' : 'var(--be)',
+      text: `<strong>Sur plan : ${wrOn.toFixed(0)}% WR (${rFmt(rOn)})</strong> vs hors plan : ${wrOff.toFixed(0)}% WR (${rFmt(rOff)}).` +
+        (wrOn > wrOff+10 ? ` Ton plan fonctionne. <em>Action : ne jamais trader hors plan.</em>` : ' Peu de différence — revoir la qualité du plan.')
+    });
+  }
+
+  /* 4. Grade A+ vs C/D */
+  const apT = tradeSet.filter(t => (t.setupGrade||t.quality)==='A+');
+  const cdT  = tradeSet.filter(t => ['C','D'].includes(t.setupGrade||t.quality));
+  if(apT.length >= 2){
+    const stAp = calcStats(apT);
+    insights.push({
+      color: stAp.wr >= 60 ? 'var(--violet)' : 'var(--be)',
+      text: `<strong>Setups A+ : ${stAp.wr.toFixed(0)}% WR, ${rFmt(stAp.avgR)} de R moyen</strong> sur ${apT.length} trades.` +
+        (stAp.wr > st.wr+8 ? ` <em>Action : concentre-toi uniquement sur A+ cette semaine.</em>` : '')
+    });
+  }
+  if(cdT.length >= 2){
+    const rCd = avgR(cdT);
+    const lossPct = cdT.length/tradeSet.length*100;
+    insights.push({
+      color:'var(--loss)',
+      text: `<strong>Setups C/D : ${lossPct.toFixed(0)}% des trades, R moyen ${rFmt(rCd)}.</strong>` +
+        (rCd !== null && rCd < 0 ? ` Ces setups te coûtent de l'argent. <em>Action : aucun trade C/D jusqu'à nouvelle instruction.</em>` : '')
+    });
+  }
+
+  /* 5. Winrate global */
+  if(st.wr >= 65 && st.total >= 8)
+    insights.push({color:'var(--win)',text:`<strong>Winrate solide à ${st.wr.toFixed(0)}%</strong> — sélection de setups excellente. Continue.`});
+  else if(st.wr < 40 && st.total >= 10)
+    insights.push({color:'var(--loss)',text:`<strong>Winrate faible (${st.wr.toFixed(0)}%)</strong> — attends uniquement les setups A/A+. <em>Action : réduire la fréquence de 50%.</em>`});
+
+  /* 6. Expectancy */
   if(st.exp > 0.5)
-    insights.push({color:'var(--win)',text:`<strong>Expectancy positive (${st.exp.toFixed(2)}R)</strong> — edge statistique confirme. Continue a suivre le processus.`});
-  else if(st.exp < 0 && st.total >= 10)
-    insights.push({color:'var(--loss)',text:`<strong>Expectancy negative (${st.exp.toFixed(2)}R)</strong> — stoppe et analyse avant de reprendre. L'edge n'est pas la.`});
-  if(st.avgR > 0 && st.avgR < 0.3 && st.total >= 8)
-    insights.push({color:'var(--be)',text:`<strong>R moyen tres faible (${st.avgR.toFixed(2)}R)</strong> — tes wins sont trop petits ou tes stops trop larges. Revois le sizing.`});
-  const offPct = st.offPlan / st.total * 100;
-  if(offPct > 25)
-    insights.push({color:'var(--loss)',text:`<strong>${offPct.toFixed(0)}% hors plan</strong> — le FOMO detruit ta performance. Utilise le filtre pre-trade systematiquement.`});
-  else if(st.offPlan === 0 && st.total >= 5)
-    insights.push({color:'var(--win)',text:`<strong>100% dans le plan</strong> — discipline exemplaire. C'est la base de l'antifragilite.`});
-  if(st.wrOnPlan != null && st.wrOnPlan > st.wr + 10)
-    insights.push({color:'var(--blue)',text:`<strong>Sur plan : ${st.wrOnPlan.toFixed(0)}% de winrate</strong> vs ${st.wr.toFixed(0)}% global — ton plan fonctionne. Suis-le toujours.`});
-  if(st.maxL >= 4)
-    insights.push({color:'var(--loss)',text:`<strong>Serie de ${st.maxL} pertes</strong> — pause obligatoire. Revois le contexte HTF avant de re-trader.`});
-  else if(st.maxL >= 2 && st.maxL < 4)
-    insights.push({color:'var(--be)',text:`<strong>${st.maxL} pertes consecutives detectees</strong> — reste vigilant, reduis le risque sur le prochain trade.`});
-  if(st.bestSetup !== '--')
-    insights.push({color:'var(--win)',text:`<strong>Setup le plus rentable : ${st.bestSetup}</strong> — priorise ce pattern en session.`});
+    insights.push({color:'var(--win)',text:`<strong>Expectancy positive à ${rFmt(st.exp)}</strong> — edge statistique confirmé. Continue le processus.`});
+  else if(st.exp < -0.1 && st.total >= 10)
+    insights.push({color:'var(--loss)',text:`<strong>Expectancy négative (${rFmt(st.exp)})</strong> — stop et analyse avant de reprendre. <em>Action : pause obligatoire.</em>`});
+
+  /* 7. Ratio Win/Loss */
   if(st.avgW > 0 && st.avgL > 0){
-    const ratio = (st.avgW / st.avgL).toFixed(2);
+    const ratio = (st.avgW/st.avgL).toFixed(2);
     if(st.avgW < st.avgL)
-      insights.push({color:'var(--loss)',text:`<strong>Ratio W/L : ${ratio}</strong> — tu coupes trop tot ou tu laisses trop courir les pertes. Revois la gestion des sorties.`});
-    else if(st.avgW > st.avgL * 1.5)
+      insights.push({color:'var(--loss)',text:`<strong>Ratio W/L : ${ratio}</strong> — tu coupes trop tôt ou tu laisses courir les pertes. <em>Action : revoir les sorties.</em>`});
+    else if(st.avgW > st.avgL*1.5)
       insights.push({color:'var(--win)',text:`<strong>Ratio W/L : ${ratio}</strong> — excellent rapport gain/perte. Laisse courir les winners.`});
   }
-  const avgPsycho = tradeSet.length ? tradeSet.reduce((a,t) => a + (t.psycho || 50), 0) / tradeSet.length : 50;
-  if(avgPsycho < 45 && st.total >= 5)
-    insights.push({color:'var(--loss)',text:`<strong>Score mental moyen bas (${avgPsycho.toFixed(0)}%)</strong> — tu trades sous stress/FOMO. Arrete, respire, reviens lucide.`});
-  else if(avgPsycho >= 70)
-    insights.push({color:'var(--win)',text:`<strong>Etat mental sain (${avgPsycho.toFixed(0)}%)</strong> — conditions psychologiques optimales. Continue dans cet etat.`});
-  const apTrades = tradeSet.filter(t => t.quality === 'A+');
-  if(apTrades.length >= 3){
-    const apSt = calcStats(apTrades);
-    if(apSt && apSt.wr > st.wr + 8)
-      insights.push({color:'#a78bfa',text:`<strong>Setups A+ : ${apSt.wr.toFixed(0)}% WR</strong> vs ${st.wr.toFixed(0)}% global — concentre-toi uniquement sur A+. Le reste te coute de l'argent.`});
-  }
-  if(st.total < 5)
-    insights.push({color:'var(--t3)',text:`<strong>${st.total} trade${st.total>1?'s':''} sur cette periode</strong> — pas assez de donnees pour des conclusions solides. Continue a journaliser.`});
-  if(!insights.length)
-    insights.push({color:'var(--t3)',text:'Continue a enregistrer tes trades — les insights s\'affinent automatiquement au fil des donnees.'});
 
-  $('insight-list').innerHTML = insights.map(i =>
+  /* 8. Série perdante */
+  if(st.maxL >= 4)
+    insights.push({color:'var(--loss)',text:`<strong>Série de ${st.maxL} pertes détectée.</strong> <em>Action : pause obligatoire. Revois le biais HTF avant de re-trader.</em>`});
+  else if(st.maxL >= 3)
+    insights.push({color:'var(--be)',text:`<strong>${st.maxL} pertes consécutives max.</strong> Reste vigilant — réduis le risque sur le prochain trade.`});
+
+  /* 9. Trades ouverts non clôturés */
+  const currentOpenCount = trades.filter(t=>t.status==='open').length;
+  if(currentOpenCount >= 3)
+    insights.push({color:'var(--be)',text:`<strong>${currentOpenCount} trades en cours non clôturés.</strong> <em>Action : clôture ou documente les sorties avant d'en ouvrir de nouveaux.</em>`});
+
+  /* 10. Faux progrès : winrate monte mais R moyen baisse */
+  if(st.wr >= 55 && st.avgR < 0.3 && st.total >= 8)
+    insights.push({color:'var(--be)',text:`<strong>Attention faux progrès :</strong> WR correct (${st.wr.toFixed(0)}%) mais R moyen faible (${rFmt(st.avgR)}). Tes wins sont trop petits. <em>Action : laisser courir 1 winner sur 2.</em>`});
+
+  /* 11. Pas assez de données */
+  if(st.total < 5)
+    insights.push({color:'var(--t3)',text:`<strong>${st.total} trade(s)</strong> — pas assez de données pour des conclusions robustes. Continue à journaliser.`});
+
+  /* ── Insights calibration instinct / scoring ─────────────────────────── */
+  if(calTrades.length >= 3){
+    const calN   = calTrades.length;
+    const over   = calTrades.filter(t => t.setupEvaluationGap === 'overestimated');
+    const under  = calTrades.filter(t => t.setupEvaluationGap === 'underestimated');
+    const align  = calTrades.filter(t => t.setupEvaluationGap === 'aligned');
+
+    // % surévaluation
+    if(over.length >= 2){
+      const overPct = (over.length/calN*100).toFixed(0);
+      const rOver   = avgR(over);
+      insights.push({
+        color:'var(--loss)',
+        text:`<strong>Tu surévalues tes setups dans ${overPct}% des cas.</strong>` +
+          (rOver !== null ? ` R moyen surévalués : ${rFmt(rOver)}.` : '') +
+          ` Tu penses être meilleur que ce que les confluences confirment. <em>Action : ne log pas de trade si le scoring calculé est en dessous de ta perception.</em>`
+      });
+    }
+
+    // % sous-évaluation
+    if(under.length >= 2){
+      const underPct = (under.length/calN*100).toFixed(0);
+      const rUnder   = avgR(under);
+      insights.push({
+        color:'var(--blue)',
+        text:`<strong>Tu sous-évalues tes setups dans ${underPct}% des cas.</strong>` +
+          (rUnder !== null ? ` R moyen sous-évalués : ${rFmt(rUnder)}.` : '') +
+          ` Attention à ne pas couper trop tôt ou réduire ton risque sur des setups objectivement solides. <em>Action : fais confiance au scoring quand il surpasse ton instinct.</em>`
+      });
+    }
+
+    // Alignement et expectancy
+    if(align.length >= 2){
+      const stAlign = calcStats(align);
+      if(stAlign){
+        insights.push({
+          color: stAlign.exp >= 0 ? 'var(--win)' : 'var(--be)',
+          text:`<strong>Quand ton instinct et le scoring sont alignés (${align.length} trades) :</strong> ${stAlign.wr.toFixed(0)}% WR, expectancy ${rFmt(stAlign.exp)}.` +
+            (stAlign.exp > 0 ? ` Ton instinct est fiable dans ces conditions. Continue à attendre cet alignement.` : ` Même alignés, les résultats sont mitigés — travaille la qualité des confluences.`)
+        });
+      }
+    }
+
+    // Instinct fiable uniquement calme/confiant ?
+    const calmeOver = calTrades.filter(t =>
+      t.setupEvaluationGap === 'overestimated' &&
+      (t.emotion === 'FOMO' || t.emotion === 'Revenge' || t.emotion === 'Stress' || t.emotion === 'Fatigue')
+    );
+    if(calmeOver.length >= 2 && calmeOver.length > over.length * 0.5){
+      const pctEmotOver = (calmeOver.length/over.length*100).toFixed(0);
+      insights.push({
+        color:'var(--be)',
+        text:`<strong>${pctEmotOver}% de tes surévaluations se produisent en état émotionnel négatif.</strong> Ton instinct est fiable uniquement quand tu es calme ou confiant. <em>Action : pas de qualité perçue A+ si émotion négative.</em>`
+      });
+    }
+  }
+
+  if(!insights.length)
+    insights.push({color:'var(--t3)',text:'Continue à enregistrer — les insights s\'affinent automatiquement avec les données.'});
+
+  // Top 8 insights max
+  const display = insights.slice(0, 8);
+  $('insight-list').innerHTML = display.map(i =>
     `<div class="insight-item">
       <div class="insight-dot" style="background:${i.color}"></div>
       <div class="insight-text">${i.text}</div>
@@ -2221,10 +2324,12 @@ function generateInsights(st, tradeSet){
 ============================================================ */
 $('f-date').value = todayISO();
 $('f-time').value = nowTime();
-loadTrades();
+loadTrades();         // charge + migre si nécessaire
 updateMiniStats();
 updatePeriodSelectors();
 setPeriodActiveState();
+updateStatusSection();
+updateSetupScore();
 </script>
 </body>
 </html>
