@@ -829,8 +829,8 @@ let periodCustomTo   = '';
 
 const MONTH_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-// Score max pour la barre visuelle (A+ = 10 pts = ~71% de la barre)
-const SETUP_SCORE_MAX = 14;
+// Score max pour la barre visuelle (A+ cible ≈ 14pts)
+const SETUP_SCORE_MAX = 16;
 
 // Conversion grade → valeur numérique pour le gap
 const GRADE_VAL = {'A+':5,'A':4,'B':3,'C':2,'D':1};
@@ -965,8 +965,8 @@ function updateStatusSection(){
 
 /**
  * calculateSetupScore(trade)
- * Calcule setupScore (numérique) et setupGrade (A+/A/B/C/D).
- * Nouvelle grille : A+≥10, A=8-9, B=6-7, C=4-5, D<4
+ * Setup Score 100% technique : confluences, structure, timing, RR.
+ * Plan et émotion exclus — ils appartiennent au Discipline Score (psycho).
  * Ne touche jamais au champ `quality` (= qualité perçue).
  */
 function calculateSetupScore(trade){
@@ -974,37 +974,42 @@ function calculateSetupScore(trade){
   const conf = Array.isArray(trade.conf) ? trade.conf : [];
   const rr   = trade.rrPlan || 0;
 
-  // ── Confluences majeures (+2) ──────────────────────────────
-  const major = ['HTF','Liquidity','Sweep','Displacement','MSS','OB','FVG'];
-  major.forEach(c => { if(conf.includes(c)) score += 2; });
+  // ── Confluences majeures (structure + liquidité) ───────────
+  const major = ['HTF','Liquidity','Sweep','Displacement','MSS'];
+  const minor = ['OB','FVG','BPR','Prem/Disc','Confirmation','Asia','London','NY'];
 
-  // RR et plan comme majeures
-  if(rr >= 2)              score += 2;
-  if(trade.plan === 'Oui') score += 2;
+  const majorCount = conf.filter(c => major.includes(c)).length;
+  const minorCount = conf.filter(c => minor.includes(c)).length;
 
-  // Émotion positive comme majeure
-  if(trade.emotion === 'Calme' || trade.emotion === 'Confiance') score += 2;
+  score += Math.min(majorCount * 2, 6); // cap 6 pts sur les majeures
+  score += Math.min(minorCount * 1, 3); // cap 3 pts sur les mineures
 
-  // ── Confluences secondaires (+1) ──────────────────────────
-  const secondary = ['BPR','Prem/Disc','Confirmation','Asia','London','NY'];
-  secondary.forEach(c => { if(conf.includes(c)) score += 1; });
+  // ── Synergies structure ────────────────────────────────────
+  if(conf.includes('MSS') && conf.includes('Displacement')) score += 3; // combo fort
 
-  // ── Malus ─────────────────────────────────────────────────
-  const malus = {FOMO:-2, Revenge:-3, Stress:-1, Fatigue:-1};
-  if(trade.emotion) score += (malus[trade.emotion] || 0);
-  if(trade.plan === 'Non') score -= 3;
-  if(rr > 0 && rr < 1.5)  score -= 2;
+  // ── Timing de session ─────────────────────────────────────
+  if(conf.includes('London') || conf.includes('NY'))        score += 2; // session premium
 
-  // Score jamais négatif
+  // ── RR prévu ──────────────────────────────────────────────
+  if(rr >= 3)            score += 3;
+  else if(rr >= 2)       score += 1;
+  else if(rr > 0)        score -= 2; // RR < 2 = malus technique
+
   score = Math.max(0, score);
 
-  // ── Grade ─────────────────────────────────────────────────
+  // ── Condition A+ : exigences structurelles strictes ───────
+  const isPremium = majorCount >= 3
+    && conf.includes('MSS')
+    && conf.includes('Displacement')
+    && (conf.includes('London') || conf.includes('NY'))
+    && rr >= 2.5;
+
   let grade;
-  if(score >= 10)     grade = 'A+';
-  else if(score >= 8) grade = 'A';
-  else if(score >= 6) grade = 'B';
-  else if(score >= 4) grade = 'C';
-  else                grade = 'D';
+  if(isPremium && score >= 10) grade = 'A+';
+  else if(score >= 8)          grade = 'A';
+  else if(score >= 6)          grade = 'B';
+  else if(score >= 4)          grade = 'C';
+  else                         grade = 'D';
 
   return { setupScore: score, setupGrade: grade };
 }
@@ -1028,10 +1033,9 @@ function calculateSetupEvaluationGap(trade){
 /* Mise à jour live dans le formulaire */
 function updateSetupScore(){
   const tmp = {
-    conf    : getConfluences(),
-    rrPlan  : parseFloat($('f-rr-plan').value) || 0,
-    plan    : getToggleVal('plan'),
-    emotion : getToggleVal('emotion'),
+    conf   : getConfluences(),
+    rrPlan : parseFloat($('f-rr-plan').value) || 0,
+    // plan et emotion exclus : appartiennent au Discipline Score uniquement
   };
   const { setupScore, setupGrade } = calculateSetupScore(tmp);
 
@@ -1047,6 +1051,10 @@ function updateSetupScore(){
   fill.style.background = color;
   val.style.color = color;
   val.textContent = `${setupGrade} · ${setupScore}pts`;
+
+  // Smart warning live (basé sur les confluences actuelles + historique)
+  const tmpTrade = { conf:tmp.conf, rrPlan:tmp.rrPlan, setupScore, setupGrade };
+  displayWarning(generateSmartWarning(tmpTrade, trades));
 }
 
 /* ============================================================
@@ -1122,10 +1130,10 @@ function resetForm(){
   $('setup-val').style.color   = 'var(--t3)';
 
   updateStatusSection();
+  displayWarning(null);
 }
 
 /* ============================================================
-   MODE ÉDITION
 ============================================================ */
 function enterEditMode(trade, mode = 'edit'){
   editingTradeId = trade.id;
@@ -1180,7 +1188,7 @@ function enterEditMode(trade, mode = 'edit'){
   // Mise à jour visuelle
   updateStatusSection();
   updatePsychoScore();
-  updateSetupScore();
+  updateSetupScore(); // déclenche aussi displayWarning via updateSetupScore
 }
 
 function exitEditMode(){
@@ -1334,6 +1342,115 @@ function deleteTrade(id){
 }
 
 /* ============================================================
+   SETUP GRADE STATS & SMART WARNING
+============================================================ */
+
+/**
+ * getStatsBySetupGrade(tradeSet)
+ * Retourne pour chaque grade A+/A/B/C/D :
+ *   { n, winrate, avgR } — sur trades clôturés uniquement.
+ */
+function getStatsBySetupGrade(tradeSet){
+  const closed = tradeSet.filter(t => t.status === 'closed' && t.setupGrade && t.result);
+  const result = {};
+  ['A+','A','B','C','D'].forEach(g => {
+    const grp = closed.filter(t => t.setupGrade === g);
+    if(!grp.length){ result[g] = null; return; }
+    const wins = grp.filter(t => t.result === 'Win').length;
+    const rSum = grp.reduce((a,t) => a + signedR(t), 0);
+    result[g] = {
+      n       : grp.length,
+      winrate : wins / grp.length * 100,
+      avgR    : rSum / grp.length,
+    };
+  });
+  return result;
+}
+
+/**
+ * generateSmartWarning(trade, tradeSet)
+ * Compare le grade du trade en cours avec les stats historiques réelles.
+ * Retourne { message, level } où level = 'good' | 'bad' | 'uncertain'
+ * N'effectue AUCUN blocage — information uniquement.
+ */
+function generateSmartWarning(trade, tradeSet){
+  const stats   = getStatsBySetupGrade(tradeSet);
+  const grade   = trade.setupGrade;
+  const current = stats[grade];
+
+  const rFmt  = v => (v >= 0 ? '+' : '') + v.toFixed(2) + 'R';
+  const wrFmt = v => v.toFixed(0) + '%';
+
+  // ── Cas 3 : données insuffisantes ──────────────────────────
+  if(!current || current.n < 3){
+    // Cherche le meilleur grade disponible pour comparaison indicative
+    const best = ['A+','A','B'].find(g => stats[g] && stats[g].n >= 3);
+    const bestStr = best && stats[best]
+      ? ` Référence : Setup ${best} → ${wrFmt(stats[best].winrate)} WR / ${rFmt(stats[best].avgR)}`
+      : '';
+    return {
+      level  : 'uncertain',
+      message: `⚠️ Setup ${grade} — pas encore assez de données (${current ? current.n : 0} trade${(current?.n||0)>1?'s':''} enregistré${(current?.n||0)>1?'s':''}).${bestStr}`,
+    };
+  }
+
+  // ── Trouver le meilleur grade de référence (A+ ou A) ───────
+  const refGrade = ['A+','A'].find(g => stats[g] && stats[g].n >= 3 && g !== grade);
+  const ref      = refGrade ? stats[refGrade] : null;
+
+  // ── Cas 1 : setup faible (C ou D, ou avgR négatif) ─────────
+  const isWeak = ['C','D'].includes(grade) || current.avgR < -0.1;
+  if(isWeak){
+    let msg = `⚠️ Setup ${grade} → WR historique : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)}`;
+    if(ref) msg += `\nComparaison : Setup ${refGrade} → ${wrFmt(ref.winrate)} WR / ${rFmt(ref.avgR)}`;
+    msg += `\n👉 Tu trades un setup statistiquement sous-performant sur tes données.`;
+    return { level:'bad', message:msg };
+  }
+
+  // ── Cas 2 : bon setup (A+ ou A, avgR positif) ──────────────
+  const isStrong = ['A+','A'].includes(grade) && current.avgR > 0.2 && current.winrate >= 50;
+  if(isStrong){
+    let msg = `✅ Setup ${grade} → WR : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)}`;
+    if(current.n < 10) msg += ` (${current.n} trades — sample limité)`;
+    msg += `\n👉 Conditions favorables selon tes données.`;
+    return { level:'good', message:msg };
+  }
+
+  // ── Cas intermédiaire : setup B ou résultats mitigés ───────
+  let msg = `📊 Setup ${grade} → WR : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)} (${current.n} trades)`;
+  if(ref) msg += `\nMeilleur référence : Setup ${refGrade} → ${wrFmt(ref.winrate)} / ${rFmt(ref.avgR)}`;
+  return { level:'uncertain', message:msg };
+}
+
+/**
+ * displayWarning(warning)
+ * Affiche le smart warning sous le bouton submit.
+ */
+function displayWarning(warning){
+  let el = $('smart-warning');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'smart-warning';
+    $('btn-submit').insertAdjacentElement('afterend', el);
+  }
+  if(!warning){ el.style.display='none'; return; }
+
+  const colors = {
+    good     : { bg:'rgba(34,197,94,.08)',  border:'rgba(34,197,94,.25)',  text:'var(--win)' },
+    bad      : { bg:'rgba(239,68,68,.08)',  border:'rgba(239,68,68,.25)',  text:'var(--loss)' },
+    uncertain: { bg:'rgba(245,158,11,.07)', border:'rgba(245,158,11,.22)', text:'var(--be)' },
+  };
+  const c = colors[warning.level] || colors.uncertain;
+
+  el.style.cssText = [
+    `background:${c.bg}`, `border:1px solid ${c.border}`, `color:${c.text}`,
+    `border-radius:var(--r)`, `padding:10px 14px`, `margin-top:8px`,
+    `font-family:var(--mono)`, `font-size:.68rem`, `line-height:1.55`,
+    `white-space:pre-line`, `display:block`,
+  ].join(';');
+  el.textContent = warning.message;
+}
+/* ============================================================
    CONSTRUCTION DU TRADE DEPUIS LE FORMULAIRE
 ============================================================ */
 function buildTradeFromForm(existingId = null){
@@ -1376,6 +1493,9 @@ function buildTradeFromForm(existingId = null){
 
   // Écart perçu vs calculé
   trade.setupEvaluationGap = calculateSetupEvaluationGap(trade);
+
+  // Smart warning basé sur les stats historiques réelles
+  trade.warning = generateSmartWarning(trade, trades);
 
   if(!existingId){
     trade.id        = Date.now();
@@ -2409,104 +2529,151 @@ function calculateCalibrationStats(calTrades){
 }
 
 /**
- * Génère les insights et les règles opérationnelles dans les conteneurs dédiés.
+ * generateCalibrationInsights(calStats, filtered)
+ * Hiérarchisation : 1. Dominant (fréquence) · 2. Leak (R le plus négatif)
+ *                   3. Modèle (R le plus positif) · 4. Psycho
+ * Ne conclut jamais "tu te surestime" uniquement parce que des surévalués existent.
+ * Lecture = fréquence ET impact combinés.
  */
 function generateCalibrationInsights(calStats, filtered){
-  const rFmt = v => v != null ? (v>=0?'+':'')+v.toFixed(2)+'R' : '--';
+  const rFmt = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + 'R' : '--';
   const insightItems = [];
-  const rules = [];
+  const rules        = [];
 
-  /* Insights surévaluation */
-  if(calStats.overestimated && calStats.overestimated.n >= 2){
-    const s = calStats.overestimated;
-    insightItems.push({
-      color:'var(--loss)',
-      text: `<strong>Tes setups surévalués (${s.n} trades) ont un R moyen de ${rFmt(s.avgR)}.</strong>` +
-        (s.avgR < 0 ? ' Quand tu penses être meilleur que le scoring, tu perds.' : ' Impact limité sur cette période.')
-    });
-    if(s.avgR < 0){
-      rules.push({ color:'var(--loss)', icon:'⛔', text:'Si qualité perçue > qualité calculée, trade interdit ou taille ×0.5.' });
-    }
+  /* Catégories disponibles */
+  const cats = [
+    { key:'aligned',        label:'alignés',      color:'var(--win)',  icon:'✓' },
+    { key:'overestimated',  label:'surévalués',   color:'var(--loss)', icon:'↓' },
+    { key:'underestimated', label:'sous-évalués', color:'var(--blue)', icon:'↑' },
+  ].map(def => {
+    const s = calStats[def.key];
+    return s && s.n > 0 ? { ...def, n:s.n, avgR:s.avgR, avgP:s.avgP ?? null, wr:s.wr } : null;
+  }).filter(Boolean);
+
+  if(!cats.length){
+    const ie = $('cal-chart-insights'); if(ie) ie.innerHTML = '';
+    const re = $('cal-rules');          if(re) re.innerHTML = '';
+    return;
   }
 
-  /* Insights alignement */
-  if(calStats.aligned && calStats.aligned.n >= 2){
-    const s = calStats.aligned;
-    const isPositive = s.avgR > 0;
-    insightItems.push({
-      color: isPositive ? 'var(--win)' : 'var(--be)',
-      text: `<strong>Quand ton intuition et le scoring sont alignés (${s.n} trades) :</strong> ${s.wr.toFixed(0)}% WR, ${rFmt(s.avgR)} de R moyen.` +
-        (isPositive ? ' Ton expectancy est positive dans ce cas. Priorité à ces configurations.' : ' Même alignés, les résultats sont mitigés — revoir la qualité des confluences.')
-    });
-    if(isPositive){
+  const total = cats.reduce((a,c) => a + c.n, 0);
+  const pct   = n => Math.round(n / total * 100);
+  const withR = cats.filter(c => c.avgR !== null);
+
+  /* ── 1. Catégorie dominante (la plus fréquente) ──────────────── */
+  const dominant      = cats.reduce((a, b) => b.n > a.n ? b : a);
+  const domPct        = pct(dominant.n);
+  const domIsPositive = dominant.avgR > 0.05;
+  const domIsNegative = dominant.avgR < -0.1;
+
+  let domText = `<strong>Ta catégorie la plus fréquente : setups ${dominant.label} (${domPct}%, ${dominant.n} trades · R moyen ${rFmt(dominant.avgR)}).</strong> `;
+
+  if(dominant.key === 'underestimated' && domIsPositive)
+    domText += `Ces trades sont positifs mais potentiellement sous-exploités — manque de conviction ou prudence excessive sur des setups objectivement solides.`;
+  else if(dominant.key === 'underestimated' && domIsNegative)
+    domText += `Malgré la fréquence, ces trades sont négatifs : le scoring calcule mieux la réalité que ton instinct ici.`;
+  else if(dominant.key === 'overestimated' && domIsNegative)
+    domText += `Signal d'alerte : tu trades trop souvent des setups que le scoring ne valide pas, avec un impact négatif. Filtrer en priorité.`;
+  else if(dominant.key === 'overestimated' && domIsPositive)
+    domText += `L'impact reste positif sur cette période, mais surveille la tendance — la surévaluation peut créer un biais de confiance à terme.`;
+  else if(dominant.key === 'aligned' && domIsPositive)
+    domText += `Bonne cohérence : quand instinct et scoring sont en phase, tes résultats sont solides.`;
+  else if(dominant.key === 'aligned' && domIsNegative)
+    domText += `Même alignés, tes résultats sont négatifs — revoir la qualité des confluences sélectionnées.`;
+  else
+    domText += `Continue à documenter pour affiner cette analyse.`;
+
+  insightItems.push({ color: dominant.color, text: domText });
+
+  /* ── 2. Leak prioritaire (R le plus négatif, si clairement < −0.1) ── */
+  const mostDestruct = withR.length ? withR.reduce((a,b) => b.avgR < a.avgR ? b : a) : null;
+  if(mostDestruct && mostDestruct.avgR < -0.1 && mostDestruct.key !== dominant.key){
+    const dPct = pct(mostDestruct.n);
+    let leakText = `<strong>Leak prioritaire : setups ${mostDestruct.label} (${dPct}%, ${mostDestruct.n} trades · R moyen ${rFmt(mostDestruct.avgR)}).</strong> `;
+    if(mostDestruct.key === 'overestimated')
+      leakText += `Quand perception > scoring, les résultats sont négatifs. Ces trades doivent être filtrés ou tradés en taille réduite.`;
+    else if(mostDestruct.key === 'underestimated')
+      leakText += `Tu entres sur des setups que toi-même tu juges insuffisants — l'instinct te freine mais tu trades quand même.`;
+    else
+      leakText += `Même alignés, ces trades détruisent de la valeur — revoir les critères de confluence.`;
+    insightItems.push({ color: 'var(--loss)', text: leakText });
+    if(mostDestruct.key === 'overestimated')
+      rules.push({ color:'var(--loss)', icon:'⛔', text:'Si qualité perçue > qualité calculée : trade interdit ou taille ×0.5.' });
+    else if(mostDestruct.key === 'aligned')
+      rules.push({ color:'var(--loss)', icon:'⚠', text:'Même les setups alignés sont négatifs — revoir la grille de confluences.' });
+  } else if(mostDestruct && mostDestruct.avgR < -0.1 && mostDestruct.key === dominant.key){
+    // dominant ET destructeur → règle sans répéter l'insight
+    if(mostDestruct.key === 'overestimated')
+      rules.push({ color:'var(--loss)', icon:'⛔', text:'Si qualité perçue > qualité calculée : trade interdit ou taille ×0.5.' });
+    else if(mostDestruct.key === 'aligned')
+      rules.push({ color:'var(--loss)', icon:'⚠', text:'Même les setups alignés sont négatifs — revoir la grille de confluences.' });
+  }
+
+  /* ── 3. Modèle à reproduire (R le plus positif) ──────────────── */
+  const mostProfit = withR.length ? withR.reduce((a,b) => b.avgR > a.avgR ? b : a) : null;
+  if(mostProfit && mostProfit.avgR > 0.1){
+    const prPct = pct(mostProfit.n);
+    let profitText = `<strong>Meilleure performance : setups ${mostProfit.label} (${prPct}%, ${mostProfit.n} trades · R moyen ${rFmt(mostProfit.avgR)}).</strong> `;
+    if(mostProfit.key === 'aligned')
+      profitText += `Quand perception et scoring sont cohérents, tes résultats sont nettement supérieurs. Ce pattern est à reproduire systématiquement.`;
+    else if(mostProfit.key === 'underestimated')
+      profitText += `Tes meilleurs trades sont ceux que tu sous-estimes. Travailler la conviction et le sizing sur ces setups — tu pourrais en extraire bien plus.`;
+    else if(mostProfit.key === 'overestimated')
+      profitText += `Tes surévaluations restent positives sur cette période — surveille si c'est structurel ou un effet statistique court terme.`;
+    insightItems.push({ color: mostProfit.color, text: profitText });
+    if(mostProfit.key === 'aligned')
       rules.push({ color:'var(--win)', icon:'✓', text:'Priorité absolue aux trades où perception et scoring sont alignés.' });
-    }
+    else if(mostProfit.key === 'underestimated')
+      rules.push({ color:'var(--blue)', icon:'↑', text:'Sur les sous-évalués positifs : travailler la conviction et le sizing progressif.' });
   }
 
-  /* Insights sous-évaluation */
-  if(calStats.underestimated && calStats.underestimated.n >= 2){
-    const s = calStats.underestimated;
-    insightItems.push({
-      color:'var(--blue)',
-      text: `<strong>Tes setups sous-évalués (${s.n} trades) : ${rFmt(s.avgR)} de R moyen.</strong>` +
-        (s.avgR > 0 ? ' Tu manques peut-être de confiance sur certains bons setups. Ne réduis pas le risque ou ne coupe pas trop tôt.' : ' La sous-évaluation ne garantit pas la performance.')
-    });
-  }
-
-  /* Insights psycho score */
-  const hasPsycho = filtered.filter(t => t.psycho != null && t.result);
+  /* ── 4. Score mental ─────────────────────────────────────────── */
+  const hasPsycho  = filtered.filter(t => t.psycho != null && t.result);
   if(hasPsycho.length >= 5){
-    const lowPsycho = hasPsycho.filter(t => t.psycho < 50);
+    const lowPsycho  = hasPsycho.filter(t => t.psycho < 50);
     const highPsycho = hasPsycho.filter(t => t.psycho >= 65);
     if(lowPsycho.length >= 2){
-      const rLow  = lowPsycho.reduce((a,t)=>a+signedR(t),0)/lowPsycho.length;
-      const rHigh = highPsycho.length ? highPsycho.reduce((a,t)=>a+signedR(t),0)/highPsycho.length : null;
+      const rLow  = lowPsycho.reduce((a,t)  => a + signedR(t), 0) / lowPsycho.length;
+      const rHigh = highPsycho.length
+        ? highPsycho.reduce((a,t) => a + signedR(t), 0) / highPsycho.length
+        : null;
+      const lossPct = Math.round(lowPsycho.filter(t => t.result === 'Loss').length / lowPsycho.length * 100);
       insightItems.push({
         color: rLow < 0 ? 'var(--loss)' : 'var(--be)',
-        text: `<strong>Les trades avec score mental < 50 (${lowPsycho.length} trades) ont un R moyen de ${rFmt(rLow)}.</strong>` +
-          (rHigh !== null ? ` Vs ${rFmt(rHigh)} quand score ≥ 65.` : '') +
-          (rLow < 0 ? ` L'état mental influence directement la performance.` : '')
+        text : `<strong>Score mental < 50 : ${lowPsycho.length} trades, R moyen ${rFmt(rLow)}</strong>` +
+          (rHigh !== null ? ` vs ${rFmt(rHigh)} quand score ≥ 65.` : '.') +
+          (rLow < 0
+            ? ` L'état mental influence directement la performance — ${lossPct}% de pertes dans cet état.`
+            : ` Impact limité sur cette période.`)
       });
-      if(rLow < 0){
-        rules.push({ color:'var(--loss)', icon:'⚠', text:'Aucun trade si score mental < 50.' });
-      }
+      if(rLow < 0) rules.push({ color:'var(--loss)', icon:'⚠', text:'Aucun trade si score mental < 50.' });
     }
   }
 
-  /* Rendu insights */
+  /* ── Rendu HTML ──────────────────────────────────────────────── */
   const insEl = $('cal-chart-insights');
-  if(insEl){
-    insEl.innerHTML = insightItems.length
-      ? insightItems.map(i => `
-          <div class="insight-item" style="margin-bottom:6px">
-            <div class="insight-dot" style="background:${i.color}"></div>
-            <div class="insight-text">${i.text}</div>
-          </div>`).join('')
-      : '';
-  }
+  if(insEl) insEl.innerHTML = insightItems.map(i =>
+    `<div class="insight-item" style="margin-bottom:6px">` +
+    `<div class="insight-dot" style="background:${i.color}"></div>` +
+    `<div class="insight-text">${i.text}</div></div>`
+  ).join('');
 
-  /* Rendu règles opérationnelles */
   const rulesEl = $('cal-rules');
   if(rulesEl && rules.length){
-    rulesEl.innerHTML = `
-      <div style="border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;margin-top:4px">
-        <div style="padding:8px 14px;background:var(--bg4);border-bottom:1px solid var(--b1)">
-          <span style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)">
-            &#9654; Règles issues de tes données
-          </span>
-        </div>
-        <div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">
-          ${rules.map(r => `
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:1rem;flex-shrink:0">${r.icon}</span>
-              <span style="font-family:var(--mono);font-size:.72rem;color:var(--t1);
-                border-left:2px solid ${r.color};padding-left:10px">${r.text}</span>
-            </div>`).join('')}
-        </div>
-      </div>`;
-  } else if(rulesEl){
-    rulesEl.innerHTML = '';
-  }
+    rulesEl.innerHTML =
+      `<div style="border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;margin-top:4px">` +
+      `<div style="padding:8px 14px;background:var(--bg4);border-bottom:1px solid var(--b1)">` +
+      `<span style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)">` +
+      `&#9654; Règles issues de tes données</span></div>` +
+      `<div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">` +
+      rules.map(r =>
+        `<div style="display:flex;align-items:center;gap:10px">` +
+        `<span style="font-size:1rem;flex-shrink:0">${r.icon}</span>` +
+        `<span style="font-family:var(--mono);font-size:.72rem;color:var(--t1);` +
+        `border-left:2px solid ${r.color};padding-left:10px">${r.text}</span></div>`
+      ).join('') +
+      `</div></div>`;
+  } else if(rulesEl){ rulesEl.innerHTML = ''; }
 }
 
 /**
