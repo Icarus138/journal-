@@ -256,7 +256,27 @@ textarea{resize:vertical;min-height:52px}
 .period-count{font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-left:auto;white-space:nowrap;}
 .period-count span{color:var(--t2);font-weight:600}
 
-/* ============================================================ TOAST */
+/* ── Tilt Monitor ──────────────────────────────────────────── */
+.tilt-monitor-wrap{
+  display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  padding:11px 14px;border:1px solid var(--b1);border-radius:var(--r);background:var(--bg3);
+  transition:border-color .3s,background .3s;
+}
+.tilt-monitor-wrap.tilt-clean  {border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.05)}
+.tilt-monitor-wrap.tilt-derive {border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.06)}
+.tilt-monitor-wrap.tilt-danger {border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.06)}
+.tilt-monitor-wrap.tilt-tilt   {border-color:rgba(239,68,68,.6);  background:rgba(239,68,68,.10);animation:tilt-pulse 1.2s ease-in-out infinite}
+@keyframes tilt-pulse{0%,100%{opacity:1}50%{opacity:.75}}
+.tilt-monitor-left{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:56px}
+.tilt-monitor-label{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.tilt-monitor-score{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1;color:var(--t1)}
+.tilt-monitor-center{display:flex;flex-direction:column;gap:6px}
+.tilt-level-badge{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tilt-bar-wrap{height:4px;background:var(--bg5);border-radius:99px;overflow:hidden;width:100%}
+.tilt-bar-fill{height:100%;border-radius:99px;transition:width .4s ease,background .4s ease}
+.tilt-monitor-msg{font-family:var(--mono);font-size:.67rem;color:var(--t2);line-height:1.45;text-align:right;max-width:200px}
+
+
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--bg4);border:1px solid var(--b2);border-radius:var(--r);color:var(--t1);
@@ -512,6 +532,23 @@ textarea{resize:vertical;min-height:52px}
 
         <div class="form-col-span-4">
           <button class="btn-submit" id="btn-submit">&#43; Enregistrer le trade</button>
+        </div>
+
+        <!-- TILT MONITOR — affiché en temps réel -->
+        <div class="form-col-span-4" id="tilt-monitor" style="display:none">
+          <div class="tilt-monitor-wrap" id="tilt-monitor-inner">
+            <div class="tilt-monitor-left">
+              <div class="tilt-monitor-label">&#129504; TILT SCORE</div>
+              <div class="tilt-monitor-score" id="tilt-score-val">0</div>
+            </div>
+            <div class="tilt-monitor-center">
+              <div class="tilt-level-badge" id="tilt-level-badge">Clean</div>
+              <div class="tilt-bar-wrap">
+                <div class="tilt-bar-fill" id="tilt-bar-fill"></div>
+              </div>
+            </div>
+            <div class="tilt-monitor-msg" id="tilt-monitor-msg"></div>
+          </div>
         </div>
 
       </div>
@@ -797,6 +834,53 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
 
+  <!-- ============================================================
+       TILT DASHBOARD
+  ============================================================ -->
+  <div class="panel" id="panel-tilt-dash">
+    <div class="panel-header">
+      <span class="panel-title">&#129504; Tilt &amp; Dérive mentale</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Basé sur les 10 derniers trades clôturés</span>
+    </div>
+    <div class="panel-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+        <div class="stat-card">
+          <div class="stat-label">Score tilt moyen</div>
+          <div class="stat-value" id="td-avg-score">--</div>
+          <div class="stat-sub">sur la période</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sessions Danger/Tilt</div>
+          <div class="stat-value" id="td-danger-count" style="color:var(--loss)">--</div>
+          <div class="stat-sub">score &gt; 60</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">R moyen — Clean</div>
+          <div class="stat-value" id="td-r-clean">--</div>
+          <div class="stat-sub">tilt 0–30</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">R moyen — Dérive+</div>
+          <div class="stat-value" id="td-r-tilt">--</div>
+          <div class="stat-sub">tilt &gt; 30</div>
+        </div>
+      </div>
+      <div class="analysis-grid">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">R moyen par niveau de tilt</div>
+          <table class="mini-table" id="tilt-level-table">
+            <thead><tr><td>Niveau</td><td>Trades</td><td>R moyen</td><td>WR</td></tr></thead>
+            <tbody id="tilt-level-tbody"></tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">Corrélation tilt score vs R</div>
+          <div style="position:relative;height:180px"><canvas id="chart-tilt-scatter"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /page-dashboard -->
 
 </div><!-- /app -->
@@ -1052,9 +1136,12 @@ function updateSetupScore(){
   val.style.color = color;
   val.textContent = `${setupGrade} · ${setupScore}pts`;
 
-  // Smart warning live (basé sur les confluences actuelles + historique)
+  // Smart warning live
   const tmpTrade = { conf:tmp.conf, rrPlan:tmp.rrPlan, setupScore, setupGrade };
   displayWarning(generateSmartWarning(tmpTrade, trades));
+
+  // Tilt monitor live
+  updateTiltDisplay();
 }
 
 /* ============================================================
@@ -1259,11 +1346,17 @@ function loadTrades(){
 function migrateTradesData(){
   if(!trades.length) return;
 
-  // Vérifie si une migration est nécessaire (score manquant OU gap manquant)
+  // Version du scoring actuel — incrémenter à chaque changement de logique
+  const SCORING_VERSION = 2; // v2 = 100% technique, sans plan/emotion
+
+  // Migration nécessaire si : score manquant, gap manquant, OU version de scoring obsolète
   const needsMigration = trades.some(t =>
     t.setupScore === null ||
+    t.setupScore === undefined ||
     t.setupGrade === null ||
-    (t.quality && t.setupGrade && t.setupEvaluationGap === undefined)
+    t.setupGrade === undefined ||
+    (t.quality && t.setupGrade && t.setupEvaluationGap === undefined) ||
+    (t.scoringVersion === undefined || t.scoringVersion < SCORING_VERSION)
   );
   if(!needsMigration) return;
 
@@ -1275,33 +1368,36 @@ function migrateTradesData(){
 
   let migratedCount = 0;
   trades = trades.map(t => {
-    const needsScore = t.setupScore === null || t.setupGrade === null;
-    const needsGap   = t.setupEvaluationGap === undefined;
-    if(!needsScore && !needsGap) return t;
+    const needsRecalc =
+      t.setupScore === null || t.setupScore === undefined ||
+      t.setupGrade === null || t.setupGrade === undefined ||
+      (t.scoringVersion === undefined || t.scoringVersion < SCORING_VERSION);
+    const needsGap = t.setupEvaluationGap === undefined;
 
-    const { setupScore, setupGrade } = needsScore
-      ? calculateSetupScore(t)
-      : { setupScore: t.setupScore, setupGrade: t.setupGrade };
+    if(!needsRecalc && !needsGap) return t;
 
+    // Recalcul 100% technique (plan/emotion ignorés par calculateSetupScore v2)
+    const { setupScore, setupGrade } = calculateSetupScore(t);
     const tWithGrade = { ...t, setupScore, setupGrade };
     const setupEvaluationGap = calculateSetupEvaluationGap(tWithGrade);
 
     migratedCount++;
     return {
       ...t,
-      status              : t.status    || 'closed',
-      isOpen              : t.isOpen    !== undefined ? t.isOpen : false,
-      createdAt           : t.createdAt || (t.date ? t.date + 'T' + (t.time || '00:00') : new Date().toISOString()),
-      updatedAt           : t.updatedAt || new Date().toISOString(),
+      status             : t.status  || 'closed',
+      isOpen             : t.isOpen  !== undefined ? t.isOpen : false,
+      createdAt          : t.createdAt || (t.date ? t.date + 'T' + (t.time || '00:00') : new Date().toISOString()),
+      updatedAt          : t.updatedAt || new Date().toISOString(),
       setupScore,
       setupGrade,
       setupEvaluationGap,
+      scoringVersion     : SCORING_VERSION,
     };
   });
 
   saveTrades();
   if(migratedCount > 0){
-    showToast(`Migration OK — ${migratedCount} trade(s) enrichis`, 3000);
+    showToast(`Recalcul scoring v2 — ${migratedCount} trade(s) mis à jour`, 3000);
   }
 }
 
@@ -1339,6 +1435,154 @@ function deleteTrade(id){
   updatePeriodSelectors();
   renderHistory();
   showToast('Trade supprimé');
+}
+
+/* ============================================================
+   TILT DETECTION — Dérive mentale en temps réel
+============================================================ */
+
+/**
+ * calculateTiltScore(tradeSet)
+ * Analyse les 10 derniers trades clôturés.
+ * Retourne un score 0–100 reflétant le niveau de dérive mentale.
+ */
+function calculateTiltScore(tradeSet){
+  const closed = tradeSet
+    .filter(t => t.status === 'closed' && t.result)
+    .slice(0, 10); // 10 derniers clôturés (trades est trié récent → ancien)
+
+  if(!closed.length) return 0;
+
+  let score = 0;
+
+  /* ── 1. Série de pertes consécutives ─────────────────────── */
+  let lossStreak = 0;
+  for(const t of closed){
+    if(t.result === 'Loss') lossStreak++;
+    else break;
+  }
+  if(lossStreak >= 4)      score += 50;
+  else if(lossStreak === 3) score += 30;
+  else if(lossStreak === 2) score += 15;
+
+  /* ── 2. Émotions négatives (sur les 10 derniers) ─────────── */
+  const emotScore = { FOMO:15, Revenge:25, Stress:10, Fatigue:10 };
+  closed.forEach(t => { score += emotScore[t.emotion] || 0; });
+
+  /* ── 3. Mauvais setups ────────────────────────────────────── */
+  const gradeScore = { C:10, D:20 };
+  closed.forEach(t => {
+    score += gradeScore[t.setupGrade] || gradeScore[t.quality] || 0;
+  });
+
+  /* ── 4. Trades hors plan ─────────────────────────────────── */
+  closed.forEach(t => { if(t.plan === 'Non') score += 20; });
+
+  /* ── 5. Overtrading (>5 trades même journée) ──────────────── */
+  const byDay = {};
+  closed.forEach(t => {
+    const d = t.date || '?';
+    byDay[d] = (byDay[d] || 0) + 1;
+  });
+  if(Object.values(byDay).some(n => n > 5)) score += 20;
+
+  return Math.min(100, Math.max(0, score));
+}
+
+/**
+ * getTiltLevel(score)
+ * Retourne le niveau de tilt et ses métadonnées visuelles.
+ */
+function getTiltLevel(score){
+  if(score >= 80) return { level:'Tilt',   cls:'tilt-tilt',   color:'var(--loss)' };
+  if(score >= 60) return { level:'Danger', cls:'tilt-danger',  color:'#f87171'     };
+  if(score >= 30) return { level:'Dérive', cls:'tilt-derive',  color:'var(--be)'   };
+  return           { level:'Clean',  cls:'tilt-clean',  color:'var(--win)'  };
+}
+
+/**
+ * generateTiltWarning(score, tiltObj)
+ * Génère un message contextuel basé sur les causes dominantes.
+ */
+function generateTiltWarning(score, tiltObj, tradeSet){
+  const closed  = tradeSet.filter(t => t.status === 'closed' && t.result).slice(0, 10);
+  const level   = tiltObj.level;
+
+  // Analyse des causes
+  let lossStreak = 0;
+  for(const t of closed){ if(t.result==='Loss') lossStreak++; else break; }
+  const hasFomo    = closed.some(t => t.emotion === 'FOMO');
+  const hasRevenge = closed.some(t => t.emotion === 'Revenge');
+  const hasFatigue = closed.some(t => t.emotion === 'Fatigue');
+  const hasOffPlan = closed.some(t => t.plan === 'Non');
+  const hasWeak    = closed.some(t => ['C','D'].includes(t.setupGrade || t.quality));
+
+  // Construction du message par niveau
+  const causes = [];
+  if(lossStreak >= 2) causes.push(`${lossStreak} pertes consécutives`);
+  if(hasRevenge)      causes.push('revenge trade');
+  if(hasFomo)         causes.push('FOMO');
+  if(hasFatigue)      causes.push('fatigue');
+  if(hasOffPlan)      causes.push('hors plan');
+  if(hasWeak)         causes.push('setups faibles');
+  const causeStr = causes.slice(0,3).join(' + ');
+
+  const actions = {
+    Clean  : '— discipline OK ✓',
+    Dérive : `→ ${causeStr || 'légère dérive'} · Réduis le risque de 50%`,
+    Danger : `→ ${causeStr || 'dérive avancée'} · Arrête de trader 1h minimum`,
+    Tilt   : `→ ${causeStr || 'tilt avancé'} · STOP session immédiatement`,
+  };
+  const icons = { Clean:'🧠', Dérive:'⚠️', Danger:'🚨', Tilt:'💀' };
+
+  return `${icons[level]} ${level.toUpperCase()} [${score}/100] ${actions[level] || ''}`;
+}
+
+/**
+ * displayTilt(score, tiltObj, message)
+ * Met à jour le bloc tilt monitor dans le formulaire.
+ */
+function displayTilt(score, tiltObj, message){
+  const monitor = $('tilt-monitor');
+  if(!monitor) return;
+
+  // Masquer si aucun historique
+  if(score === 0 && tiltObj.level === 'Clean' && trades.filter(t=>t.status==='closed').length < 2){
+    monitor.style.display = 'none';
+    return;
+  }
+
+  monitor.style.display = '';
+  const wrap = $('tilt-monitor-inner');
+  if(wrap){
+    wrap.className = `tilt-monitor-wrap ${tiltObj.cls}`;
+  }
+
+  const sv = $('tilt-score-val');
+  if(sv){ sv.textContent = score; sv.style.color = tiltObj.color; }
+
+  const badge = $('tilt-level-badge');
+  if(badge){ badge.textContent = tiltObj.level; badge.style.color = tiltObj.color; }
+
+  const fill = $('tilt-bar-fill');
+  if(fill){
+    fill.style.width = score + '%';
+    fill.style.background = score >= 80 ? 'var(--loss)' : score >= 60 ? '#f87171' : score >= 30 ? 'var(--be)' : 'var(--win)';
+  }
+
+  const msg = $('tilt-monitor-msg');
+  if(msg){ msg.textContent = message.split('·').slice(1).join('·').trim() || ''; }
+}
+
+/**
+ * updateTiltDisplay()
+ * Point d'entrée unique — appelé à chaque interaction du formulaire.
+ */
+function updateTiltDisplay(){
+  const score   = calculateTiltScore(trades);
+  const tiltObj = getTiltLevel(score);
+  const message = generateTiltWarning(score, tiltObj, trades);
+  displayTilt(score, tiltObj, message);
 }
 
 /* ============================================================
@@ -1486,10 +1730,16 @@ function buildTradeFromForm(existingId = null){
     updatedAt  : new Date().toISOString(),
   };
 
-  // Score setup automatique (calculatedSetupGrade)
+  // Score setup automatique — 100% technique (v2)
   const { setupScore, setupGrade } = calculateSetupScore(trade);
-  trade.setupScore = setupScore;
-  trade.setupGrade = setupGrade;
+  trade.setupScore      = setupScore;
+  trade.setupGrade      = setupGrade;
+  trade.scoringVersion  = 2;
+
+  // Tilt au moment du trade
+  const tiltScore = calculateTiltScore(trades);
+  trade.tiltScore  = tiltScore;
+  trade.tiltLevel  = getTiltLevel(tiltScore).level;
 
   // Écart perçu vs calculé
   trade.setupEvaluationGap = calculateSetupEvaluationGap(trade);
@@ -2303,6 +2553,7 @@ function renderDashboard(){
 
   generateInsights(st, filtered, calTrades);
   renderCalibrationCharts(filtered);
+  renderTiltDashboard(filtered);
 }
 
 /* ============================================================
@@ -2880,6 +3131,119 @@ function renderCalibrationCharts(filtered){
 }
 
 /* ============================================================
+   TILT DASHBOARD — Corrélation tilt vs performance
+============================================================ */
+let _chartTiltScatter = null;
+
+function renderTiltDashboard(filtered){
+  // Trades clôturés avec tiltScore enregistré
+  const withTilt = filtered.filter(t => t.tiltScore != null && t.result);
+
+  const panel = $('panel-tilt-dash');
+  if(!withTilt.length){
+    if(panel) panel.style.display = 'none';
+    return;
+  }
+  if(panel) panel.style.display = '';
+
+  // Stats globales
+  const avgScore   = withTilt.reduce((a,t) => a+t.tiltScore, 0) / withTilt.length;
+  const dangerN    = withTilt.filter(t => t.tiltScore >= 60).length;
+  const cleanSet   = withTilt.filter(t => t.tiltScore <= 30);
+  const tiltedSet  = withTilt.filter(t => t.tiltScore > 30);
+  const avgR       = set => set.length ? set.reduce((a,t)=>a+signedR(t),0)/set.length : null;
+  const rFmt       = v  => v != null ? (v>=0?'+':'')+v.toFixed(2)+'R' : '--';
+
+  const rClean = avgR(cleanSet);
+  const rTilt  = avgR(tiltedSet);
+
+  $('td-avg-score').textContent   = avgScore.toFixed(0);
+  $('td-avg-score').style.color   = avgScore >= 60 ? 'var(--loss)' : avgScore >= 30 ? 'var(--be)' : 'var(--win)';
+  $('td-danger-count').textContent = dangerN;
+  $('td-danger-count').style.color = dangerN > 0 ? 'var(--loss)' : 'var(--t3)';
+
+  $('td-r-clean').textContent  = rFmt(rClean);
+  $('td-r-clean').style.color  = rClean != null ? (rClean>=0?'var(--win)':'var(--loss)') : 'var(--t3)';
+  $('td-r-tilt').textContent   = rFmt(rTilt);
+  $('td-r-tilt').style.color   = rTilt  != null ? (rTilt>=0?'var(--win)':'var(--loss)') : 'var(--t3)';
+
+  // Tableau par niveau
+  const levels = [
+    { key:'Clean',  label:'🧠 Clean',  min:0,  max:30,  color:'var(--win)'  },
+    { key:'Dérive', label:'⚠️ Dérive', min:31, max:59,  color:'var(--be)'   },
+    { key:'Danger', label:'🚨 Danger', min:60, max:79,  color:'#f87171'     },
+    { key:'Tilt',   label:'💀 Tilt',   min:80, max:100, color:'var(--loss)' },
+  ];
+  $('tilt-level-tbody').innerHTML = levels.map(lv => {
+    const set = withTilt.filter(t => t.tiltScore >= lv.min && t.tiltScore <= lv.max);
+    if(!set.length) return `<tr><td style="color:${lv.color}">${lv.label}</td><td style="color:var(--t4)">0</td><td>--</td><td>--</td></tr>`;
+    const r  = avgR(set);
+    const wr = set.filter(t=>t.result==='Win').length/set.length*100;
+    return `<tr>
+      <td style="color:${lv.color};font-weight:600">${lv.label}</td>
+      <td style="font-family:var(--mono)">${set.length}</td>
+      <td style="font-family:var(--mono);color:${r>=0?'var(--win)':'var(--loss)'}">${rFmt(r)}</td>
+      <td style="font-family:var(--mono)">${wr.toFixed(0)}%</td>
+    </tr>`;
+  }).join('');
+
+  // Scatter tilt score vs R réel
+  if(_chartTiltScatter){ _chartTiltScatter.destroy(); _chartTiltScatter = null; }
+  const scatterEl = $('chart-tilt-scatter');
+  if(scatterEl && withTilt.length >= 3){
+    const points = withTilt.map(t => ({
+      x   : t.tiltScore,
+      y   : parseFloat(signedR(t).toFixed(2)),
+      _t  : t,
+      col : t.tiltScore >= 80 ? 'rgba(239,68,68,.85)'  :
+            t.tiltScore >= 60 ? 'rgba(239,68,68,.6)'   :
+            t.tiltScore >= 30 ? 'rgba(245,158,11,.75)'  :
+                                'rgba(34,197,94,.75)',
+    }));
+    _chartTiltScatter = new Chart(scatterEl, {
+      type:'scatter',
+      data:{ datasets:[{
+        label:'Trades', data:points,
+        backgroundColor: points.map(p=>p.col), pointRadius:5, pointHoverRadius:7,
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{ display:false },
+          tooltip:{
+            callbacks:{
+              label: ctx => {
+                const t = ctx.raw._t;
+                return [
+                  `${t.asset||'--'} · ${t.date||'--'}`,
+                  `Tilt : ${t.tiltScore} [${t.tiltLevel||'--'}]`,
+                  `Émotion : ${t.emotion||'--'}`,
+                  `R réel : ${ctx.raw.y >= 0?'+':''}${ctx.raw.y}R`,
+                  t.pnl ? `PnL : ${t.pnl>=0?'+':''}${t.pnl}$` : '',
+                ].filter(Boolean);
+              },
+              title: ()=>''
+            }
+          }
+        },
+        scales:{
+          x:{
+            title:{ display:true, text:'Tilt Score', color:'#3a5070', font:{size:9} },
+            min:0, max:100,
+            ticks:{color:'#3a5070',font:{size:8}}, grid:{color:'rgba(30,45,68,.6)'},
+          },
+          y:{
+            title:{ display:true, text:'R signé', color:'#3a5070', font:{size:9} },
+            ticks:{color:'#3a5070',font:{size:8},callback:v=>(v>=0?'+':'')+v+'R'},
+            grid:{color:'rgba(30,45,68,.6)'}, border:{dash:[3,3]},
+          }
+        }
+      }
+    });
+  }
+}
+
+/* ============================================================
    INITIALISATION
 ============================================================ */
 $('f-date').value = todayISO();
@@ -2889,7 +3253,8 @@ updateMiniStats();
 updatePeriodSelectors();
 setPeriodActiveState();
 updateStatusSection();
-updateSetupScore();
+updateSetupScore();   // déclenche aussi displayWarning + updateTiltDisplay
+updateTiltDisplay();  // afficher le tilt dès le chargement
 </script>
 </body>
 </html>
