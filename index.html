@@ -1546,8 +1546,8 @@ function displayTilt(score, tiltObj, message){
   const monitor = $('tilt-monitor');
   if(!monitor) return;
 
-  // Masquer si aucun historique
-  if(score === 0 && tiltObj.level === 'Clean' && trades.filter(t=>t.status==='closed').length < 2){
+  // Masquer uniquement si aucun historique du tout
+  if(trades.filter(t => t.status === 'closed').length < 1){
     monitor.style.display = 'none';
     return;
   }
@@ -1601,10 +1601,12 @@ function getStatsBySetupGrade(tradeSet){
     const grp = closed.filter(t => t.setupGrade === g);
     if(!grp.length){ result[g] = null; return; }
     const wins = grp.filter(t => t.result === 'Win').length;
+    const losses = grp.filter(t => t.result === 'Loss').length;
+    const decisive = wins + losses;
     const rSum = grp.reduce((a,t) => a + signedR(t), 0);
     result[g] = {
       n       : grp.length,
-      winrate : wins / grp.length * 100,
+      winrate : decisive === 0 ? 0 : wins / decisive * 100,
       avgR    : rSum / grp.length,
     };
   });
@@ -1798,14 +1800,21 @@ function calcStats(tradeSet){
   const wins   = tradeSet.filter(t => t.result === 'Win');
   const losses = tradeSet.filter(t => t.result === 'Loss');
   const bes    = tradeSet.filter(t => t.result === 'BE');
-  const wr     = wins.length / tradeSet.length * 100;
+
+  // Winrate = Wins / (Wins + Losses) — BE exclus du dénominateur
+  const totalDecisive = wins.length + losses.length;
+  const wr     = totalDecisive === 0 ? 0 : wins.length / totalDecisive * 100;
+  const beRate = tradeSet.length   === 0 ? 0 : bes.length / tradeSet.length * 100;
+
   const rValues = tradeSet.map(signedR);
   const totalR  = rValues.reduce((a,b) => a+b, 0);
   const avgR    = totalR / tradeSet.length;
   const avgW    = wins.length   ? wins.reduce((a,t)   => a + Math.abs(signedR(t)), 0) / wins.length   : 0;
   const avgL    = losses.length ? losses.reduce((a,t) => a + Math.abs(signedR(t)), 0) / losses.length : 0;
-  const wrDec   = wr / 100;
-  const exp     = wrDec * avgW - (1 - wrDec) * avgL;
+
+  // Expectancy basée sur le WR corrigé (sans BE)
+  const wrDec = wr / 100;
+  const exp   = totalDecisive === 0 ? 0 : wrDec * avgW - (1 - wrDec) * avgL;
 
   let maxW=0, maxL=0, curW=0, curL=0;
   [...tradeSet].reverse().forEach(t => {
@@ -1835,11 +1844,14 @@ function calcStats(tradeSet){
 
   const offPlan  = tradeSet.filter(t => t.plan === 'Non');
   const onPlan   = tradeSet.filter(t => t.plan === 'Oui');
-  const wrOnPlan = onPlan.length ? onPlan.filter(t => t.result === 'Win').length / onPlan.length * 100 : null;
+  const wrOnPlan = onPlan.length
+    ? onPlan.filter(t => t.result === 'Win').length /
+      Math.max(1, onPlan.filter(t => t.result === 'Win' || t.result === 'Loss').length) * 100
+    : null;
 
   return {
     total:tradeSet.length, wins:wins.length, losses:losses.length, bes:bes.length,
-    wr, totalR, avgR, avgW, avgL, exp, best, worst, maxW, maxL,
+    wr, beRate, totalR, avgR, avgW, avgL, exp, best, worst, maxW, maxL,
     bestSetup : bestSetup ? bestSetup[0] : '--',
     bestAsset : bestAsset ? bestAsset[0] : '--',
     offPlan   : offPlan.length,
@@ -2516,7 +2528,10 @@ function renderDashboard(){
     const pct       = n => calN ? (n/calN*100).toFixed(0)+'%' : '--';
     const avgRCal   = s => s.length ? (s.reduce((a,t)=>a+signedR(t),0)/s.length).toFixed(2) : '--';
     const avgPnlCal = s => s.length ? (s.reduce((a,t)=>a+(t.pnl||0),0)/s.length).toFixed(0) : '--';
-    const wrCal     = s => s.length ? (s.filter(t=>t.result==='Win').length/s.length*100).toFixed(0)+'%' : '--';
+    const wrCal = s => {
+      const dec = s.filter(t => t.result === 'Win' || t.result === 'Loss').length;
+      return dec === 0 ? '--' : (s.filter(t=>t.result==='Win').length / dec * 100).toFixed(0) + '%';
+    };
     const rFmtCal   = v => v !== '--' ? (parseFloat(v)>=0?'+':'')+v+'R' : '--';
 
     $('cal-aligned-pct').textContent = pct(aligned.length);
@@ -2768,7 +2783,8 @@ function calculateCalibrationStats(calTrades){
     const avgR = rs.reduce((a,b)=>a+b,0) / rs.length;
     const pnls = set.map(t=>t.pnl||0).filter(v=>v!==0);
     const avgP = pnls.length ? pnls.reduce((a,b)=>a+b,0)/pnls.length : null;
-    const wr   = set.filter(t=>t.result==='Win').length / set.length * 100;
+    const decisive = set.filter(t => t.result === 'Win' || t.result === 'Loss').length;
+    const wr   = decisive === 0 ? 0 : set.filter(t=>t.result==='Win').length / decisive * 100;
     return { n: set.length, avgR, avgP, wr, trades: set };
   };
 
@@ -3177,8 +3193,9 @@ function renderTiltDashboard(filtered){
   $('tilt-level-tbody').innerHTML = levels.map(lv => {
     const set = withTilt.filter(t => t.tiltScore >= lv.min && t.tiltScore <= lv.max);
     if(!set.length) return `<tr><td style="color:${lv.color}">${lv.label}</td><td style="color:var(--t4)">0</td><td>--</td><td>--</td></tr>`;
-    const r  = avgR(set);
-    const wr = set.filter(t=>t.result==='Win').length/set.length*100;
+    const r   = avgR(set);
+    const dec = set.filter(t => t.result === 'Win' || t.result === 'Loss').length;
+    const wr  = dec === 0 ? 0 : set.filter(t=>t.result==='Win').length / dec * 100;
     return `<tr>
       <td style="color:${lv.color};font-weight:600">${lv.label}</td>
       <td style="font-family:var(--mono)">${set.length}</td>
