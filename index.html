@@ -262,10 +262,15 @@ textarea{resize:vertical;min-height:52px}
   padding:11px 14px;border:1px solid var(--b1);border-radius:var(--r);background:var(--bg3);
   transition:border-color .3s,background .3s;
 }
+/* États analytiques (dashboard) */
 .tilt-monitor-wrap.tilt-clean  {border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.05)}
 .tilt-monitor-wrap.tilt-derive {border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.06)}
 .tilt-monitor-wrap.tilt-danger {border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.06)}
 .tilt-monitor-wrap.tilt-tilt   {border-color:rgba(239,68,68,.6);  background:rgba(239,68,68,.10);animation:tilt-pulse 1.2s ease-in-out infinite}
+/* États comportementaux (formulaire) */
+.tilt-monitor-wrap.tilt-stable   {border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.05)}
+.tilt-monitor-wrap.tilt-warning  {border-color:rgba(245,158,11,.4); background:rgba(245,158,11,.07)}
+.tilt-monitor-wrap.tilt-highrisk {border-color:rgba(239,68,68,.6);  background:rgba(239,68,68,.10);animation:tilt-pulse 1.2s ease-in-out infinite}
 @keyframes tilt-pulse{0%,100%{opacity:1}50%{opacity:.75}}
 .tilt-monitor-left{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:56px}
 .tilt-monitor-label{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
@@ -276,6 +281,57 @@ textarea{resize:vertical;min-height:52px}
 .tilt-bar-fill{height:100%;border-radius:99px;transition:width .4s ease,background .4s ease}
 .tilt-monitor-msg{font-family:var(--mono);font-size:.67rem;color:var(--t2);line-height:1.45;text-align:right;max-width:200px}
 
+
+/* ============================================================ INTERCEPTOR MODAL */
+.interceptor-overlay{
+  position:fixed;inset:0;z-index:500;background:rgba(4,6,12,.82);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(4px);animation:overlay-in .18s ease;
+}
+@keyframes overlay-in{from{opacity:0}to{opacity:1}}
+.interceptor-modal{
+  background:var(--bg2);border:1px solid var(--b2);border-radius:var(--rl);
+  width:100%;max-width:440px;overflow:hidden;animation:modal-in .2s cubic-bezier(.16,1,.3,1);
+}
+@keyframes modal-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.interceptor-header{
+  padding:14px 18px 12px;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;gap:10px;
+}
+.interceptor-icon{font-size:1.2rem;line-height:1}
+.interceptor-title{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.interceptor-score{font-family:var(--mono);font-size:.65rem;color:var(--t3);margin-left:auto}
+.interceptor-body{padding:14px 18px}
+.interceptor-section{margin-bottom:14px}
+.interceptor-section:last-child{margin-bottom:0}
+.interceptor-section-title{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:7px}
+.interceptor-reason{
+  display:flex;align-items:flex-start;gap:8px;padding:7px 10px;margin-bottom:5px;
+  background:var(--bg3);border-radius:6px;border-left:2px solid var(--loss);
+  font-family:var(--mono);font-size:.68rem;color:var(--t2);line-height:1.4;
+}
+.interceptor-reason:last-child{margin-bottom:0}
+.interceptor-reason.reason-warn{border-left-color:var(--be)}
+.interceptor-stat-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid var(--b0);font-size:.73rem;
+}
+.interceptor-stat-row:last-child{border-bottom:none}
+.interceptor-stat-label{color:var(--t3);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em}
+.interceptor-stat-val{font-family:var(--mono);font-weight:600}
+.interceptor-footer{
+  display:flex;gap:8px;padding:12px 18px 14px;border-top:1px solid var(--b1);
+  background:var(--bg3);
+}
+.interceptor-btn{
+  flex:1;padding:10px;border:none;border-radius:var(--r);font-family:var(--mono);
+  font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  transition:opacity .12s ease;
+}
+.interceptor-btn:hover{opacity:.8}
+.interceptor-btn-cancel{background:var(--bg4);color:var(--t2);border:1px solid var(--b2)}
+.interceptor-btn-proceed{background:rgba(239,68,68,.18);color:var(--loss);border:1px solid rgba(239,68,68,.35)}
+.interceptor-btn-proceed.ok{background:rgba(34,197,94,.12);color:var(--win);border:1px solid rgba(34,197,94,.3)}
 
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
@@ -530,25 +586,25 @@ textarea{resize:vertical;min-height:52px}
           </div>
         </div>
 
-        <div class="form-col-span-4">
-          <button class="btn-submit" id="btn-submit">&#43; Enregistrer le trade</button>
-        </div>
-
-        <!-- TILT MONITOR — affiché en temps réel -->
+        <!-- TILT MONITOR — visible uniquement si RR + confluence + émotion renseignés -->
         <div class="form-col-span-4" id="tilt-monitor" style="display:none">
-          <div class="tilt-monitor-wrap" id="tilt-monitor-inner">
+          <div class="tilt-monitor-wrap tilt-stable" id="tilt-monitor-inner">
             <div class="tilt-monitor-left">
-              <div class="tilt-monitor-label">&#129504; TILT SCORE</div>
-              <div class="tilt-monitor-score" id="tilt-score-val">0</div>
+              <div class="tilt-monitor-label">&#129504; TILT</div>
+              <div class="tilt-monitor-score" id="tilt-score-val" style="font-size:1rem;letter-spacing:.04em">STABLE</div>
             </div>
             <div class="tilt-monitor-center">
-              <div class="tilt-level-badge" id="tilt-level-badge">Clean</div>
+              <div class="tilt-level-badge" id="tilt-level-badge" style="color:var(--win)">&#10003; Mindset OK</div>
               <div class="tilt-bar-wrap">
                 <div class="tilt-bar-fill" id="tilt-bar-fill"></div>
               </div>
             </div>
             <div class="tilt-monitor-msg" id="tilt-monitor-msg"></div>
           </div>
+        </div>
+
+        <div class="form-col-span-4">
+          <button class="btn-submit" id="btn-submit">&#43; Enregistrer le trade</button>
         </div>
 
       </div>
@@ -881,6 +937,37 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
 
+  <!-- ============================================================
+       EDGE DETECTION — Setups profitables vs à éviter
+  ============================================================ -->
+  <div class="panel" id="panel-edge" style="display:none">
+    <div class="panel-header">
+      <span class="panel-title">&#9889; Edge Detection — Setups réels</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Min. 5 trades par grade · Clôturés uniquement</span>
+    </div>
+    <div class="panel-body">
+      <div class="analysis-grid" style="margin-bottom:14px">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--win);margin-bottom:8px">&#128293; Setups avec edge</div>
+          <div id="edge-edge-list"></div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--loss);margin-bottom:8px">&#10060; Setups à éviter</div>
+          <div id="edge-avoid-list"></div>
+        </div>
+      </div>
+      <table class="mini-table">
+        <thead><tr>
+          <td style="font-weight:600">Grade</td>
+          <td style="font-weight:600">Trades</td>
+          <td style="font-weight:600">Winrate</td>
+          <td style="font-weight:600">R moyen</td>
+        </tr></thead>
+        <tbody id="edge-all-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div><!-- /page-dashboard -->
 
 </div><!-- /app -->
@@ -1049,9 +1136,14 @@ function updateStatusSection(){
 
 /**
  * calculateSetupScore(trade)
- * v3 — Scoring réaliste : A+ atteignable avec 5 confluences fortes cohérentes.
- * Plan malus inclus (−2 si non respecté) : disciplined execution est partie du setup.
- * Ne touche jamais au champ `quality` (= qualité perçue).
+ * v4 — Distribution cible : A+ 5–10% · A 20–30% · B majorité · C/D minorité
+ *
+ * Changements vs v3 :
+ *  - Plan malus SUPPRIMÉ du setup score (appartient au discipline score / psycho)
+ *  - Cap majeures relevé 4→6 : 3 majeures bien différenciées de 2
+ *  - RR rewards rééquilibrés : ≥3→+3, ≥2→+2, ≥1.5→+1, <1.5→0 (plus de malus)
+ *  - isPremium assoupli : MSS OU Displacement (pas obligatoirement les deux)
+ *  - Seuils grades abaissés d'un cran
  */
 function calculateSetupScore(trade){
   let score = 0;
@@ -1065,40 +1157,47 @@ function calculateSetupScore(trade){
   const majorCount = conf.filter(c => major.includes(c)).length;
   const minorCount = conf.filter(c => minor.includes(c)).length;
 
-  score += Math.min(majorCount * 2, 4); // cap 4 pts majeures (rend A+ accessible)
-  score += Math.min(minorCount * 1, 4); // cap 4 pts mineures
+  score += Math.min(majorCount * 2, 6); // cap 6 — 3 majeures différenciées de 2 (était 4)
+  score += Math.min(minorCount * 1, 4); // cap 4 mineures — inchangé
 
-  // ── Synergies structure ────────────────────────────────────
+  // ── Synergie structure ─────────────────────────────────────
   if(conf.includes('MSS') && conf.includes('Displacement')) score += 2;
 
   // ── Timing de session ─────────────────────────────────────
   if(conf.includes('London') || conf.includes('NY'))        score += 1;
 
-  // ── RR prévu ──────────────────────────────────────────────
-  if(rr >= 3)            score += 2;
-  else if(rr >= 2)       score += 1;
-  else if(rr >= 1.5)     score += 0;
-  else if(rr > 0)        score -= 1; // RR < 1.5 = malus léger
+  // ── RR prévu — rewards uniquement, plus de malus ──────────
+  if(rr >= 3)        score += 3; // excellent RR (était +2)
+  else if(rr >= 2)   score += 2; // bon RR (était +1)
+  else if(rr >= 1.5) score += 1; // RR acceptable (était 0)
+  // rr < 1.5 → 0 pts, plus de malus (était −1)
 
-  // ── Plan non respecté = malus d'exécution ─────────────────
-  if(trade.plan === 'Non') score -= 2;
+  // ── Plan : EXCLU du setup score (géré par psycho/discipline)
 
   score = Math.max(0, score);
 
-  // ── Condition A+ : exigences structurelles — seuil abaissé ─
+  // ── Condition A+ : MSS OU Displacement suffisant ──────────
+  // Un setup ICT solide peut avoir l'un sans l'autre
   const isPremium = majorCount >= 2
-    && conf.includes('MSS')
-    && conf.includes('Displacement')
-    && rr >= 2;
+    && (conf.includes('MSS') || conf.includes('Displacement'))
+    && rr >= 1.5;
 
   let grade;
   if(isPremium && score >= 9) grade = 'A+';
-  else if(score >= 7)         grade = 'A';
-  else if(score >= 5)         grade = 'B';
-  else if(score >= 3)         grade = 'C';
-  else                        grade = 'D';
+  else if(score >= 6)         grade = 'A';  // était 7
+  else if(score >= 4)         grade = 'B';  // était 5 — B = majorité
+  else if(score >= 2)         grade = 'C';  // était 3
+  else                        grade = 'D';  // < 2 pts uniquement
 
-  return { setupScore: score, setupGrade: grade };
+  // ── Soft calibration flag (informatif uniquement) ─────────
+  const realizedR = trade.rrReal || 0;
+  let evaluationFlag = null;
+  if(trade.result === 'Win' && realizedR >= 1.5 && ['C','D'].includes(grade))
+    evaluationFlag = 'under-evaluated';
+  if(trade.result === 'Loss' && ['A+','A'].includes(grade))
+    evaluationFlag = 'over-evaluated';
+
+  return { setupScore: score, setupGrade: grade, evaluationFlag };
 }
 
 /**
@@ -1221,6 +1320,8 @@ function resetForm(){
 
   updateStatusSection();
   displayWarning(null);
+  // Formulaire vide → tilt caché (isTiltReady sera false)
+  const tm = $('tilt-monitor'); if(tm) tm.style.display = 'none';
 }
 
 /* ============================================================
@@ -1350,7 +1451,7 @@ function migrateTradesData(){
   if(!trades.length) return;
 
   // Version du scoring actuel — incrémenter à chaque changement de logique
-  const SCORING_VERSION = 3; // v3 = caps assouplis, isPremium simplifié, plan malus −2
+  const SCORING_VERSION = 4; // v4 = plan exclu, cap maj 6, RR rewards, isPremium assoupli
 
   // Migration nécessaire si : score manquant, gap manquant, OU version de scoring obsolète
   const needsMigration = trades.some(t =>
@@ -1400,7 +1501,7 @@ function migrateTradesData(){
 
   saveTrades();
   if(migratedCount > 0){
-    showToast(`Recalcul scoring v2 — ${migratedCount} trade(s) mis à jour`, 3000);
+    showToast(`Recalcul scoring v4 — ${migratedCount} trade(s) mis à jour`, 3000);
   }
 }
 
@@ -1492,57 +1593,201 @@ function analyzeJournal(tradeSet){
    TILT DETECTION — Dérive mentale en temps réel
 ============================================================ */
 
+/* ============================================================
+   TILT SYSTEM — Décision & Protection comportementale
+   ─────────────────────────────────────────────────────────────
+   Deux couches séparées :
+   1. computeTiltScore (0–5, 3 derniers trades) → décision temps réel
+   2. calculateTiltScore (0–100, 10 derniers trades) → dashboard analytique
+============================================================ */
+
+/* ── COUCHE 1 : Comportemental — rapide, actionnable ──────── */
+
 /**
- * calculateTiltScore(tradeSet)
- * Analyse les 10 derniers trades clôturés.
- * Retourne un score 0–100 reflétant le niveau de dérive mentale.
+ * computeTiltScore(tradeSet)
+ * Score 0–5 basé sur les 3 derniers trades clôturés.
+ * Rapide à déclencher — détecte la dérive en cours, pas historique.
+ */
+function computeTiltScore(tradeSet){
+  const closed = tradeSet
+    .filter(t => t.status === 'closed' && t.result)
+    .slice(0, 3); // 3 plus récents (array trié newest-first)
+
+  let tilt = 0;
+
+  // Pertes récentes (R signé)
+  const losses = closed.filter(t => signedR(t) < 0).length;
+  if(losses >= 2) tilt += 2;
+
+  // Mauvaise discipline récente
+  const badDiscipline = closed.filter(t => t.plan === 'Non').length;
+  if(badDiscipline >= 1) tilt += 2;
+
+  // Overtrading aujourd'hui
+  const todayAll = tradeSet.filter(t => t.date === todayISO());
+  if(todayAll.length >= 5) tilt += 1;
+
+  return Math.min(5, tilt);
+}
+
+/**
+ * getTiltState(tiltScore)
+ * Interprète le score comportemental.
+ * Retourne : 'STABLE' | 'WARNING' | 'HIGH_RISK'
+ */
+function getTiltState(tiltScore){
+  if(tiltScore <= 1) return 'STABLE';
+  if(tiltScore <= 3) return 'WARNING';
+  return 'HIGH_RISK';
+}
+
+/**
+ * getTiltMessage(tiltScore, tradeSet)
+ * Message court et actionnable selon l'état.
+ */
+function getTiltMessage(tiltScore, tradeSet){
+  const closed = tradeSet.filter(t => t.status === 'closed' && t.result).slice(0, 3);
+
+  // Causes détectées
+  const losses      = closed.filter(t => signedR(t) < 0).length;
+  const offPlan     = closed.filter(t => t.plan === 'Non').length;
+  const todayCount  = tradeSet.filter(t => t.date === todayISO()).length;
+
+  const causes = [];
+  if(losses >= 2)    causes.push(`${losses} pertes récentes`);
+  if(offPlan >= 1)   causes.push('hors plan');
+  if(todayCount >= 5) causes.push(`${todayCount} trades aujourd'hui`);
+  const causeStr = causes.join(' · ');
+
+  if(tiltScore >= 4){
+    return `❌ HIGH RISK${causeStr ? ' — ' + causeStr : ''} → STOP recommandé`;
+  }
+  if(tiltScore >= 2){
+    return `⚠️ WARNING${causeStr ? ' — ' + causeStr : ''} → Réduis le risque`;
+  }
+  return '✅ Mindset stable';
+}
+
+/**
+ * displayTilt(tiltScore, state, message)
+ * Met à jour le bloc tilt monitor dans le formulaire.
+ * Utilise le nouveau système 0–5 / STABLE–WARNING–HIGH_RISK.
+ */
+function displayTilt(tiltScore, state, message){
+  const monitor = $('tilt-monitor');
+  if(!monitor) return;
+
+  // Rendu — la décision d'afficher/cacher est dans updateTiltDisplay/isTiltReady
+  monitor.style.display = '';
+
+  const wrap = $('tilt-monitor-inner');
+  if(wrap){
+    const cls = { STABLE:'tilt-stable', WARNING:'tilt-warning', HIGH_RISK:'tilt-highrisk' };
+    wrap.className = `tilt-monitor-wrap ${cls[state] || 'tilt-stable'}`;
+  }
+
+  const colors = { STABLE:'var(--win)', WARNING:'var(--be)', HIGH_RISK:'var(--loss)' };
+  const color  = colors[state] || 'var(--win)';
+
+  const sv = $('tilt-score-val');
+  if(sv){ sv.textContent = state.replace('_',' '); sv.style.color = color; }
+
+  const badge = $('tilt-level-badge');
+  if(badge){
+    const labels = { STABLE:'✓ Discipline OK', WARNING:'⚠ Surveiller', HIGH_RISK:'🚨 Stop recommandé' };
+    badge.textContent = labels[state] || '';
+    badge.style.color = color;
+  }
+
+  const fill = $('tilt-bar-fill');
+  if(fill){
+    fill.style.width      = (tiltScore / 5 * 100) + '%';
+    fill.style.background = color;
+  }
+
+  const msg = $('tilt-monitor-msg');
+  if(msg){
+    // Afficher uniquement la partie après les icônes
+    msg.textContent = message.replace(/^[✅⚠️❌]+\s*\w+\s*—?\s*/, '').trim() || '';
+    msg.style.color = color;
+  }
+}
+
+/**
+ * isTiltReady()
+ * Vérifie si le formulaire est suffisamment rempli pour afficher le TILT.
+ * Conditions : RR prévu défini + au moins 1 confluence + état émotionnel.
+ */
+function isTiltReady(){
+  const rr       = parseFloat($('f-rr-plan').value) || 0;
+  const conf     = getConfluences();
+  const emotion  = getToggleVal('emotion');
+  return rr > 0 && conf.length > 0 && emotion !== '';
+}
+
+/**
+ * updateTiltDisplay()
+ * Point d'entrée unique — appelé à chaque interaction formulaire.
+ * Affiche le TILT uniquement si les conditions contextuelles sont remplies.
+ */
+function updateTiltDisplay(){
+  const monitor = $('tilt-monitor');
+  if(!monitor) return;
+
+  // Conditions non remplies → cacher sans calcul
+  if(!isTiltReady()){
+    monitor.style.display = 'none';
+    return;
+  }
+
+  // Conditions remplies → calculer et afficher
+  const score   = computeTiltScore(trades);
+  const state   = getTiltState(score);
+  const message = getTiltMessage(score, trades);
+  displayTilt(score, state, message);
+}
+
+/* ── COUCHE 2 : Analytique — historique, dashboard ────────── */
+
+/**
+ * calculateTiltScore(tradeSet) — conservé pour le dashboard
+ * Score 0–100 sur les 10 derniers trades — corrélation tilt vs R.
  */
 function calculateTiltScore(tradeSet){
   const closed = tradeSet
     .filter(t => t.status === 'closed' && t.result)
-    .slice(0, 10); // 10 derniers clôturés (trades est trié récent → ancien)
+    .slice(0, 10);
 
   if(!closed.length) return 0;
 
   let score = 0;
 
-  /* ── 1. Série de pertes consécutives ─────────────────────── */
   let lossStreak = 0;
   for(const t of closed){
     if(t.result === 'Loss') lossStreak++;
     else break;
   }
-  if(lossStreak >= 4)      score += 50;
+  if(lossStreak >= 4)       score += 50;
   else if(lossStreak === 3) score += 30;
   else if(lossStreak === 2) score += 15;
 
-  /* ── 2. Émotions négatives (sur les 10 derniers) ─────────── */
   const emotScore = { FOMO:15, Revenge:25, Stress:10, Fatigue:10 };
   closed.forEach(t => { score += emotScore[t.emotion] || 0; });
 
-  /* ── 3. Mauvais setups ────────────────────────────────────── */
   const gradeScore = { C:10, D:20 };
-  closed.forEach(t => {
-    score += gradeScore[t.setupGrade] || gradeScore[t.quality] || 0;
-  });
+  closed.forEach(t => { score += gradeScore[t.setupGrade] || gradeScore[t.quality] || 0; });
 
-  /* ── 4. Trades hors plan ─────────────────────────────────── */
   closed.forEach(t => { if(t.plan === 'Non') score += 20; });
 
-  /* ── 5. Overtrading (>5 trades même journée) ──────────────── */
   const byDay = {};
-  closed.forEach(t => {
-    const d = t.date || '?';
-    byDay[d] = (byDay[d] || 0) + 1;
-  });
+  closed.forEach(t => { const d = t.date || '?'; byDay[d] = (byDay[d] || 0) + 1; });
   if(Object.values(byDay).some(n => n > 5)) score += 20;
 
   return Math.min(100, Math.max(0, score));
 }
 
 /**
- * getTiltLevel(score)
- * Retourne le niveau de tilt et ses métadonnées visuelles.
+ * getTiltLevel(score) — conservé pour le dashboard
  */
 function getTiltLevel(score){
   if(score >= 80) return { level:'Tilt',   cls:'tilt-tilt',   color:'var(--loss)' };
@@ -1552,14 +1797,12 @@ function getTiltLevel(score){
 }
 
 /**
- * generateTiltWarning(score, tiltObj)
- * Génère un message contextuel basé sur les causes dominantes.
+ * generateTiltWarning(score, tiltObj, tradeSet) — conservé pour le dashboard
  */
 function generateTiltWarning(score, tiltObj, tradeSet){
-  const closed  = tradeSet.filter(t => t.status === 'closed' && t.result).slice(0, 10);
-  const level   = tiltObj.level;
+  const closed = tradeSet.filter(t => t.status === 'closed' && t.result).slice(0, 10);
+  const level  = tiltObj.level;
 
-  // Analyse des causes
   let lossStreak = 0;
   for(const t of closed){ if(t.result==='Loss') lossStreak++; else break; }
   const hasFomo    = closed.some(t => t.emotion === 'FOMO');
@@ -1568,7 +1811,6 @@ function generateTiltWarning(score, tiltObj, tradeSet){
   const hasOffPlan = closed.some(t => t.plan === 'Non');
   const hasWeak    = closed.some(t => ['C','D'].includes(t.setupGrade || t.quality));
 
-  // Construction du message par niveau
   const causes = [];
   if(lossStreak >= 2) causes.push(`${lossStreak} pertes consécutives`);
   if(hasRevenge)      causes.push('revenge trade');
@@ -1585,55 +1827,7 @@ function generateTiltWarning(score, tiltObj, tradeSet){
     Tilt   : `→ ${causeStr || 'tilt avancé'} · STOP session immédiatement`,
   };
   const icons = { Clean:'🧠', Dérive:'⚠️', Danger:'🚨', Tilt:'💀' };
-
   return `${icons[level]} ${level.toUpperCase()} [${score}/100] ${actions[level] || ''}`;
-}
-
-/**
- * displayTilt(score, tiltObj, message)
- * Met à jour le bloc tilt monitor dans le formulaire.
- */
-function displayTilt(score, tiltObj, message){
-  const monitor = $('tilt-monitor');
-  if(!monitor) return;
-
-  // Masquer uniquement si aucun historique du tout
-  if(trades.filter(t => t.status === 'closed').length < 1){
-    monitor.style.display = 'none';
-    return;
-  }
-
-  monitor.style.display = '';
-  const wrap = $('tilt-monitor-inner');
-  if(wrap){
-    wrap.className = `tilt-monitor-wrap ${tiltObj.cls}`;
-  }
-
-  const sv = $('tilt-score-val');
-  if(sv){ sv.textContent = score; sv.style.color = tiltObj.color; }
-
-  const badge = $('tilt-level-badge');
-  if(badge){ badge.textContent = tiltObj.level; badge.style.color = tiltObj.color; }
-
-  const fill = $('tilt-bar-fill');
-  if(fill){
-    fill.style.width = score + '%';
-    fill.style.background = score >= 80 ? 'var(--loss)' : score >= 60 ? '#f87171' : score >= 30 ? 'var(--be)' : 'var(--win)';
-  }
-
-  const msg = $('tilt-monitor-msg');
-  if(msg){ msg.textContent = message.split('·').slice(1).join('·').trim() || ''; }
-}
-
-/**
- * updateTiltDisplay()
- * Point d'entrée unique — appelé à chaque interaction du formulaire.
- */
-function updateTiltDisplay(){
-  const score   = calculateTiltScore(trades);
-  const tiltObj = getTiltLevel(score);
-  const message = generateTiltWarning(score, tiltObj, trades);
-  displayTilt(score, tiltObj, message);
 }
 
 /* ============================================================
@@ -1787,15 +1981,17 @@ function buildTradeFromForm(existingId = null){
   const { setupScore, setupGrade } = calculateSetupScore(trade);
   trade.setupScore      = setupScore;
   trade.setupGrade      = setupGrade;
-  trade.scoringVersion  = 3;
+  trade.scoringVersion  = 4;
 
   // Feedback d'exécution (comparaison RR prévu vs réel)
   trade.executionFeedback = evaluateExecution(trade);
 
-  // Tilt au moment du trade
-  const tiltScore = calculateTiltScore(trades);
-  trade.tiltScore  = tiltScore;
-  trade.tiltLevel  = getTiltLevel(tiltScore).level;
+  // Tilt au moment du trade — deux couches
+  const tiltAnalytic = calculateTiltScore(trades);  // 0–100 pour dashboard
+  const tiltBehav    = computeTiltScore(trades);     // 0–5 pour décision
+  trade.tiltScore  = tiltAnalytic;
+  trade.tiltLevel  = getTiltLevel(tiltAnalytic).level;
+  trade.tiltState  = getTiltState(tiltBehav);        // STABLE/WARNING/HIGH_RISK
 
   // Écart perçu vs calculé
   trade.setupEvaluationGap = calculateSetupEvaluationGap(trade);
@@ -1812,33 +2008,296 @@ function buildTradeFromForm(existingId = null){
 }
 
 /* ============================================================
+   PRE-TRADE INTERCEPTOR
+   S'active uniquement avant validation, jamais après.
+   Conditions d'activation : même que isTiltReady()
+============================================================ */
+
+/**
+ * detectRisk(trade, closedTrades)
+ * Analyse le trade en cours + l'historique récent.
+ * Retourne { score:0–100, reasons:[{text,severity}] }
+ */
+function detectRisk(trade, closedTrades){
+  let score = 0;
+  const reasons = [];
+
+  // ── Psychologie ────────────────────────────────────────────
+  const badEmotions = {
+    Revenge   : { pts:35, label:'État Revenge — trades pris par réaction émotionnelle',   sev:'high' },
+    FOMO      : { pts:30, label:'État FOMO — entrée précipitée hors confirmation',         sev:'high' },
+    Stress    : { pts:20, label:'État Stress — performance dégradée sous pression',       sev:'warn' },
+    Fatigue   : { pts:20, label:'État Fatigue — jugement altéré, réflexes lents',         sev:'warn' },
+  };
+  const emotRisk = badEmotions[trade.emotion];
+  if(emotRisk){
+    score += emotRisk.pts;
+    reasons.push({ text: emotRisk.label, sev: emotRisk.sev });
+  }
+
+  // ── RR prévu trop faible ───────────────────────────────────
+  const rr = trade.rrPlan || 0;
+  if(rr > 0 && rr < 1.5){
+    score += 25;
+    reasons.push({ text:`RR prévu ${rr} — ratio risque/récompense insuffisant (< 1.5)`, sev:'high' });
+  } else if(rr >= 1.5 && rr < 2){
+    score += 10;
+    reasons.push({ text:`RR prévu ${rr} — borderline, préférable ≥ 2`, sev:'warn' });
+  }
+
+  // ── Comportement récent — 3 derniers trades ────────────────
+  const last3 = closedTrades.slice(0, 3);
+  const recentLosses = last3.filter(t => signedR(t) < 0).length;
+  if(recentLosses >= 3){
+    score += 35;
+    reasons.push({ text:`3 pertes consécutives — stop-loss journée recommandé`, sev:'high' });
+  } else if(recentLosses >= 2){
+    score += 20;
+    reasons.push({ text:`2 pertes sur les 3 derniers trades — dérive possible`, sev:'warn' });
+  }
+
+  // ── Hors plan ──────────────────────────────────────────────
+  if(trade.plan === 'Non'){
+    score += 20;
+    reasons.push({ text:'Trade hors plan — déviation du process validé', sev:'warn' });
+  }
+
+  // ── Setup grade faible ─────────────────────────────────────
+  if(['C','D'].includes(trade.setupGrade)){
+    score += 15;
+    reasons.push({ text:`Setup ${trade.setupGrade} — statistiquement sous-performant sur ton historique`, sev:'warn' });
+  }
+
+  // ── Overtrading aujourd'hui ────────────────────────────────
+  const todayCount = trades.filter(t => t.date === todayISO()).length;
+  if(todayCount >= 5){
+    score += 15;
+    reasons.push({ text:`${todayCount} trades aujourd'hui — overtrading détecté`, sev:'warn' });
+  }
+
+  return { score: Math.min(100, score), reasons };
+}
+
+/**
+ * buildInterceptorStats(closedTrades, grade, emotion)
+ * Construit les stats rapides pour le popup — globales + setup + émotion.
+ */
+
+/**
+ * getSetupStats(closedTrades, setupGrade)
+ * Stats de performance réelle pour un grade de setup.
+ * Requiert ≥ 5 trades pour être significatif.
+ */
+function getSetupStats(closedTrades, setupGrade){
+  const filtered = closedTrades.filter(t =>
+    t.setupGrade === setupGrade && t.result
+  );
+  if(filtered.length < 5) return null;
+  const decisive = filtered.filter(t => t.result === 'Win' || t.result === 'Loss');
+  const wins     = filtered.filter(t => t.result === 'Win').length;
+  const avgR     = filtered.reduce((sum, t) => sum + signedR(t), 0) / filtered.length;
+  return {
+    count   : filtered.length,
+    winRate : decisive.length ? Math.round(wins / decisive.length * 100) : 0,
+    avgR    : parseFloat(avgR.toFixed(2)),
+  };
+}
+
+/**
+ * getEmotionStats(closedTrades, emotion)
+ * Stats de performance par état émotionnel.
+ * Requiert ≥ 5 trades pour être significatif.
+ */
+function getEmotionStats(closedTrades, emotion){
+  if(!emotion) return null;
+  const filtered = closedTrades.filter(t => t.emotion === emotion && t.result);
+  if(filtered.length < 5) return null;
+  const decisive = filtered.filter(t => t.result === 'Win' || t.result === 'Loss');
+  const wins     = filtered.filter(t => t.result === 'Win').length;
+  const avgR     = filtered.reduce((sum, t) => sum + signedR(t), 0) / filtered.length;
+  return {
+    count   : filtered.length,
+    winRate : decisive.length ? Math.round(wins / decisive.length * 100) : 0,
+    avgR    : parseFloat(avgR.toFixed(2)),
+  };
+}
+
+function buildInterceptorStats(closedTrades, grade, emotion){
+  const rFmt = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + 'R' : '--';
+
+  // Retourne des sections structurées pour l'affichage
+  const sections = [];
+
+  // ── Section 1 : Performance globale ───────────────────────
+  const st = calcStats(closedTrades);
+  if(st){
+    const globalRows = [
+      { label:'Winrate global', val: st.wr.toFixed(0) + '%',  color: st.wr >= 50 ? 'var(--win)' : 'var(--loss)' },
+      { label:'Expectancy',     val: rFmt(st.exp),             color: st.exp >= 0  ? 'var(--win)' : 'var(--loss)' },
+      { label:'R moyen',        val: rFmt(st.avgR),            color: st.avgR >= 0 ? 'var(--win)' : 'var(--loss)' },
+    ];
+    if(st.maxL >= 2) globalRows.push({ label:'Série pertes max', val: st.maxL + ' trades', color:'var(--loss)' });
+    sections.push({ title: 'Performances globales', rows: globalRows });
+  }
+
+  // ── Section 2 : Setup actuel ───────────────────────────────
+  if(grade){
+    const ss = getSetupStats(closedTrades, grade);
+    if(ss){
+      const setupRows = [
+        { label:`Trades setup ${grade}`, val: ss.count + ' trades',          color:'var(--t2)' },
+        { label:'Winrate',               val: ss.winRate + '%',               color: ss.winRate >= 50 ? 'var(--win)' : 'var(--loss)' },
+        { label:'R moyen',               val: rFmt(ss.avgR),                   color: ss.avgR >= 0     ? 'var(--win)' : 'var(--loss)' },
+      ];
+      sections.push({ title: `Setup ${grade} — historique réel`, rows: setupRows });
+    }
+  }
+
+  // ── Section 3 : État émotionnel ────────────────────────────
+  if(emotion){
+    const es = getEmotionStats(closedTrades, emotion);
+    if(es){
+      const emotRows = [
+        { label:`Trades en ${emotion}`, val: es.count + ' trades',           color:'var(--t2)' },
+        { label:'Winrate',              val: es.winRate + '%',                color: es.winRate >= 50 ? 'var(--win)' : 'var(--loss)' },
+        { label:'R moyen',              val: rFmt(es.avgR),                    color: es.avgR >= 0     ? 'var(--win)' : 'var(--loss)' },
+      ];
+      sections.push({ title: `État ${emotion} — historique réel`, rows: emotRows });
+    }
+  }
+
+  return sections;
+}
+
+/**
+ * showInterceptor(riskData, statsData)
+ * Affiche le modal interceptor. Retourne une Promise<boolean>.
+ * true = l'utilisateur choisit de procéder, false = annuler.
+ */
+function showInterceptor(riskData, statsData){
+  return new Promise(resolve => {
+    // Supprimer un éventuel modal précédent
+    const existing = document.getElementById('interceptor-overlay');
+    if(existing) existing.remove();
+
+    const { score, reasons } = riskData;
+    const isHigh = score >= 70;
+    const isMed  = score >= 40 && score < 70;
+
+    const headerColor = isHigh ? 'var(--loss)' : 'var(--be)';
+    const headerBg    = isHigh ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.06)';
+    const icon        = isHigh ? '🚨' : '⚠️';
+    const title       = isHigh ? 'RISQUE ÉLEVÉ DÉTECTÉ' : 'ATTENTION — RISQUE MODÉRÉ';
+
+    const reasonsHTML = reasons.map(r => `
+      <div class="interceptor-reason ${r.sev === 'warn' ? 'reason-warn' : ''}">
+        <span>${r.sev === 'high' ? '❌' : '⚠️'}</span>
+        <span>${r.text}</span>
+      </div>`).join('');
+
+    // Rendu des stats — sections séparées par titre
+    const statsHTML = statsData.length
+      ? statsData.map(section => `
+          <div style="margin-bottom:10px">
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--b0)">${section.title}</div>
+            ${section.rows.map(s => `
+              <div class="interceptor-stat-row">
+                <span class="interceptor-stat-label">${s.label}</span>
+                <span class="interceptor-stat-val" style="color:${s.color}">${s.val}</span>
+              </div>`).join('')}
+          </div>`).join('')
+      : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore assez de données historiques (min. 5 trades par catégorie).</div>`;
+
+    const html = `
+      <div class="interceptor-overlay" id="interceptor-overlay">
+        <div class="interceptor-modal">
+          <div class="interceptor-header" style="background:${headerBg};border-bottom-color:${isHigh?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">
+            <span class="interceptor-icon">${icon}</span>
+            <span class="interceptor-title" style="color:${headerColor}">${title}</span>
+            <span class="interceptor-score">Score risque : ${score}/100</span>
+          </div>
+          <div class="interceptor-body">
+            <div class="interceptor-section">
+              <div class="interceptor-section-title">Risques détectés</div>
+              ${reasonsHTML || '<div style="font-family:var(--mono);font-size:.65rem;color:var(--t3)">Aucun risque critique isolé.</div>'}
+            </div>
+            <div class="interceptor-section">
+              <div class="interceptor-section-title">Tes performances réelles</div>
+              ${statsHTML}
+            </div>
+          </div>
+          <div class="interceptor-footer">
+            <button class="interceptor-btn interceptor-btn-cancel" id="interceptor-cancel">
+              ✕ Annuler le trade
+            </button>
+            <button class="interceptor-btn interceptor-btn-proceed ${score < 70 ? 'ok' : ''}" id="interceptor-proceed">
+              ${isHigh ? '⚠ Trader quand même' : '→ Continuer'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    // Fermeture sur click overlay
+    document.getElementById('interceptor-overlay').addEventListener('click', function(e){
+      if(e.target === this){ this.remove(); resolve(false); }
+    });
+
+    document.getElementById('interceptor-cancel').addEventListener('click', () => {
+      document.getElementById('interceptor-overlay').remove();
+      resolve(false);
+    });
+
+    document.getElementById('interceptor-proceed').addEventListener('click', () => {
+      document.getElementById('interceptor-overlay').remove();
+      resolve(true);
+    });
+  });
+}
+
+/* ============================================================
    ENREGISTREMENT / MISE À JOUR
 ============================================================ */
-$('btn-submit').addEventListener('click', () => {
-  // ── Protection tilt : friction avant décision risquée ─────
-  if(formMode === 'create'){
-    const tiltNow   = calculateTiltScore(trades);
-    const tiltState = getTiltLevel(tiltNow);
+$('btn-submit').addEventListener('click', async () => {
+  // ── PRE-TRADE INTERCEPTOR — uniquement avant création ──────
+  if(formMode === 'create' && isTiltReady()){
+    const closedTrades = trades.filter(t => t.status === 'closed');
 
-    // Danger (60–79) : avertissement fort mais non bloquant
-    if(tiltNow >= 60 && tiltNow < 80){
-      const ok = confirm(
-        `🚨 DÉRIVE AVANCÉE DÉTECTÉE — Score tilt : ${tiltNow}/100\n\n` +
-        generateTiltWarning(tiltNow, tiltState, trades).split(']')[1]?.trim() +
-        `\n\nConfirmer quand même l'enregistrement ?`
-      );
+    // Construire un trade partiel pour l'analyse
+    const partialTrade = {
+      emotion   : getToggleVal('emotion'),
+      rrPlan    : parseFloat($('f-rr-plan').value) || 0,
+      plan      : getToggleVal('plan'),
+      conf      : getConfluences(),
+    };
+    const { setupGrade } = calculateSetupScore(partialTrade);
+    partialTrade.setupGrade = setupGrade;
+
+    const riskData  = detectRisk(partialTrade, closedTrades);
+
+    if(riskData.score > 40){
+      const statsData = buildInterceptorStats(closedTrades, setupGrade, partialTrade.emotion);
+      const proceed   = await showInterceptor(riskData, statsData);
+      if(!proceed) return;
+    }
+  }
+
+  // ── TILT PROTECTION — couche secondaire ────────────────────
+  if(formMode === 'create'){
+    const tiltNow   = computeTiltScore(trades);
+    const tiltState = getTiltState(tiltNow);
+    const tiltMsg   = getTiltMessage(tiltNow, trades);
+
+    if(tiltState === 'WARNING'){
+      const ok = confirm(`⚠️ TILT WARNING — Score : ${tiltNow}/5\n\n${tiltMsg}\n\nConfirmer quand même ce trade ?`);
       if(!ok) return;
     }
 
-    // Tilt (80+) : friction maximale — double confirmation
-    if(tiltNow >= 80){
-      const ok1 = confirm(
-        `💀 TILT DÉTECTÉ — Score : ${tiltNow}/100\n\n` +
-        `${generateTiltWarning(tiltNow, tiltState, trades).split(']')[1]?.trim()}\n\n` +
-        `Il est fortement recommandé d'arrêter la session.\n\nVoulez-vous quand même continuer ?`
-      );
+    if(tiltState === 'HIGH_RISK'){
+      const ok1 = confirm(`❌ TILT HIGH RISK — Score : ${tiltNow}/5\n\n${tiltMsg}\n\nIl est fortement recommandé d'arrêter la session.\nVoulez-vous continuer quand même ?`);
       if(!ok1) return;
-      const ok2 = confirm(`⚠️ Dernière confirmation — Vous êtes en TILT (${tiltNow}/100). Enregistrer ce trade ?`);
+      const ok2 = confirm(`⚠️ Dernière confirmation — Enregistrer ce trade ?`);
       if(!ok2) return;
     }
   }
@@ -1853,7 +2312,6 @@ $('btn-submit').addEventListener('click', () => {
     resetForm();
     showToast('Trade #' + trades.length + ' enregistré');
   } else {
-    // edit ou close
     const fields = buildTradeFromForm(editingTradeId);
     if(!fields) return;
     if(!updateTrade(editingTradeId, fields)){
@@ -2651,6 +3109,7 @@ function renderDashboard(){
   generateInsights(st, filtered, calTrades);
   renderCalibrationCharts(filtered);
   renderTiltDashboard(filtered);
+  renderEdgeInsights(filtered);
 }
 
 /* ============================================================
@@ -3347,6 +3806,125 @@ function renderTiltDashboard(filtered){
 }
 
 /* ============================================================
+   EDGE DETECTION — Setups profitables vs à éviter
+   Basé uniquement sur trades clôturés, ≥ 5 par grade.
+============================================================ */
+
+/**
+ * computeSetupPerformance(closedTrades)
+ * Groupe les trades par setupGrade, calcule les stats.
+ * Ignore les grades avec < 5 trades.
+ */
+function computeSetupPerformance(closedTrades){
+  const groups = {};
+  closedTrades.forEach(t => {
+    const key = t.setupGrade;
+    if(!key) return;
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  const results = {};
+  for(const grade in groups){
+    const list = groups[grade];
+    if(list.length < 5) continue;
+    const decisive = list.filter(t => t.result === 'Win' || t.result === 'Loss');
+    const wins     = list.filter(t => t.result === 'Win').length;
+    const avgR     = list.reduce((sum, t) => sum + signedR(t), 0) / list.length;
+    results[grade] = {
+      count  : list.length,
+      winRate: decisive.length ? Math.round(wins / decisive.length * 100) : 0,
+      avgR   : parseFloat(avgR.toFixed(2)),
+    };
+  }
+  return results;
+}
+
+/**
+ * detectEdge(performance)
+ * Classifie chaque setup en EDGE (profitable) ou AVOID (perdant).
+ */
+function detectEdge(performance){
+  const edges = [];
+  for(const grade in performance){
+    const d = performance[grade];
+    if(d.winRate >= 55 && d.avgR > 0)
+      edges.push({ grade, type:'EDGE',  ...d });
+    else if(d.winRate < 40 && d.avgR < 0)
+      edges.push({ grade, type:'AVOID', ...d });
+  }
+  return edges;
+}
+
+/**
+ * generateEdgeInsights(closedTrades)
+ * Retourne les edges détectés à partir des données réelles.
+ */
+function generateEdgeInsights(closedTrades){
+  const perf  = computeSetupPerformance(closedTrades);
+  return detectEdge(perf);
+}
+
+/**
+ * renderEdgeInsights(filtered)
+ * Affiche le panel edge detection dans le dashboard.
+ */
+function renderEdgeInsights(filtered){
+  const panel = $('panel-edge');
+  if(!panel) return;
+
+  const edges = generateEdgeInsights(filtered);
+  const perf  = computeSetupPerformance(filtered);
+  const rFmt  = v => (v >= 0 ? '+' : '') + v.toFixed(2) + 'R';
+
+  const edgeList  = edges.filter(e => e.type === 'EDGE').sort((a,b) => b.avgR - a.avgR);
+  const avoidList = edges.filter(e => e.type === 'AVOID').sort((a,b) => a.avgR - b.avgR);
+
+  // Masquer si pas assez de données
+  const hasSufficientData = Object.keys(perf).length > 0;
+  panel.style.display = hasSufficientData ? '' : 'none';
+  if(!hasSufficientData) return;
+
+  const gradeBadgeMap = {'A+':'badge-ap','A':'badge-a','B':'badge-b','C':'badge-c','D':'badge-d'};
+
+  const renderEdgeItem = (e, isEdge) => {
+    const color = isEdge ? 'var(--win)' : 'var(--loss)';
+    const bg    = isEdge ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)';
+    const border= isEdge ? 'rgba(34,197,94,.2)'  : 'rgba(239,68,68,.2)';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${bg};border:1px solid ${border};border-radius:var(--r);margin-bottom:6px">
+        <span class="badge ${gradeBadgeMap[e.grade]||''}">${e.grade}</span>
+        <span style="font-family:var(--mono);font-size:.68rem;color:${color};font-weight:700">${e.winRate}% WR</span>
+        <span style="font-family:var(--mono);font-size:.68rem;color:${color}">${rFmt(e.avgR)}</span>
+        <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-left:auto">${e.count} trades</span>
+      </div>`;
+  };
+
+  // Stats complètes de tous les grades analysés
+  const allGrades = Object.entries(perf).sort((a,b) => b[1].avgR - a[1].avgR);
+  const allHTML = allGrades.map(([grade, d]) => {
+    const col = d.avgR >= 0 ? 'var(--win)' : 'var(--loss)';
+    return `<tr>
+      <td><span class="badge ${gradeBadgeMap[grade]||''}">${grade}</span></td>
+      <td style="font-family:var(--mono)">${d.count}</td>
+      <td style="font-family:var(--mono);color:${d.winRate>=50?'var(--win)':'var(--loss)'}">${d.winRate}%</td>
+      <td style="font-family:var(--mono);color:${col}">${rFmt(d.avgR)}</td>
+    </tr>`;
+  }).join('');
+
+  $('edge-edge-list').innerHTML  = edgeList.length
+    ? edgeList.map(e => renderEdgeItem(e, true)).join('')
+    : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore d'edge détecté (WR≥55% & R>0).</div>`;
+
+  $('edge-avoid-list').innerHTML = avoidList.length
+    ? avoidList.map(e => renderEdgeItem(e, false)).join('')
+    : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas de setup à éviter identifié.</div>`;
+
+  $('edge-all-tbody').innerHTML = allHTML ||
+    `<tr><td colspan="4" style="text-align:center;color:var(--t4)">Minimum 5 trades par grade requis.</td></tr>`;
+}
+
+/* ============================================================
    INITIALISATION
 ============================================================ */
 $('f-date').value = todayISO();
@@ -3357,7 +3935,7 @@ updatePeriodSelectors();
 setPeriodActiveState();
 updateStatusSection();
 updateSetupScore();   // déclenche aussi displayWarning + updateTiltDisplay
-updateTiltDisplay();  // afficher le tilt dès le chargement
+// updateTiltDisplay au chargement : inutile — formulaire vide, isTiltReady() = false
 </script>
 </body>
 </html>
