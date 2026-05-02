@@ -1258,9 +1258,9 @@ const DEFAULT_CONFLUENCE_DEFS = [
   { id:'BPR',          label:'BPR',           group:'ENTRÉE'    },
   { id:'Prem/Disc',    label:'Prem/Disc',     group:'ENTRÉE'    },
   { id:'Confirmation', label:'Confirmation',  group:'ENTRÉE'    },
-  { id:'London',       label:'London',        group:'TIMING'    },
-  { id:'NY',           label:'NY',            group:'TIMING'    },
-  { id:'Asia',         label:'Asia',          group:'TIMING'    },
+  { id:'London',       label:'London',        group:'SESSION'   },
+  { id:'NY',           label:'NY',            group:'SESSION'   },
+  { id:'Asia',         label:'Asia',          group:'SESSION'   },
 ];
 
 const SETTINGS_KEY = 'tj_user_settings_v1';
@@ -1313,7 +1313,7 @@ const CONFLUENCE_GROUPS = {
   CONTEXTE  : ['HTF', 'Liquidity', 'Sweep'],
   STRUCTURE : ['MSS', 'Displacement'],
   'ENTRÉE'  : ['OB', 'FVG', 'BPR', 'Prem/Disc', 'Confirmation'],
-  TIMING    : ['London', 'NY', 'Asia'],
+  SESSION   : ['London', 'NY', 'Asia'],
 };
 
 // Mapping catégorie → classe CSS (couleur active)
@@ -1321,7 +1321,7 @@ const GROUP_CSS = {
   CONTEXTE  : 'cat-context',
   STRUCTURE : 'cat-structure',
   'ENTRÉE'  : 'cat-entry',
-  TIMING    : 'cat-timing',
+  SESSION   : 'cat-timing',
 };
 
 /**
@@ -1426,7 +1426,7 @@ function calculateSetupScore(trade){
   if(coverage.ENTRY)     score += 2; // Zone d'entrée précise
   if(rr >= 2)            score += 2; // RR ≥ 2
   else if(rr >= 1.5)     score += 1;
-  if(coverage.TIMING)    score += 2; // Session active
+  if(coverage.SESSION)   score += 2; // Session active
 
   // Max = 10
 
@@ -1436,7 +1436,7 @@ function calculateSetupScore(trade){
     score = Math.min(10, score + 1);
 
   // ── Grade ─────────────────────────────────────────────────
-  const fullCov = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
+  const fullCov = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.SESSION;
   const validRR = rr >= 2;
 
   let grade;
@@ -1503,6 +1503,7 @@ function updateSetupScore(){
     grade  : setupGrade,
     rr     : tmp.rrPlan,
     emotion: getToggleVal('emotion'),
+    conf   : tmp.conf,
   });
 
   if(adaptFeedback && !baseWarning){
@@ -2123,10 +2124,10 @@ const CATEGORY_MAP = {
   BPR         : 'ENTRY',
   'Prem/Disc' : 'ENTRY',
   Confirmation: 'ENTRY',
-  // TIMING — session de trading active
-  Asia        : 'TIMING',
-  London      : 'TIMING',
-  NY          : 'TIMING',
+  // SESSION — session de trading active
+  Asia        : 'SESSION',
+  London      : 'SESSION',
+  NY          : 'SESSION',
 };
 
 /**
@@ -2134,7 +2135,7 @@ const CATEGORY_MAP = {
  * Retourne quelles catégories sont couvertes.
  */
 function checkCategoryCoverage(conf){
-  const cov = { CONTEXT:false, STRUCTURE:false, ENTRY:false, TIMING:false };
+  const cov = { CONTEXT:false, STRUCTURE:false, ENTRY:false, SESSION:false };
   conf.forEach(c => { if(CATEGORY_MAP[c]) cov[CATEGORY_MAP[c]] = true; });
   return cov;
 }
@@ -2173,7 +2174,7 @@ function refreshSetupDisplay(){
   const rr   = parseFloat($('f-rr-plan').value) || 0;
 
   const { setupScore, setupGrade, coverage } = calculateSetupScore({ conf, rrPlan: rr });
-  const fullCov  = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
+  const fullCov  = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.SESSION;
   const validRR  = rr >= 2;
   const missing  = getMissingCategories(coverage);
   const isAPlus  = setupGrade === 'A+';
@@ -2348,28 +2349,67 @@ function refreshUserStats(){
 }
 
 /**
- * getAdaptiveFeedback({ grade, rr, emotion })
+/**
+ * isHighProbabilitySetup(conf)
+ * Détecte la synergie ICT maximale : HTF bias + MSS + Displacement.
+ * Ces 3 ensemble = structure de marché la plus forte possible.
+ */
+function isHighProbabilitySetup(conf){
+  return Array.isArray(conf)
+    && (conf.includes('HTF') || conf.includes('Liquidity') || conf.includes('Sweep'))
+    && conf.includes('MSS')
+    && conf.includes('Displacement');
+}
+
+/**
+ * getRRRecommendation(grade, userStats)
+ * Retourne le RR optimal basé sur tes données historiques pour ce grade.
+ * Fallback : seuils antifragiles standard.
+ */
+function getRRRecommendation(grade, userStats){
+  const fallbacks = { 'A+':3, 'A':2.5, 'B':2, 'C':1.5, 'D':1.5 };
+  if(!userStats?.grades?.[grade] || userStats.grades[grade].total < 5)
+    return fallbacks[grade] || 2;
+  const avgR = userStats.grades[grade].avgR;
+  // Recommande légèrement au-dessus de la moyenne historique (antifragile)
+  return parseFloat(Math.max(avgR * 1.1, fallbacks[grade] || 2).toFixed(2));
+}
+
+
+/**
+ * getAdaptiveFeedback({ grade, rr, emotion, conf })
  * Génère un feedback personnalisé basé sur l'historique réel.
  * Requiert au moins 10 trades pour être significatif.
  */
-function getAdaptiveFeedback({ grade, rr, emotion }){
+function getAdaptiveFeedback({ grade, rr, emotion, conf = [] }){
   if(!USER_STATS) return null;
 
   const closedCount = USER_STATS.global.total;
-  if(closedCount < 10) return null; // pas assez de données
+  if(closedCount < 10) return null;
 
   const messages = [];
   const gradeStats   = grade   ? USER_STATS.grades[grade]     : null;
   const emotionStats = emotion ? USER_STATS.emotions[emotion] : null;
 
+  // ── Setup haute probabilité — signal positif fort ──────────
+  if(isHighProbabilitySetup(conf)){
+    const rrOpt = getRRRecommendation(grade, USER_STATS);
+    if(rr > 0 && rr < rrOpt - 0.2){
+      messages.push(`🔥 Setup haute proba — vise ${rrOpt}R (ton optimal ${grade})`);
+    } else {
+      messages.push(`🔥 Setup haute probabilité — HTF + MSS + Displacement`);
+    }
+  }
+
   // ── Performance du setup ──────────────────────────────────
   if(gradeStats && gradeStats.total >= 5){
-    if(rr > 0 && rr < gradeStats.avgR - 0.3){
-      messages.push(`⚠️ RR ${rr} < ton optimal sur ${grade} (${gradeStats.avgR.toFixed(2)}R moy)`);
+    const rrOpt = getRRRecommendation(grade, USER_STATS);
+    if(rr > 0 && rr < rrOpt - 0.3 && !isHighProbabilitySetup(conf)){
+      messages.push(`⚠️ RR ${rr} < ton optimal sur ${grade} (${rrOpt}R)`);
     }
     if(gradeStats.winrate < 40){
       messages.push(`⚠️ Setup ${grade} : ${gradeStats.winrate.toFixed(0)}% WR sur tes données`);
-    } else if(gradeStats.winrate >= 60){
+    } else if(gradeStats.winrate >= 60 && !isHighProbabilitySetup(conf)){
       messages.push(`🔥 Setup ${grade} performant : ${gradeStats.winrate.toFixed(0)}% WR`);
     }
   }
@@ -2377,7 +2417,7 @@ function getAdaptiveFeedback({ grade, rr, emotion }){
   // ── État émotionnel ────────────────────────────────────────
   if(emotionStats && emotionStats.total >= 5){
     if(emotionStats.winrate < 35){
-      messages.push(`🚨 ${emotion} → ${emotionStats.winrate.toFixed(0)}% WR sur tes trades`);
+      messages.push(`🚨 ${emotion} = pattern perdant (${emotionStats.winrate.toFixed(0)}% WR)`);
     } else if(emotionStats.winrate >= 65){
       messages.push(`✅ ${emotion} = état optimal (${emotionStats.winrate.toFixed(0)}% WR)`);
     }
@@ -2817,6 +2857,24 @@ function detectRisk(trade, closedTrades){
   if(todayCount >= 5){
     score += 15;
     reasons.push({ text:`${todayCount} trades aujourd'hui — overtrading détecté`, sev:'warn' });
+  }
+
+  // ── Setup haute probabilité — signal positif (non bloquant) ─
+  if(isHighProbabilitySetup(trade.conf || [])){
+    const rrOpt = getRRRecommendation(trade.setupGrade, USER_STATS);
+    if((trade.rrPlan || 0) < rrOpt - 0.2){
+      score += 15;
+      reasons.push({ text:`Setup haute proba (HTF+MSS+Displ.) — RR ${trade.rrPlan} sous-exploite l'edge (optimal : ${rrOpt}R)`, sev:'warn' });
+    }
+  }
+
+  // ── Pattern émotionnel perdant basé sur historique ─────────
+  if(USER_STATS?.emotions?.[trade.emotion]?.total >= 5){
+    const eWR = USER_STATS.emotions[trade.emotion].winrate;
+    if(eWR < 35){
+      score += 20;
+      reasons.push({ text:`${trade.emotion} = pattern perdant sur tes données (${eWR.toFixed(0)}% WR)`, sev:'high' });
+    }
   }
 
   return { score: Math.min(100, score), reasons };
@@ -4692,7 +4750,7 @@ function renderSettingsUI(){
       <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">Visible</div>
     </div>`);
 
-  const groupOpts = ['CONTEXTE','STRUCTURE','ENTRÉE','TIMING'];
+  const groupOpts = ['CONTEXTE','STRUCTURE','ENTRÉE','SESSION'];
 
   DEFAULT_CONFLUENCE_DEFS.forEach(def => {
     const s  = settings?.confluences?.[def.id] || {};
