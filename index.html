@@ -1122,6 +1122,7 @@ textarea{resize:vertical;min-height:52px}
 ============================================================ */
 const LS_KEY = 'tj_trades_v1';
 let trades = [];
+let USER_STATS = null; // Stats adaptatives — recalculées après chaque mutation
 
 // Historique
 let historySortAsc = false;
@@ -1429,6 +1430,11 @@ function calculateSetupScore(trade){
 
   // Max = 10
 
+  // ── Combo boost : MSS + Displacement + zone d'entrée ──────
+  // Récompense la synergie structure complète (+1, plafond 10)
+  if(conf.includes('MSS') && conf.includes('Displacement') && coverage.ENTRY)
+    score = Math.min(10, score + 1);
+
   // ── Grade ─────────────────────────────────────────────────
   const fullCov = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
   const validRR = rr >= 2;
@@ -1488,9 +1494,22 @@ function updateSetupScore(){
   val.style.color = color;
   val.textContent = `${setupGrade} · ${setupScore}pts`;
 
-  // Smart warning live
+  // Smart warning + feedback adaptatif combinés
   const tmpTrade = { conf:tmp.conf, rrPlan:tmp.rrPlan, setupScore, setupGrade };
-  displayWarning(generateSmartWarning(tmpTrade, trades));
+  const baseWarning = generateSmartWarning(tmpTrade, trades);
+
+  // Overlay adaptatif si USER_STATS disponibles
+  const adaptFeedback = getAdaptiveFeedback({
+    grade  : setupGrade,
+    rr     : tmp.rrPlan,
+    emotion: getToggleVal('emotion'),
+  });
+
+  if(adaptFeedback && !baseWarning){
+    displayWarning(adaptFeedback);
+  } else {
+    displayWarning(baseWarning);
+  }
 
   // Tilt monitor live
   updateTiltDisplay();
@@ -1646,6 +1665,7 @@ $('cancel-edit-btn').addEventListener('click', exitEditMode);
 ============================================================ */
 function saveTrades(){
   localStorage.setItem(LS_KEY, JSON.stringify(trades));
+  refreshUserStats(); // recalcul adaptatif après chaque mutation
 }
 
 function loadTrades(){
@@ -2247,6 +2267,133 @@ function getStatsBySetupGrade(tradeSet){
  * Retourne { message, level } où level = 'good' | 'bad' | 'uncertain'
  * N'effectue AUCUN blocage — information uniquement.
  */
+/* ============================================================
+   ADAPTIVE STATS — Couche d'intelligence utilisateur
+   Analyse l'historique pour adapter les feedbacks en temps réel.
+============================================================ */
+
+/**
+ * computeUserStats(trades)
+ * Analyse tous les trades clôturés et retourne des stats
+ * par grade, par émotion, et globales.
+ */
+function computeUserStats(tradeSet){
+  const stats = {
+    grades  : {},
+    emotions: {},
+    global  : { total:0, wins:0, losses:0, totalR:0, winrate:0, avgR:0 },
+  };
+
+  tradeSet.forEach(t => {
+    if(t.status !== 'closed' || !t.result) return;
+
+    const grade   = t.setupGrade || t.quality;
+    const emotion = t.emotionEntry || t.emotion;
+    const r       = signedR(t);
+    const isWin   = t.result === 'Win';
+    const isLoss  = t.result === 'Loss';
+
+    // Global
+    stats.global.total++;
+    if(isWin)  stats.global.wins++;
+    if(isLoss) stats.global.losses++;
+    stats.global.totalR += r;
+
+    // Par grade
+    if(grade){
+      if(!stats.grades[grade]) stats.grades[grade] = { total:0, wins:0, losses:0, totalR:0 };
+      stats.grades[grade].total++;
+      if(isWin)  stats.grades[grade].wins++;
+      if(isLoss) stats.grades[grade].losses++;
+      stats.grades[grade].totalR += r;
+    }
+
+    // Par émotion
+    if(emotion){
+      if(!stats.emotions[emotion]) stats.emotions[emotion] = { total:0, wins:0, losses:0 };
+      stats.emotions[emotion].total++;
+      if(isWin)  stats.emotions[emotion].wins++;
+      if(isLoss) stats.emotions[emotion].losses++;
+    }
+  });
+
+  // Dérivés — winrate + avgR (basé sur décisifs uniquement pour WR)
+  const wr = set => {
+    const dec = set.wins + set.losses;
+    return dec > 0 ? (set.wins / dec * 100) : 0;
+  };
+
+  const decisive = stats.global.wins + stats.global.losses;
+  stats.global.winrate = decisive > 0 ? stats.global.wins / decisive * 100 : 0;
+  stats.global.avgR    = stats.global.total > 0 ? stats.global.totalR / stats.global.total : 0;
+
+  Object.values(stats.grades).forEach(d => {
+    d.winrate = wr(d);
+    d.avgR    = d.total > 0 ? d.totalR / d.total : 0;
+  });
+
+  Object.values(stats.emotions).forEach(d => {
+    d.winrate = wr(d);
+  });
+
+  return stats;
+}
+
+/**
+ * refreshUserStats()
+ * Point d'entrée unique — appelé après chaque mutation de `trades`.
+ */
+function refreshUserStats(){
+  USER_STATS = computeUserStats(trades);
+}
+
+/**
+ * getAdaptiveFeedback({ grade, rr, emotion })
+ * Génère un feedback personnalisé basé sur l'historique réel.
+ * Requiert au moins 10 trades pour être significatif.
+ */
+function getAdaptiveFeedback({ grade, rr, emotion }){
+  if(!USER_STATS) return null;
+
+  const closedCount = USER_STATS.global.total;
+  if(closedCount < 10) return null; // pas assez de données
+
+  const messages = [];
+  const gradeStats   = grade   ? USER_STATS.grades[grade]     : null;
+  const emotionStats = emotion ? USER_STATS.emotions[emotion] : null;
+
+  // ── Performance du setup ──────────────────────────────────
+  if(gradeStats && gradeStats.total >= 5){
+    if(rr > 0 && rr < gradeStats.avgR - 0.3){
+      messages.push(`⚠️ RR ${rr} < ton optimal sur ${grade} (${gradeStats.avgR.toFixed(2)}R moy)`);
+    }
+    if(gradeStats.winrate < 40){
+      messages.push(`⚠️ Setup ${grade} : ${gradeStats.winrate.toFixed(0)}% WR sur tes données`);
+    } else if(gradeStats.winrate >= 60){
+      messages.push(`🔥 Setup ${grade} performant : ${gradeStats.winrate.toFixed(0)}% WR`);
+    }
+  }
+
+  // ── État émotionnel ────────────────────────────────────────
+  if(emotionStats && emotionStats.total >= 5){
+    if(emotionStats.winrate < 35){
+      messages.push(`🚨 ${emotion} → ${emotionStats.winrate.toFixed(0)}% WR sur tes trades`);
+    } else if(emotionStats.winrate >= 65){
+      messages.push(`✅ ${emotion} = état optimal (${emotionStats.winrate.toFixed(0)}% WR)`);
+    }
+  }
+
+  // ── Global ─────────────────────────────────────────────────
+  if(!gradeStats && !emotionStats && USER_STATS.global.winrate < 40){
+    messages.push(`📉 Winrate global bas (${USER_STATS.global.winrate.toFixed(0)}%) — attends les A+/A`);
+  }
+
+  return messages.length > 0
+    ? { level: messages.some(m => m.includes('🚨') || m.includes('⚠️')) ? 'bad' : 'good',
+        message: messages.join('\n') }
+    : null;
+}
+
 function generateSmartWarning(trade, tradeSet){
   const stats   = getStatsBySetupGrade(tradeSet);
   const grade   = trade.setupGrade;
