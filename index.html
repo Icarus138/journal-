@@ -115,19 +115,29 @@ textarea{resize:vertical;min-height:52px}
 .tgl[data-val="closed"].active{background:var(--win-d);border-color:rgba(34,197,94,.3);color:var(--win)}
 .tgl[data-val="open"].active{background:var(--be-d);border-color:rgba(245,158,11,.35);color:var(--be)}
 
-/* Confluences */
-.conf-grid{display:flex;gap:6px;flex-wrap:wrap}
-.conf-cb{
-  display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg4);
-  border:1px solid var(--b1);border-radius:6px;cursor:pointer;user-select:none;
-  -webkit-tap-highlight-color:transparent;transition:all var(--tr);
+/* ── Confluence groups ─────────────────────────────────────── */
+.confluence-container{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.confluence-group{display:flex;flex-direction:column;gap:5px}
+.confluence-group-title{
+  font-family:var(--mono);font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--t3);padding-bottom:2px;
 }
-.conf-cb input{display:none}
-.conf-cb-box{width:14px;height:14px;border:1.5px solid var(--b2);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.55rem;transition:all var(--tr);}
-.conf-cb.checked{border-color:rgba(59,130,246,.4);background:var(--blue-d)}
-.conf-cb.checked .conf-cb-box{background:var(--blue);border-color:var(--blue);color:#000;font-weight:900}
-.conf-cb-label{font-family:var(--mono);font-size:.65rem;color:var(--t2)}
-.conf-cb.checked .conf-cb-label{color:var(--blue)}
+.confluence-row{display:flex;gap:5px;flex-wrap:wrap}
+.confluence-btn{
+  padding:6px 11px;border-radius:6px;background:var(--bg4);border:1px solid var(--b1);
+  color:var(--t3);font-family:var(--mono);font-size:.67rem;font-weight:600;
+  cursor:pointer;transition:all var(--tr);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.confluence-btn:hover{color:var(--t2);border-color:var(--b2)}
+.confluence-btn.active{
+  background:var(--blue-d);border-color:rgba(59,130,246,.45);color:var(--blue);
+}
+/* Couleur par catégorie quand actif */
+.confluence-btn.cat-context.active {background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.35);color:#a78bfa}
+.confluence-btn.cat-structure.active{background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.30); color:#f87171}
+.confluence-btn.cat-entry.active   {background:var(--blue-d);         border-color:rgba(59,130,246,.45);color:var(--blue)}
+.confluence-btn.cat-timing.active  {background:rgba(34,197,94,.10);   border-color:rgba(34,197,94,.35); color:var(--win)}
 
 /* Submit */
 .btn-submit{
@@ -330,8 +340,13 @@ textarea{resize:vertical;min-height:52px}
 }
 .interceptor-btn:hover{opacity:.8}
 .interceptor-btn-cancel{background:var(--bg4);color:var(--t2);border:1px solid var(--b2)}
-.interceptor-btn-proceed{background:rgba(239,68,68,.18);color:var(--loss);border:1px solid rgba(239,68,68,.35)}
-.interceptor-btn-proceed.ok{background:rgba(34,197,94,.12);color:var(--win);border:1px solid rgba(34,197,94,.3)}
+/* Niveaux de trigger — info / warning / high */
+.interceptor-header.level-info    {background:rgba(59,130,246,.06); border-bottom-color:rgba(59,130,246,.2)}
+.interceptor-header.level-warning {background:rgba(245,158,11,.06); border-bottom-color:rgba(245,158,11,.2)}
+.interceptor-header.level-high    {background:rgba(239,68,68,.08);  border-bottom-color:rgba(239,68,68,.2)}
+.interceptor-btn-proceed.level-info   {background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.interceptor-btn-proceed.level-warning{background:rgba(245,158,11,.12);color:var(--be);  border:1px solid rgba(245,158,11,.3)}
+.interceptor-btn-proceed.level-high   {background:rgba(239,68,68,.15); color:var(--loss);border:1px solid rgba(239,68,68,.3)}
 
 /* Justification block (risque élevé) */
 .interceptor-justif{
@@ -353,6 +368,19 @@ textarea{resize:vertical;min-height:52px}
 .interceptor-justif-hint{
   font-family:var(--mono);font-size:.58rem;color:var(--t3);margin-top:4px;
 }
+
+/* ── Setup Coverage & Live Score ────────────────────────────── */
+/* ── Setup Coverage hint (texte uniquement) ─────────────────── */
+#cov-missing-hint{font-family:var(--mono);font-size:.58rem;color:var(--t3)}
+
+.setup-feedback{
+  display:none;align-items:center;gap:8px;padding:6px 12px;
+  border-radius:6px;margin-top:6px;font-family:var(--mono);font-size:.68rem;
+  border:1px solid transparent;transition:all .2s ease;
+}
+.setup-feedback.feedback-good{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.2);color:var(--win)}
+.setup-feedback.feedback-med {background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.2);color:var(--be)}
+.setup-feedback.feedback-bad {background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.2); color:var(--loss)}
 
 /* ── Partial TP */
 .partials-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
@@ -430,8 +458,8 @@ textarea{resize:vertical;min-height:52px}
     <button class="nav-tab active" data-page="page-log">&#43; Log Trade</button>
     <button class="nav-tab" data-page="page-history">Historique</button>
     <button class="nav-tab" data-page="page-dashboard">Dashboard</button>
+    <button class="nav-tab" data-page="page-settings">&#9881; Setup</button>
   </div>
-  <div class="nav-clock">
     <span id="nav-time">--:--:--</span>
     <span id="nav-date">--</span>
   </div>
@@ -559,20 +587,17 @@ textarea{resize:vertical;min-height:52px}
         </div>
         <div class="field form-col-span-2">
           <div class="field-label">Confluences</div>
-          <div class="conf-grid" id="conf-grid">
-            <label class="conf-cb"><input type="checkbox" value="HTF"/><div class="conf-cb-box"></div><span class="conf-cb-label">HTF</span></label>
-            <label class="conf-cb"><input type="checkbox" value="FVG"/><div class="conf-cb-box"></div><span class="conf-cb-label">FVG</span></label>
-            <label class="conf-cb"><input type="checkbox" value="OB"/><div class="conf-cb-box"></div><span class="conf-cb-label">OB</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Liquidity"/><div class="conf-cb-box"></div><span class="conf-cb-label">Liq.</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Sweep"/><div class="conf-cb-box"></div><span class="conf-cb-label">Sweep</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Displacement"/><div class="conf-cb-box"></div><span class="conf-cb-label">Displ.</span></label>
-            <label class="conf-cb"><input type="checkbox" value="MSS"/><div class="conf-cb-box"></div><span class="conf-cb-label">MSS</span></label>
-            <label class="conf-cb"><input type="checkbox" value="BPR"/><div class="conf-cb-box"></div><span class="conf-cb-label">BPR</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Prem/Disc"/><div class="conf-cb-box"></div><span class="conf-cb-label">Prem/Disc</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Confirmation"/><div class="conf-cb-box"></div><span class="conf-cb-label">Confirm.</span></label>
-            <label class="conf-cb"><input type="checkbox" value="Asia"/><div class="conf-cb-box"></div><span class="conf-cb-label">Asia</span></label>
-            <label class="conf-cb"><input type="checkbox" value="London"/><div class="conf-cb-box"></div><span class="conf-cb-label">London</span></label>
-            <label class="conf-cb"><input type="checkbox" value="NY"/><div class="conf-cb-box"></div><span class="conf-cb-label">NY</span></label>
+          <!-- Container généré dynamiquement par renderConfluenceGroups() -->
+          <div class="confluence-container" id="confluence-container"></div>
+
+          <!-- Hint catégories manquantes — texte uniquement -->
+          <div style="margin-top:5px">
+            <span id="cov-missing-hint"></span>
+          </div>
+
+          <!-- Feedback grade live -->
+          <div class="setup-feedback" id="setup-feedback">
+            <span id="setup-feedback-text"></span>
           </div>
         </div>
 
@@ -650,8 +675,8 @@ textarea{resize:vertical;min-height:52px}
           <input type="text" id="f-note" placeholder="1 ligne max — observation clé du trade..."/>
         </div>
 
-        <!-- Scores : calculés au submit uniquement — cachés pendant la saisie -->
-        <div class="form-col-span-4" id="scores-dual-wrap" style="display:none">
+        <!-- Scores setup + mental — visibles en live (score uniquement, pas de warning) -->
+        <div class="form-col-span-4" id="scores-dual-wrap">
           <div class="scores-dual">
             <div class="score-bar-wrap">
               <div class="score-bar-label">Score mental</div>
@@ -1050,6 +1075,24 @@ textarea{resize:vertical;min-height:52px}
 
 </div><!-- /page-dashboard -->
 
+<!-- ============================================================ PAGE SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">&#9881; Personnalisation des confluences</span>
+      <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3)">Labels · Visibilité · Les IDs internes ne changent jamais</span>
+    </div>
+    <div class="panel-body">
+      <div id="settings-confluence-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-submit" id="btn-save-settings" style="max-width:180px">&#10003; Sauvegarder</button>
+        <button class="filter-btn" id="btn-reset-settings">&#8635; Réinitialiser</button>
+      </div>
+      <div id="settings-saved-msg" style="display:none;font-family:var(--mono);font-size:.65rem;color:var(--win);margin-top:8px">✓ Paramètres sauvegardés — rechargement des confluences</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 <div class="toast" id="toast"></div>
 
@@ -1176,28 +1219,152 @@ $$('[data-group]').forEach(group => {
   });
 });
 
-// Confluences
-function getConfluences(){
-  return [...$$('#conf-grid input:checked')].map(i => i.value);
+/* ============================================================
+   USER SETTINGS — Labels et visibilité des confluences
+   Les IDs internes ne changent jamais. Seuls labels + visibilité.
+============================================================ */
+
+const DEFAULT_CONFLUENCE_DEFS = [
+  { id:'HTF',          label:'HTF',          group:'CONTEXTE'  },
+  { id:'Liquidity',    label:'Liquidity',     group:'CONTEXTE'  },
+  { id:'Sweep',        label:'Sweep',         group:'CONTEXTE'  },
+  { id:'MSS',          label:'MSS',           group:'STRUCTURE' },
+  { id:'Displacement', label:'Displacement',  group:'STRUCTURE' },
+  { id:'OB',           label:'OB',            group:'ENTRÉE'    },
+  { id:'FVG',          label:'FVG',           group:'ENTRÉE'    },
+  { id:'BPR',          label:'BPR',           group:'ENTRÉE'    },
+  { id:'Prem/Disc',    label:'Prem/Disc',     group:'ENTRÉE'    },
+  { id:'Confirmation', label:'Confirmation',  group:'ENTRÉE'    },
+  { id:'London',       label:'London',        group:'TIMING'    },
+  { id:'NY',           label:'NY',            group:'TIMING'    },
+  { id:'Asia',         label:'Asia',          group:'TIMING'    },
+];
+
+const SETTINGS_KEY = 'tj_user_settings_v1';
+
+function loadSettings(){
+  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+  catch(e){ return {}; }
 }
 
-$$('.conf-cb').forEach(cb => {
-  cb.addEventListener('click', function(e){
-    e.preventDefault();
-    const inp = this.querySelector('input');
-    inp.checked = !inp.checked;
-    this.classList.toggle('checked', inp.checked);
-    this.querySelector('.conf-cb-box').textContent = inp.checked ? '✓' : '';
-    // Scoring uniquement au submit
-  });
-});
+function saveSettings(settings){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
 
-// f-rr-plan : plus de scoring live
-// $('f-rr-plan').addEventListener('input', updateSetupScore);
+/**
+ * getConfluenceLabel(id, settings)
+ * Retourne le label personnalisé ou le défaut.
+ */
+function getConfluenceLabel(id, settings){
+  return settings?.confluences?.[id]?.label || id;
+}
+
+/**
+ * isConfluenceVisible(id, settings)
+ * Retourne true sauf si l'utilisateur l'a désactivé.
+ */
+function isConfluenceVisible(id, settings){
+  return settings?.confluences?.[id]?.hidden !== true;
+}
+
+/**
+ * getActiveConfluenceDefs(settings)
+ * Retourne les defs filtrées + labels personnalisés.
+ */
+function getActiveConfluenceDefs(settings = {}){
+  return DEFAULT_CONFLUENCE_DEFS
+    .filter(d => isConfluenceVisible(d.id, settings))
+    .map(d => ({ ...d, label: getConfluenceLabel(d.id, settings) }));
+}
+
+// ── Groupes dynamiques issus des settings ───────────────────
+// Calculé au chargement, mis à jour si settings changent
+let _activeDefs = getActiveConfluenceDefs(loadSettings());
 
 /* ============================================================
-   SECTION RÉSULTAT — dim si trade open
+   CONFLUENCE UI
 ============================================================ */
+
+// Groupes de confluences par catégorie — ordre lecture trader
+const CONFLUENCE_GROUPS = {
+  CONTEXTE  : ['HTF', 'Liquidity', 'Sweep'],
+  STRUCTURE : ['MSS', 'Displacement'],
+  'ENTRÉE'  : ['OB', 'FVG', 'BPR', 'Prem/Disc', 'Confirmation'],
+  TIMING    : ['London', 'NY', 'Asia'],
+};
+
+// Mapping catégorie → classe CSS (couleur active)
+const GROUP_CSS = {
+  CONTEXTE  : 'cat-context',
+  STRUCTURE : 'cat-structure',
+  'ENTRÉE'  : 'cat-entry',
+  TIMING    : 'cat-timing',
+};
+
+/**
+ * renderConfluenceGroups(selected)
+ * Construit le UI confluence structuré par catégorie.
+ * Appelé à l'init, au reset et à l'ouverture en mode édition.
+ */
+function renderConfluenceGroups(selected = [], settings = null){
+  const defs = settings
+    ? getActiveConfluenceDefs(settings)
+    : _activeDefs;
+
+  // Reconstruire les groupes depuis les defs actives
+  const groups = {};
+  defs.forEach(d => {
+    if(!groups[d.group]) groups[d.group] = [];
+    groups[d.group].push(d);
+  });
+
+  const container = $('confluence-container');
+  if(!container) return;
+  container.innerHTML = '';
+
+  Object.entries(groups).forEach(([group, items]) => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'confluence-group';
+
+    const title = document.createElement('div');
+    title.className = 'confluence-group-title';
+    title.textContent = group;
+
+    const row = document.createElement('div');
+    row.className = 'confluence-row';
+
+    items.forEach(def => {
+      const btn = document.createElement('button');
+      btn.className = `confluence-btn ${GROUP_CSS[group] || ''}`;
+      btn.textContent = def.label;   // label personnalisé
+      btn.dataset.name = def.id;     // ID interne immuable
+      btn.type = 'button';
+      if(selected.includes(def.id)) btn.classList.add('active');
+
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        refreshSetupDisplay();
+      });
+
+      row.appendChild(btn);
+    });
+
+    groupEl.appendChild(title);
+    groupEl.appendChild(row);
+    container.appendChild(groupEl);
+  });
+}
+
+/**
+ * getConfluences()
+ * Lit les confluences actives depuis les boutons rendus dynamiquement.
+ */
+function getConfluences(){
+  return [...$$('#confluence-container .confluence-btn.active')].map(b => b.dataset.name);
+}
+
+// RR prévu → mise à jour du score setup en live
+$('f-rr-plan').addEventListener('input', refreshSetupDisplay);
 function updateStatusSection(){
   const isOpen = getToggleVal('status') === 'open';
   const rs = $('result-section');
@@ -1226,57 +1393,46 @@ function calculateSetupScore(trade){
   const conf = Array.isArray(trade.conf) ? trade.conf : [];
   const rr   = trade.rrPlan || 0;
 
-  // ── Confluences majeures (structure + liquidité) ───────────
+  // ── Score numérique (raffinement, pas critère principal) ──
   const major = ['HTF','Liquidity','Sweep','Displacement','MSS'];
   const minor = ['OB','FVG','BPR','Prem/Disc','Confirmation','Asia','London','NY'];
-
   const majorCount = conf.filter(c => major.includes(c)).length;
   const minorCount = conf.filter(c => minor.includes(c)).length;
 
-  score += Math.min(majorCount * 2, 6); // cap 6 — 3 majeures différenciées de 2 (était 4)
-  score += Math.min(minorCount * 1, 4); // cap 4 mineures — inchangé
-
-  // ── Synergie structure ─────────────────────────────────────
+  score += Math.min(majorCount * 2, 6);
+  score += Math.min(minorCount * 1, 4);
   if(conf.includes('MSS') && conf.includes('Displacement')) score += 2;
-
-  // ── Timing de session ─────────────────────────────────────
   if(conf.includes('London') || conf.includes('NY'))        score += 1;
-
-  // ── RR prévu — rewards uniquement, plus de malus ──────────
-  if(rr >= 3)        score += 3; // excellent RR (était +2)
-  else if(rr >= 2)   score += 2; // bon RR (était +1)
-  else if(rr >= 1.5) score += 1; // RR acceptable (était 0)
-  // rr < 1.5 → 0 pts, plus de malus (était −1)
-
-  // ── Plan : EXCLU du setup score (géré par psycho/discipline)
-
+  if(rr >= 3)        score += 3;
+  else if(rr >= 2)   score += 2;
+  else if(rr >= 1.5) score += 1;
   score = Math.max(0, score);
 
-  // ── Condition A+ : MSS OU Displacement suffisant ──────────
-  // Un setup ICT solide peut avoir l'un sans l'autre
-  const isPremium = majorCount >= 2
-    && (conf.includes('MSS') || conf.includes('Displacement'))
-    && rr >= 1.5;
+  // ── Validation structurelle (catégories) ──────────────────
+  const coverage  = checkCategoryCoverage(conf);
+  const fullCov   = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
+  const validRR   = rr >= 2;
 
-  // Structure présente si MSS ou Displacement confirmé
-  const hasStructure = conf.includes('MSS') || conf.includes('Displacement');
-
+  // ── Grading hybride : Structure prioritaire, score en raffinement
   let grade;
-  if(isPremium && score >= 9)              grade = 'A+'; // A+ : structure forte + conditions premium
-  else if(score >= 6 && hasStructure && rr >= 2) grade = 'A';  // A : structure + RR ≥ 2 requis
-  else if(score >= 4)                      grade = 'B';  // B : score correct, structure non requise
-  else if(score >= 2)                      grade = 'C';
-  else                                     grade = 'D';
+  if(fullCov && validRR)          grade = 'A+'; // Structure complète + RR ≥ 2
+  else {
+    // Ratio score / max théorique (18 pts)
+    const ratio = score / 18;
+    if(ratio >= 0.70)             grade = 'A';
+    else if(ratio >= 0.50)        grade = 'B';
+    else if(ratio >= 0.30)        grade = 'C';
+    else                          grade = 'D';
+  }
 
-  // ── Soft calibration flag (informatif uniquement) ─────────
-  const realizedR = trade.rrReal || 0;
+  // ── Soft calibration flag ─────────────────────────────────
   let evaluationFlag = null;
-  if(trade.result === 'Win' && realizedR >= 1.5 && ['C','D'].includes(grade))
+  if(trade.result === 'Win' && (trade.rrReal||0) >= 1.5 && ['C','D'].includes(grade))
     evaluationFlag = 'under-evaluated';
   if(trade.result === 'Loss' && ['A+','A'].includes(grade))
     evaluationFlag = 'over-evaluated';
 
-  return { setupScore: score, setupGrade: grade, evaluationFlag };
+  return { setupScore: score, setupGrade: grade, evaluationFlag, coverage };
 }
 
 /**
@@ -1383,11 +1539,8 @@ function resetForm(){
   $$('[data-group] .tgl').forEach(b => b.classList.remove('active'));
   setToggleVal('status', 'closed');
 
-  $$('#conf-grid .conf-cb').forEach(cb => {
-    cb.querySelector('input').checked = false;
-    cb.classList.remove('checked');
-    cb.querySelector('.conf-cb-box').textContent = '';
-  });
+  // Réinitialiser les confluences
+  renderConfluenceGroups([]);
 
   // Reset bars
   $('psycho-fill').style.width = '0%';
@@ -1401,6 +1554,7 @@ function resetForm(){
   displayWarning(null);
   setToggleVal('emotionExit', '');
   clearPartials();
+  refreshSetupDisplay(); // reset affichage score + coverage
   // Tout cacher — formulaire propre, pas de scoring visible
   const tm = $('tilt-monitor');   if(tm) tm.style.display = 'none';
   const sd = $('scores-dual-wrap'); if(sd) sd.style.display = 'none';
@@ -1443,14 +1597,8 @@ function enterEditMode(trade, mode = 'edit'){
     setToggleVal('status', trade.status || 'closed');
   }
 
-  // Confluences
-  $$('#conf-grid .conf-cb').forEach(cb => {
-    const inp = cb.querySelector('input');
-    const checked = (trade.conf || []).includes(inp.value);
-    inp.checked = checked;
-    cb.classList.toggle('checked', checked);
-    cb.querySelector('.conf-cb-box').textContent = checked ? '✓' : '';
-  });
+  // Confluences — rendu avec les valeurs du trade
+  renderConfluenceGroups(trade.conf || []);
 
   // Partiels TP — restaurer si présents
   clearPartials();
@@ -1917,6 +2065,136 @@ function generateTiltWarning(score, tiltObj, tradeSet){
   };
   const icons = { Clean:'🧠', Dérive:'⚠️', Danger:'🚨', Tilt:'💀' };
   return `${icons[level]} ${level.toUpperCase()} [${score}/100] ${actions[level] || ''}`;
+}
+
+/* ============================================================
+   LIVE SETUP DISPLAY — Score auto + coverage catégories
+   Informationnel uniquement — pas de warning, pas de blocage
+============================================================ */
+
+// Mapping confluence → catégorie
+const CATEGORY_MAP = {
+  // CONTEXTE — biais HTF et liquidité identifiée
+  HTF         : 'CONTEXT',
+  Liquidity   : 'CONTEXT',
+  Sweep       : 'CONTEXT',   // sweep = purge de liquidité, confirme le biais
+  // STRUCTURE — changement de structure du marché
+  MSS         : 'STRUCTURE',
+  Displacement: 'STRUCTURE',
+  // ENTRÉE — zone de trade précise
+  OB          : 'ENTRY',
+  FVG         : 'ENTRY',
+  BPR         : 'ENTRY',
+  'Prem/Disc' : 'ENTRY',
+  Confirmation: 'ENTRY',
+  // TIMING — session de trading active
+  Asia        : 'TIMING',
+  London      : 'TIMING',
+  NY          : 'TIMING',
+};
+
+/**
+ * checkCategoryCoverage(conf)
+ * Retourne quelles catégories sont couvertes.
+ */
+function checkCategoryCoverage(conf){
+  const cov = { CONTEXT:false, STRUCTURE:false, ENTRY:false, TIMING:false };
+  conf.forEach(c => { if(CATEGORY_MAP[c]) cov[CATEGORY_MAP[c]] = true; });
+  return cov;
+}
+
+/**
+ * getMissingCategories(coverage)
+ * Retourne les catégories manquantes.
+ */
+function getMissingCategories(coverage){
+  return Object.entries(coverage).filter(([,v]) => !v).map(([k]) => k);
+}
+
+/**
+ * getSetupFeedback(grade)
+ * Retourne un message court et une classe CSS pour le feedback visuel.
+ */
+function getSetupFeedback(grade){
+  if(grade === 'A+') return { text:'✅ Setup premium — conditions optimales',  cls:'feedback-good' };
+  if(grade === 'A')  return { text:'✅ Conditions favorables',                  cls:'feedback-good' };
+  if(grade === 'B')  return { text:'⚠️ Conditions moyennes — setup acceptable', cls:'feedback-med'  };
+  if(grade === 'C')  return { text:'⚠️ Setup moyen — manque de confluence', cls:'feedback-med'  };
+  return                  { text:'❌ Setup insuffisant — risque élevé',          cls:'feedback-bad'  };
+}
+
+/**
+ * refreshSetupDisplay()
+ * Met à jour en live :
+ *  - barre score setup + grade
+ *  - coverage dots (CORE/STRUCTURE/EXECUTION/CONTEXT)
+ *  - feedback texte
+ * Appelé sur chaque changement de confluence ou de RR.
+ * N'appelle PAS displayWarning ni updateTiltDisplay (réservés au submit).
+ */
+function refreshSetupDisplay(){
+  const conf = getConfluences();
+  const rr   = parseFloat($('f-rr-plan').value) || 0;
+
+  const { setupScore, setupGrade, coverage } = calculateSetupScore({ conf, rrPlan: rr });
+  const fullCov  = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
+  const validRR  = rr >= 2;
+  const missing  = getMissingCategories(coverage);
+  const isAPlus  = setupGrade === 'A+';
+
+  // ── Barre score setup ──────────────────────────────────────
+  const fill = $('setup-fill');
+  const val  = $('setup-val');
+  if(fill && val){
+    const pct   = Math.min(100, Math.round(setupScore / SETUP_SCORE_MAX * 100));
+    const colors = {'A+':'var(--violet)','A':'var(--blue)','B':'var(--be)','C':'var(--loss)','D':'#7f2020'};
+    const color  = colors[setupGrade] || 'var(--t3)';
+    fill.style.width      = pct + '%';
+    fill.style.background = color;
+    val.style.color       = color;
+    val.textContent       = `${setupGrade} · ${setupScore}pts`;
+  }
+
+  // ── Hint texte catégories manquantes ──────────────────────
+  const missingHint = $('cov-missing-hint');
+  if(missingHint){
+    if(conf.length === 0 || isAPlus){
+      missingHint.textContent = '';
+    } else if(missing.length > 0){
+      missingHint.textContent = `Manque : ${missing.join(', ')}`;
+      missingHint.style.color = missing.length >= 2 ? 'var(--loss)' : 'var(--be)';
+    } else {
+      missingHint.textContent = validRR ? '' : 'RR < 2';
+      missingHint.style.color = 'var(--be)';
+    }
+  }
+
+  // ── Feedback — message structurel clair ────────────────────
+  const fb = $('setup-feedback');
+  const ft = $('setup-feedback-text');
+  if(fb && ft){
+    if(conf.length === 0){
+      fb.style.display = 'none';
+    } else if(isAPlus){
+      fb.style.display = 'flex';
+      fb.className     = 'setup-feedback feedback-good';
+      ft.textContent   = '🔥 Setup A+ validé — Structure complète + RR ≥ 2';
+    } else if(missing.length >= 2){
+      fb.style.display = 'flex';
+      fb.className     = 'setup-feedback feedback-bad';
+      ft.textContent   = `⚠️ Setup incomplet — Manque : ${missing.join(' / ')}`;
+    } else if(missing.length === 1){
+      fb.style.display = 'flex';
+      fb.className     = 'setup-feedback feedback-med';
+      ft.textContent   = `⚠️ Presque complet — Manque : ${missing[0]}`;
+    } else {
+      // Couverture complète mais RR non atteint : info seulement, pas d'alarme
+      const { text, cls } = getSetupFeedback(setupGrade);
+      fb.style.display = 'flex';
+      fb.className     = `setup-feedback ${validRR ? cls : 'feedback-med'}`;
+      ft.textContent   = validRR ? text : `${text} · RR < 2`;
+    }
+  }
 }
 
 /* ============================================================
@@ -2451,6 +2729,18 @@ function buildInterceptorStats(closedTrades, grade, emotion){
 }
 
 /**
+/**
+ * getTriggerLevel(score, tiltState, grade)
+ * Détermine le niveau visuel du modal — par défaut WARNING, jamais ERROR.
+ */
+function getTriggerLevel(score, tiltState, grade){
+  if(tiltState === 'HIGH_RISK' || grade === 'D' || score >= 75) return 'high';
+  if(score >= 45 || tiltState === 'WARNING' || grade === 'C')   return 'warning';
+  return 'info';
+}
+
+
+/**
  * showInterceptor(riskData, statsData, tiltData)
  * Modal HTML natif — zéro confirm()/alert().
  * - score < 70 : bouton "Continuer" direct
@@ -2464,11 +2754,29 @@ function showInterceptor(riskData, statsData, tiltData = null){
     if(existing) existing.remove();
 
     const { score, reasons } = riskData;
-    const isHigh     = score >= 70;
-    const headerColor = isHigh ? 'var(--loss)' : 'var(--be)';
-    const headerBg    = isHigh ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.06)';
-    const icon        = isHigh ? '🚨' : '⚠️';
-    const title       = isHigh ? 'RISQUE ÉLEVÉ — Justification requise' : 'ATTENTION — Risque modéré';
+    const tState   = tiltData?.state || 'STABLE';
+    const grade    = riskData._grade || '';
+    const level    = getTriggerLevel(score, tState, grade);
+    const isHigh   = level === 'high';
+
+    const levelColors = {
+      info    : { color:'var(--blue)', icon:'ℹ️',  title:'Vérification avant trade'      },
+      warning : { color:'var(--be)',   icon:'⚠️',  title:'Attention — point de contrôle' },
+      high    : { color:'var(--loss)', icon:'🚨', title:'Risque élevé — confirmation requise' },
+    };
+    const { color: headerColor, icon, title } = levelColors[level];
+
+    // Enrichissement : grade + feedback depuis les stats
+    const currentGrade   = riskData._grade || '';
+    const { feedbackText, statsLine } = currentGrade
+      ? buildTriggerMessage(currentGrade, riskData, statsData)
+      : { feedbackText: '', statsLine: '' };
+
+    const gradeHeader = currentGrade && feedbackText
+      ? `<div style="font-family:var(--mono);font-size:.65rem;color:${isHigh?'var(--t2)':'var(--t2)'};margin-top:2px">`+
+        `Qualité détectée : <strong style="color:${headerColor}">${currentGrade}</strong>`+
+        `${statsLine ? ` · ${statsLine}` : ''}</div>`
+      : '';
 
     const reasonsHTML = reasons.map(r =>
       `<div class="interceptor-reason ${r.sev === 'warn' ? 'reason-warn' : ''}">
@@ -2499,24 +2807,25 @@ function showInterceptor(riskData, statsData, tiltData = null){
          </div>`
       : '';
 
-    // Bloc justification (risque élevé uniquement)
-    const justifHTML = isHigh
-      ? `<div class="interceptor-justif" id="justif-block" style="display:none">
+    const proceedLabel = isHigh ? '⚠ Justifier et trader' : level === 'warning' ? '→ Trader quand même' : '→ Confirmer';
+    const justifHTML   = isHigh ? `<div class="interceptor-justif" id="justif-block" style="display:none">
            <div class="interceptor-justif-label">Pourquoi prends-tu ce trade malgré le risque ?</div>
            <textarea id="justif-input" placeholder="Explique ton raisonnement (min. 10 caractères)..."></textarea>
            <div class="interceptor-justif-hint" id="justif-hint"></div>
-         </div>`
-      : '';
-
-    const proceedLabel = isHigh ? '⚠ Justifier et trader' : '→ Continuer';
+         </div>` : '';
 
     document.body.insertAdjacentHTML('beforeend', `
       <div class="interceptor-overlay" id="interceptor-overlay">
         <div class="interceptor-modal">
-          <div class="interceptor-header" style="background:${headerBg};border-bottom-color:${isHigh?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">
-            <span class="interceptor-icon">${icon}</span>
-            <span class="interceptor-title" style="color:${headerColor}">${title}</span>
-            <span class="interceptor-score">Score : ${score}/100</span>
+          <div class="interceptor-header level-${level}">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="interceptor-icon">${icon}</span>
+                <span class="interceptor-title" style="color:${headerColor}">${title}</span>
+              </div>
+              ${gradeHeader}
+            </div>
+            <span class="interceptor-score" style="align-self:flex-start">Score : ${score}/100</span>
           </div>
           <div class="interceptor-body">
             <div class="interceptor-section">
@@ -2532,7 +2841,7 @@ function showInterceptor(riskData, statsData, tiltData = null){
           ${justifHTML}
           <div class="interceptor-footer">
             <button class="interceptor-btn interceptor-btn-cancel" id="interceptor-cancel">✕ Annuler</button>
-            <button class="interceptor-btn interceptor-btn-proceed ${score < 70 ? 'ok' : ''}" id="interceptor-proceed">${proceedLabel}</button>
+            <button class="interceptor-btn interceptor-btn-proceed level-${level}" id="interceptor-proceed">${proceedLabel}</button>
           </div>
         </div>
       </div>`);
@@ -2616,6 +2925,43 @@ function showConfirmModal(message, confirmLabel = 'Confirmer', destructive = fal
   });
 }
 
+/**
+ * buildTriggerMessage(grade, riskData, statsData)
+ * Construit l'en-tête du modal interceptor — court, factuel, actionnable.
+ */
+function buildTriggerMessage(grade, riskData, statsData){
+  const { score, reasons } = riskData;
+  const { text: feedbackText } = getSetupFeedback(grade);
+
+  // Extraire les stats setup depuis statsData
+  const setupSection = statsData.find(s => s.title && s.title.includes('Setup'));
+  let statsLine = '';
+  if(setupSection && setupSection.rows.length){
+    const wr   = setupSection.rows.find(r => r.label === 'Winrate');
+    const avgR = setupSection.rows.find(r => r.label === 'R moyen');
+    if(wr && avgR) statsLine = `${wr.val} WR · ${avgR.val}`;
+  }
+
+  return { feedbackText, statsLine };
+}
+
+/**
+ * shouldTrigger(grade, coverage, rr, riskScore, tiltState)
+ * Décide si l'interceptor doit s'activer.
+ * Critères : grade faible OU structure incomplète OU RR insuffisant OU risque/tilt élevé.
+ */
+function shouldTrigger(grade, coverage, rr, riskScore, tiltState){
+  const missing = getMissingCategories(coverage);
+  if(grade === 'D')          return true;  // setup vraiment faible
+  if(missing.length >= 2)    return true;  // structure très incomplète
+  if(riskScore > 60)         return true;  // risque comportemental significatif
+  if(tiltState === 'HIGH_RISK') return true; // tilt avancé uniquement
+  return false;
+  // RR < 2 → feedback visuel uniquement, pas d'interception
+  // Grade C → affiché, non bloqué
+  // Tilt WARNING → affiché, non bloqué
+}
+
 /* ============================================================
    ENREGISTREMENT / MISE À JOUR
 ============================================================ */
@@ -2632,19 +2978,19 @@ $('btn-submit').addEventListener('click', async () => {
       plan      : getToggleVal('plan'),
       conf      : getConfluences(),
     };
-    const { setupGrade } = calculateSetupScore(partialTrade);
+    const { setupGrade, coverage } = calculateSetupScore(partialTrade);
     partialTrade.setupGrade = setupGrade;
 
     const riskData  = detectRisk(partialTrade, closedTrades);
+    riskData._grade = setupGrade;
     const tiltNow   = computeTiltScore(trades);
     const tiltState = getTiltState(tiltNow);
     const tiltData  = tiltState !== 'STABLE'
       ? { state: tiltState, message: getTiltMessage(tiltNow, trades) }
       : null;
 
-    const needsInterceptor = riskData.score > 40 || tiltState !== 'STABLE';
-
-    if(needsInterceptor){
+    // Trigger unifié — structure + grade + RR + risque + tilt
+    if(shouldTrigger(setupGrade, coverage, partialTrade.rrPlan, riskData.score, tiltState)){
       const displayScore = Math.max(riskData.score,
         tiltState === 'HIGH_RISK' ? 75 : tiltState === 'WARNING' ? 45 : 0);
       const displayRisk = displayScore !== riskData.score
@@ -4142,6 +4488,100 @@ $$('.nav-tab').forEach(tab=>{
 
 
 /* ============================================================
+   SETTINGS UI — Personnalisation des confluences
+============================================================ */
+
+function renderSettingsUI(){
+  const container = $('settings-confluence-list');
+  if(!container) return;
+
+  const settings = loadSettings();
+  container.innerHTML = '';
+
+  // En-tête colonnes
+  container.insertAdjacentHTML('beforeend', `
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr 80px;gap:8px;padding:0 4px;margin-bottom:4px">
+      <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">ID</div>
+      <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">Label affiché</div>
+      <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">Catégorie</div>
+      <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">Visible</div>
+    </div>`);
+
+  const groupOpts = ['CONTEXTE','STRUCTURE','ENTRÉE','TIMING'];
+
+  DEFAULT_CONFLUENCE_DEFS.forEach(def => {
+    const s  = settings?.confluences?.[def.id] || {};
+    const lbl = s.label   || def.label;
+    const grp = s.group   || def.group;
+    const hid = s.hidden  === true;
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:80px 1fr 1fr 80px;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--b0)';
+    row.innerHTML = `
+      <div style="font-family:var(--mono);font-size:.68rem;color:var(--t3)">${def.id}</div>
+      <input type="text" class="s-label" data-id="${def.id}" value="${lbl}" placeholder="${def.label}"
+             style="padding:5px 8px;font-size:.75rem;background:var(--bg4);border:1px solid var(--b1);border-radius:5px;color:var(--t1)"/>
+      <select class="s-group" data-id="${def.id}"
+              style="padding:5px 8px;font-size:.72rem;background:var(--bg4);border:1px solid var(--b1);border-radius:5px;color:var(--t2);appearance:none">
+        ${groupOpts.map(g => `<option value="${g}" ${g===grp?'selected':''}>${g}</option>`).join('')}
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:.65rem;color:var(--t3)">
+        <input type="checkbox" class="s-visible" data-id="${def.id}" ${!hid?'checked':''} style="width:14px;height:14px"/>
+        Actif
+      </label>`;
+    container.appendChild(row);
+  });
+}
+
+// Save
+$('btn-save-settings')?.addEventListener('click', () => {
+  const settings = loadSettings();
+  if(!settings.confluences) settings.confluences = {};
+
+  $$('.s-label').forEach(inp => {
+    const id = inp.dataset.id;
+    if(!settings.confluences[id]) settings.confluences[id] = {};
+    const val = inp.value.trim();
+    settings.confluences[id].label = val || id;
+  });
+  $$('.s-group').forEach(sel => {
+    const id = sel.dataset.id;
+    if(!settings.confluences[id]) settings.confluences[id] = {};
+    settings.confluences[id].group = sel.value;
+  });
+  $$('.s-visible').forEach(chk => {
+    const id = chk.dataset.id;
+    if(!settings.confluences[id]) settings.confluences[id] = {};
+    settings.confluences[id].hidden = !chk.checked;
+  });
+
+  saveSettings(settings);
+  _activeDefs = getActiveConfluenceDefs(settings); // mettre à jour defs actives
+  renderConfluenceGroups([]); // reconstruire le UI
+
+  const msg = $('settings-saved-msg');
+  if(msg){ msg.style.display = ''; setTimeout(() => msg.style.display='none', 2500); }
+});
+
+// Reset
+$('btn-reset-settings')?.addEventListener('click', async () => {
+  const ok = await showConfirmModal('Réinitialiser toutes les personnalisations ?', 'Réinitialiser', true);
+  if(!ok) return;
+  localStorage.removeItem(SETTINGS_KEY);
+  _activeDefs = getActiveConfluenceDefs({});
+  renderConfluenceGroups([]);
+  renderSettingsUI();
+  showToast('Confluences réinitialisées');
+});
+
+// Ouvrir la page settings
+$$('.nav-tab').forEach(tab => {
+  if(tab.dataset.page === 'page-settings'){
+    tab.addEventListener('click', renderSettingsUI);
+  }
+});
+
+/* ============================================================
    INITIALISATION
 ============================================================ */
 $('f-date').value = todayISO();
@@ -4151,7 +4591,8 @@ updateMiniStats();
 updatePeriodSelectors();
 setPeriodActiveState();
 updateStatusSection();
-// Scoring uniquement au submit — rien de live au chargement
+renderConfluenceGroups([]); // construire le UI confluences structuré
+refreshSetupDisplay();      // initialiser les barres (tout vide = D)
 </script>
 </body>
 </html>
