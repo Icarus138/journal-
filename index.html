@@ -3021,67 +3021,57 @@ function showInterceptor(riskData, statsData, tiltData = null){
         `${statsLine ? ` · ${statsLine}` : ''}</div>`
       : '';
 
-    const reasonsHTML = reasons.map(r =>
-      `<div class="interceptor-reason ${r.sev === 'warn' ? 'reason-warn' : ''}">
-        <span>${r.sev === 'high' ? '❌' : '⚠️'}</span><span>${r.text}</span>
-      </div>`
-    ).join('');
+    // ── Risques + état mental fusionnés dans un seul bloc ─────
+    const allReasonsHTML = [
+      ...reasons.map(r =>
+        `<div class="interceptor-reason ${r.sev === 'warn' ? 'reason-warn' : ''}">
+          <span>${r.sev === 'high' ? '❌' : '⚠️'}</span><span>${r.text}</span>
+        </div>`
+      ),
+      ...(tiltData ? [`<div class="interceptor-reason reason-warn">
+          <span>⚠️</span><span>${tiltData.message.replace(/^[✅⚠️❌🚨]+\s*/,'')}</span>
+        </div>`] : [])
+    ].join('') || `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t3)">Aucun risque critique isolé.</div>`;
 
+    // ── Stats : sous-titres = titre de section, pas de doublon ──
     const statsHTML = statsData.length
       ? statsData.map(sec => `
           <div style="margin-bottom:10px">
-            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--b0)">${sec.title}</div>
+            <div style="font-family:var(--mono);font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--b0)">${sec.title}</div>
             ${sec.rows.map(s => `
               <div class="interceptor-stat-row">
                 <span class="interceptor-stat-label">${s.label}</span>
                 <span class="interceptor-stat-val" style="color:${s.color}">${s.val}</span>
               </div>`).join('')}
           </div>`).join('')
-      : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore assez de données (min. 5 trades par catégorie).</div>`;
+      : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore assez de données (min. 5 trades).</div>`;
 
-    // Bloc tilt si présent
-    const tiltHTML = tiltData
-      ? `<div class="interceptor-section">
-           <div class="interceptor-section-title">État mental</div>
-           <div class="interceptor-reason ${tiltData.state === 'HIGH_RISK' ? '' : 'reason-warn'}">
-             <span>${tiltData.state === 'HIGH_RISK' ? '❌' : '⚠️'}</span>
-             <span>${tiltData.message}</span>
-           </div>
-         </div>`
-      : '';
+    const proceedLabel = level === 'warning' ? '→ Continuer' : '→ Confirmer';
 
-    const proceedLabel = isHigh ? '⚠ Justifier et trader' : level === 'warning' ? '→ Trader quand même' : '→ Confirmer';
-    const justifHTML   = isHigh ? `<div class="interceptor-justif" id="justif-block" style="display:none">
-           <div class="interceptor-justif-label">Pourquoi prends-tu ce trade malgré le risque ?</div>
-           <textarea id="justif-input" placeholder="Explique ton raisonnement (min. 10 caractères)..."></textarea>
-           <div class="interceptor-justif-hint" id="justif-hint"></div>
-         </div>` : '';
+    const noteHTML = `<div class="interceptor-justif" id="justif-block">
+           <div class="interceptor-justif-label">Note rapide (optionnel)</div>
+           <textarea id="justif-input" placeholder="Observation sur ce trade..."></textarea>
+         </div>`;
 
     document.body.insertAdjacentHTML('beforeend', `
       <div class="interceptor-overlay" id="interceptor-overlay">
         <div class="interceptor-modal">
           <div class="interceptor-header level-${level}">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="interceptor-icon">${icon}</span>
-                <span class="interceptor-title" style="color:${headerColor}">${title}</span>
-              </div>
-              ${gradeHeader}
-            </div>
-            <span class="interceptor-score" style="align-self:flex-start">Score : ${score}/100</span>
+            <span class="interceptor-icon">${icon}</span>
+            <span class="interceptor-title" style="color:${headerColor}">${title}</span>
+            <span class="interceptor-score">Score : ${score}/100</span>
           </div>
           <div class="interceptor-body">
             <div class="interceptor-section">
               <div class="interceptor-section-title">Risques détectés</div>
-              ${reasonsHTML || '<div style="font-family:var(--mono);font-size:.65rem;color:var(--t3)">Aucun risque critique isolé.</div>'}
+              ${allReasonsHTML}
             </div>
-            ${tiltHTML}
             <div class="interceptor-section">
               <div class="interceptor-section-title">Tes performances réelles</div>
               ${statsHTML}
             </div>
           </div>
-          ${justifHTML}
+          ${noteHTML}
           <div class="interceptor-footer">
             <button class="interceptor-btn interceptor-btn-cancel" id="interceptor-cancel">✕ Annuler</button>
             <button class="interceptor-btn interceptor-btn-proceed level-${level}" id="interceptor-proceed">${proceedLabel}</button>
@@ -3100,35 +3090,10 @@ function showInterceptor(riskData, statsData, tiltData = null){
     });
 
     document.getElementById('interceptor-proceed').addEventListener('click', () => {
-      if(isHigh){
-        // Afficher le bloc justification si pas encore visible
-        const jb = document.getElementById('justif-block');
-        const ji = document.getElementById('justif-input');
-        const jh = document.getElementById('justif-hint');
-
-        if(!jb) return; // sécurité
-
-        if(jb.style.display === 'none'){
-          jb.style.display = '';
-          ji.focus();
-          return; // premier clic = révèle le champ
-        }
-
-        // Deuxième clic = valider la justification
-        const val = (ji.value || '').trim();
-        if(val.length < 10){
-          jh.textContent = `Minimum 10 caractères (${val.length}/10)`;
-          jh.style.color = 'var(--loss)';
-          ji.style.borderColor = 'rgba(239,68,68,.5)';
-          return;
-        }
-
-        document.getElementById('interceptor-overlay').remove();
-        resolve({ proceed:true, justification:val });
-      } else {
-        document.getElementById('interceptor-overlay').remove();
-        resolve({ proceed:true, justification:null });
-      }
+      const ji = document.getElementById('justif-input');
+      const justification = ji ? ji.value.trim() || null : null;
+      document.getElementById('interceptor-overlay').remove();
+      resolve({ proceed: true, justification });
     });
   });
 }
@@ -3193,16 +3158,34 @@ function buildTriggerMessage(grade, riskData, statsData){
  * Décide si l'interceptor doit s'activer.
  * Critères : grade faible OU structure incomplète OU RR insuffisant OU risque/tilt élevé.
  */
-function shouldTrigger(grade, coverage, rr, riskScore, tiltState){
-  const missing = getMissingCategories(coverage);
-  if(grade === 'D')          return true;  // setup vraiment faible
-  if(missing.length >= 2)    return true;  // structure très incomplète
-  if(riskScore > 60)         return true;  // risque comportemental significatif
-  if(tiltState === 'HIGH_RISK') return true; // tilt avancé uniquement
+/**
+ * shouldTrigger(grade, coverage, rr, riskScore, tiltState, conf, emotion)
+ * N'intercepte QUE si une faiblesse récurrente ET négative est détectée.
+ * Principe : pas de spam — uniquement quand les données montrent un pattern.
+ */
+function shouldTrigger(grade, coverage, rr, riskScore, tiltState, conf = [], emotion = ''){
+  // ── Tilt avancé — protection immédiate ────────────────────
+  if(tiltState === 'HIGH_RISK') return true;
+
+  // ── Pattern émotionnel perdant récurrent ──────────────────
+  // Déclenche uniquement si historique suffisant (≥8 trades) ET WR < 35%
+  if(emotion && USER_STATS?.emotions?.[emotion]){
+    const es = USER_STATS.emotions[emotion];
+    if(es.total >= 8 && es.winrate < 35) return true;
+  }
+
+  // ── Grade récurrément perdant ─────────────────────────────
+  // Uniquement si ≥10 trades sur ce grade ET R moyen négatif
+  if(grade && USER_STATS?.grades?.[grade]){
+    const gs = USER_STATS.grades[grade];
+    if(gs.total >= 10 && gs.avgR < -0.2) return true;
+  }
+
+  // ── Tilt WARNING + setup faible ──────────────────────────
+  if(tiltState === 'WARNING' && grade === 'D') return true;
+
   return false;
-  // RR < 2 → feedback visuel uniquement, pas d'interception
-  // Grade C → affiché, non bloqué
-  // Tilt WARNING → affiché, non bloqué
+  // Grade D seul, structure incomplète, RR faible → feedback visuel uniquement
 }
 
 /* ============================================================
@@ -3233,7 +3216,7 @@ $('btn-submit').addEventListener('click', async () => {
       : null;
 
     // Trigger unifié — structure + grade + RR + risque + tilt
-    if(shouldTrigger(setupGrade, coverage, partialTrade.rrPlan, riskData.score, tiltState)){
+    if(shouldTrigger(setupGrade, coverage, partialTrade.rrPlan, riskData.score, tiltState, partialTrade.conf, partialTrade.emotion)){
       const displayScore = Math.max(riskData.score,
         tiltState === 'HIGH_RISK' ? 75 : tiltState === 'WARNING' ? 45 : 0);
       const displayRisk = displayScore !== riskData.score
