@@ -54,8 +54,8 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);min-height:10
 .page.active{display:block}
 
 /* ============================================================ STAT CARDS */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
-.stat-card{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+.stat-card{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);padding:10px 14px;display:flex;flex-direction:column;gap:3px;}
 .stat-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);}
 .stat-value{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--t1);line-height:1;}
 .stat-sub{font-size:.68rem;color:var(--t3);margin-top:2px}
@@ -64,10 +64,10 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);min-height:10
 .panel{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:11px 16px 10px;background:var(--bg3);border-bottom:1px solid var(--b0);}
 .panel-title{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--t2);}
-.panel-body{padding:16px}
+.panel-body{padding:12px}
 
 /* ============================================================ FORMULAIRE */
-.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .form-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .form-col-span-2{grid-column:span 2}
 .form-col-span-4{grid-column:span 4}
@@ -116,7 +116,7 @@ textarea{resize:vertical;min-height:52px}
 .tgl[data-val="open"].active{background:var(--be-d);border-color:rgba(245,158,11,.35);color:var(--be)}
 
 /* ── Confluence groups ─────────────────────────────────────── */
-.confluence-container{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.confluence-container{display:flex;flex-direction:column;gap:7px;margin-top:2px}
 .confluence-group{display:flex;flex-direction:column;gap:5px}
 .confluence-group-title{
   font-family:var(--mono);font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;
@@ -150,8 +150,8 @@ textarea{resize:vertical;min-height:52px}
 
 /* Psycho / Setup score bars */
 .score-bar-wrap{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);
-  border:1px solid var(--b0);border-radius:var(--r);margin-top:4px;
+  display:flex;align-items:center;gap:10px;padding:7px 12px;background:var(--bg3);
+  border:1px solid var(--b0);border-radius:var(--r);margin-top:2px;
 }
 .score-bar-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
 .score-bar{flex:1;height:4px;background:var(--bg5);border-radius:99px;overflow:hidden}
@@ -382,6 +382,19 @@ textarea{resize:vertical;min-height:52px}
 .setup-feedback.feedback-med {background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.2);color:var(--be)}
 .setup-feedback.feedback-bad {background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.2); color:var(--loss)}
 
+/* ── Accordéon options avancées ─────────────────────────────── */
+.advanced-toggle{
+  display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:var(--bg3);border:1px solid var(--b0);border-radius:var(--r);
+  cursor:pointer;user-select:none;transition:border-color var(--tr);
+  font-family:var(--mono);font-size:.62rem;color:var(--t3);letter-spacing:.06em;
+}
+.advanced-toggle:hover{border-color:var(--b2);color:var(--t2)}
+.advanced-toggle .adv-arrow{transition:transform .2s ease;font-size:.6rem}
+.advanced-toggle.open .adv-arrow{transform:rotate(90deg)}
+.advanced-content{display:none;margin-top:6px;display:none;flex-direction:column;gap:8px}
+.advanced-content.open{display:flex}
+
 /* ── Partial TP */
 .partials-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .partial-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:end}
@@ -460,9 +473,8 @@ textarea{resize:vertical;min-height:52px}
     <button class="nav-tab" data-page="page-dashboard">Dashboard</button>
     <button class="nav-tab" data-page="page-settings">&#9881; Setup</button>
   </div>
-    <span id="nav-time">--:--:--</span>
-    <span id="nav-date">--</span>
-  </div>
+  <span id="nav-time">--:--:--</span>
+  <span id="nav-date">--</span>
 </nav>
 
 <!-- ============================================================ PAGE LOG TRADE -->
@@ -634,7 +646,7 @@ textarea{resize:vertical;min-height:52px}
         </div>
 
         <div class="field form-col-span-4">
-          <div class="field-label">Émotion à l'entrée</div>
+          <div class="field-label">État émotionnel</div>
           <div class="toggle-group" data-group="emotion">
             <button class="tgl" data-val="Calme">&#9679; Calme</button>
             <button class="tgl" data-val="Confiance">&#9650; Confiance</button>
@@ -645,37 +657,7 @@ textarea{resize:vertical;min-height:52px}
           </div>
         </div>
 
-        <div class="field form-col-span-4">
-          <div class="field-label">Émotion à la sortie <span style="color:var(--t3);font-size:.52rem;font-weight:400">(optionnel)</span></div>
-          <div class="toggle-group" data-group="emotionExit">
-            <button class="tgl" data-val="Calme">&#9679; Calme</button>
-            <button class="tgl" data-val="Confiance">&#9650; Confiance</button>
-            <button class="tgl" data-val="FOMO">&#9650;&#9650; FOMO</button>
-            <button class="tgl" data-val="Stress">&#9889; Stress</button>
-            <button class="tgl" data-val="Fatigue">&#9790; Fatigue</button>
-            <button class="tgl" data-val="Revenge">&#9760; Revenge</button>
-          </div>
-        </div>
-
-        <!-- PARTIAL TP — optionnel -->
-        <div class="field form-col-span-4" id="partials-section">
-          <div class="field-label" style="display:flex;align-items:center;gap:8px">
-            Prises de profits partielles
-            <span style="color:var(--t3);font-size:.52rem;font-weight:400">(optionnel — si plusieurs sorties)</span>
-          </div>
-          <div class="partials-list" id="partials-list"></div>
-          <button class="btn-add-partial" id="btn-add-partial" type="button">&#43; Ajouter une sortie partielle</button>
-          <div class="partial-computed" id="partial-computed" style="display:none">
-            R pondéré calculé : <span id="partial-r-result">--</span>
-            &nbsp;·&nbsp; Total taille : <span id="partial-size-total">--</span>
-          </div>
-        </div>
-        <div class="field form-col-span-4">
-          <div class="field-label">Note rapide</div>
-          <input type="text" id="f-note" placeholder="1 ligne max — observation clé du trade..."/>
-        </div>
-
-        <!-- Scores setup + mental — visibles en live (score uniquement, pas de warning) -->
+        <!-- SCORES — toujours visibles -->
         <div class="form-col-span-4" id="scores-dual-wrap">
           <div class="scores-dual">
             <div class="score-bar-wrap">
@@ -689,9 +671,9 @@ textarea{resize:vertical;min-height:52px}
               <div class="score-bar-val" id="setup-val" style="color:var(--t3)">&#8212;</div>
             </div>
           </div>
-        </div><!-- /scores-dual-wrap -->
+        </div>
 
-        <!-- TILT MONITOR — visible uniquement au submit si analyse disponible -->
+        <!-- TILT MONITOR -->
         <div class="form-col-span-4" id="tilt-monitor" style="display:none">
           <div class="tilt-monitor-wrap tilt-stable" id="tilt-monitor-inner">
             <div class="tilt-monitor-left">
@@ -700,16 +682,53 @@ textarea{resize:vertical;min-height:52px}
             </div>
             <div class="tilt-monitor-center">
               <div class="tilt-level-badge" id="tilt-level-badge" style="color:var(--win)">&#10003; Mindset OK</div>
-              <div class="tilt-bar-wrap">
-                <div class="tilt-bar-fill" id="tilt-bar-fill"></div>
-              </div>
+              <div class="tilt-bar-wrap"><div class="tilt-bar-fill" id="tilt-bar-fill"></div></div>
             </div>
             <div class="tilt-monitor-msg" id="tilt-monitor-msg"></div>
           </div>
         </div>
 
+        <!-- BOUTON SUBMIT -->
         <div class="form-col-span-4">
           <button class="btn-submit" id="btn-submit">&#43; Enregistrer le trade</button>
+        </div>
+
+        <!-- OPTIONS AVANCÉES — accordéon -->
+        <div class="form-col-span-4">
+          <div class="advanced-toggle" id="advanced-toggle">
+            <span class="adv-arrow">&#9658;</span>
+            <span>Options avancées</span>
+            <span style="color:var(--t4);font-size:.58rem;margin-left:4px">Émotion sortie · Partiels TP · Note</span>
+          </div>
+          <div class="advanced-content" id="advanced-content">
+
+            <div class="field">
+              <div class="field-label">Émotion à la sortie <span style="color:var(--t3);font-size:.52rem;font-weight:400">(optionnel)</span></div>
+              <div class="toggle-group" data-group="emotionExit">
+                <button class="tgl" data-val="Calme">&#9679; Calme</button>
+                <button class="tgl" data-val="Confiance">&#9650; Confiance</button>
+                <button class="tgl" data-val="FOMO">&#9650;&#9650; FOMO</button>
+                <button class="tgl" data-val="Stress">&#9889; Stress</button>
+                <button class="tgl" data-val="Fatigue">&#9790; Fatigue</button>
+                <button class="tgl" data-val="Revenge">&#9760; Revenge</button>
+              </div>
+            </div>
+
+            <div class="field" id="partials-section">
+              <div class="field-label">Prises de profits partielles <span style="color:var(--t3);font-size:.52rem;font-weight:400">(optionnel)</span></div>
+              <div class="partials-list" id="partials-list"></div>
+              <button class="btn-add-partial" id="btn-add-partial" type="button">&#43; Ajouter une sortie partielle</button>
+              <div class="partial-computed" id="partial-computed" style="display:none">
+                R pondéré : <span id="partial-r-result">--</span> &nbsp;·&nbsp; Total : <span id="partial-size-total">--</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Note rapide</div>
+              <input type="text" id="f-note" placeholder="Observation clé du trade..."/>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -1124,7 +1143,7 @@ let periodCustomTo   = '';
 const MONTH_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
 // Score max pour la barre visuelle (A+ cible ≈ 14pts)
-const SETUP_SCORE_MAX = 16;
+const SETUP_SCORE_MAX = 10;
 
 // Conversion grade → valeur numérique pour le gap
 const GRADE_VAL = {'A+':5,'A':4,'B':3,'C':2,'D':1};
@@ -1214,7 +1233,10 @@ $$('[data-group]').forEach(group => {
       this.classList.add('active');
       const g = group.dataset.group;
       if(g === 'status') updateStatusSection();
-      // Scoring & warnings : uniquement au submit (pas pendant la saisie)
+      // Score mental mis à jour live sur les champs qui l'influencent
+      if(['emotion','emotionExit','result','quality','plan'].includes(g)){
+        updatePsychoScore();
+      }
     });
   });
 });
@@ -1389,43 +1411,36 @@ function updateStatusSection(){
  *  - Seuils grades abaissés d'un cran
  */
 function calculateSetupScore(trade){
-  let score = 0;
   const conf = Array.isArray(trade.conf) ? trade.conf : [];
   const rr   = trade.rrPlan || 0;
 
-  // ── Score numérique (raffinement, pas critère principal) ──
-  const major = ['HTF','Liquidity','Sweep','Displacement','MSS'];
-  const minor = ['OB','FVG','BPR','Prem/Disc','Confirmation','Asia','London','NY'];
-  const majorCount = conf.filter(c => major.includes(c)).length;
-  const minorCount = conf.filter(c => minor.includes(c)).length;
+  // Coverage des catégories
+  const coverage = checkCategoryCoverage(conf);
 
-  score += Math.min(majorCount * 2, 6);
-  score += Math.min(minorCount * 1, 4);
-  if(conf.includes('MSS') && conf.includes('Displacement')) score += 2;
-  if(conf.includes('London') || conf.includes('NY'))        score += 1;
-  if(rr >= 3)        score += 3;
-  else if(rr >= 2)   score += 2;
-  else if(rr >= 1.5) score += 1;
-  score = Math.max(0, score);
+  // ── Score /10 par catégorie ────────────────────────────────
+  let score = 0;
 
-  // ── Validation structurelle (catégories) ──────────────────
-  const coverage  = checkCategoryCoverage(conf);
-  const fullCov   = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
-  const validRR   = rr >= 2;
+  if(coverage.CONTEXT)   score += 2; // Contexte HTF + liquidité
+  if(coverage.STRUCTURE) score += 2; // MSS / Displacement
+  if(coverage.ENTRY)     score += 2; // Zone d'entrée précise
+  if(rr >= 2)            score += 2; // RR ≥ 2
+  else if(rr >= 1.5)     score += 1;
+  if(coverage.TIMING)    score += 2; // Session active
 
-  // ── Grading hybride : Structure prioritaire, score en raffinement
+  // Max = 10
+
+  // ── Grade ─────────────────────────────────────────────────
+  const fullCov = coverage.CONTEXT && coverage.STRUCTURE && coverage.ENTRY && coverage.TIMING;
+  const validRR = rr >= 2;
+
   let grade;
-  if(fullCov && validRR)          grade = 'A+'; // Structure complète + RR ≥ 2
-  else {
-    // Ratio score / max théorique (18 pts)
-    const ratio = score / 18;
-    if(ratio >= 0.70)             grade = 'A';
-    else if(ratio >= 0.50)        grade = 'B';
-    else if(ratio >= 0.30)        grade = 'C';
-    else                          grade = 'D';
-  }
+  if(fullCov && validRR && score >= 9) grade = 'A+'; // structure complète + RR
+  else if(score >= 7)                  grade = 'A';
+  else if(score >= 5)                  grade = 'B';
+  else if(score >= 3)                  grade = 'C';
+  else                                 grade = 'D';
 
-  // ── Soft calibration flag ─────────────────────────────────
+  // Soft calibration flag
   let evaluationFlag = null;
   if(trade.result === 'Win' && (trade.rrReal||0) >= 1.5 && ['C','D'].includes(grade))
     evaluationFlag = 'under-evaluated';
@@ -1556,8 +1571,9 @@ function resetForm(){
   clearPartials();
   refreshSetupDisplay(); // reset affichage score + coverage
   // Tout cacher — formulaire propre, pas de scoring visible
-  const tm = $('tilt-monitor');   if(tm) tm.style.display = 'none';
-  const sd = $('scores-dual-wrap'); if(sd) sd.style.display = 'none';
+  // Tout cacher — formulaire propre
+  const tm = $('tilt-monitor'); if(tm) tm.style.display = 'none';
+  // scores-dual-wrap reste visible (barres réinitialisées par refreshSetupDisplay)
 }
 
 /* ============================================================
@@ -1687,7 +1703,7 @@ function migrateTradesData(){
   if(!trades.length) return;
 
   // Version du scoring actuel — incrémenter à chaque changement de logique
-  const SCORING_VERSION = 5; // v5 = grade A requiert structure (MSS/Displ.) + RR ≥ 2
+  const SCORING_VERSION = 6; // v6 = modèle /10 par catégorie
 
   // Migration nécessaire si : score manquant, gap manquant, OU version de scoring obsolète
   const needsMigration = trades.some(t =>
@@ -2477,6 +2493,28 @@ function clearPartials(){
   if(el) el.style.display = 'none';
 }
 
+// Listener accordéon options avancées
+document.addEventListener('DOMContentLoaded', () => {
+  const tog = $('advanced-toggle');
+  const cnt = $('advanced-content');
+  if(tog && cnt){
+    tog.addEventListener('click', () => {
+      tog.classList.toggle('open');
+      cnt.classList.toggle('open');
+    });
+  }
+});
+if(document.readyState !== 'loading'){
+  const tog = $('advanced-toggle');
+  const cnt = $('advanced-content');
+  if(tog && cnt){
+    tog.addEventListener('click', () => {
+      tog.classList.toggle('open');
+      cnt.classList.toggle('open');
+    });
+  }
+}
+
 // Listener bouton ajouter partiel
 document.addEventListener('DOMContentLoaded', () => {
   const btn = $('btn-add-partial');
@@ -2540,7 +2578,7 @@ function buildTradeFromForm(existingId = null){
   const { setupScore, setupGrade } = calculateSetupScore(trade);
   trade.setupScore      = setupScore;
   trade.setupGrade      = setupGrade;
-  trade.scoringVersion  = 5;
+  trade.scoringVersion  = 6;
 
   // Feedback d'exécution (comparaison RR prévu vs réel)
   trade.executionFeedback = evaluateExecution(trade);
