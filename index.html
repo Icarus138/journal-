@@ -100,19 +100,49 @@ body{background:#080A0F;color:var(--t1);font-family:var(--font);min-height:100vh
   pointer-events:none;
 }
 .nav-brand{
-  font-family:var(--mono);font-size:.58rem;font-weight:500;
-  letter-spacing:.38em;text-transform:uppercase;
-  color:rgba(230,230,230,.3);white-space:nowrap;display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:11px;white-space:nowrap;flex-shrink:0;
+  text-decoration:none;
 }
-.nav-brand-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--blue);opacity:.6;
-  box-shadow:0 0 6px var(--blue);
-  animation:dot-breathe 3s ease-in-out infinite;
+.nav-logo-mark{
+  flex-shrink:0;
+  animation:logo-breathe 4s ease-in-out infinite;
 }
-@keyframes dot-breathe{
-  0%,100%{opacity:.4;box-shadow:0 0 4px var(--blue);}
-  50%{opacity:.9;box-shadow:0 0 10px var(--blue),0 0 20px rgba(79,70,229,.3);}
+@keyframes logo-breathe{
+  0%,100%{filter:drop-shadow(0 0 3px rgba(255,255,255,.12)) drop-shadow(0 0 10px rgba(200,210,255,.04));}
+  50%    {filter:drop-shadow(0 0 8px rgba(255,255,255,.28)) drop-shadow(0 0 24px rgba(190,200,255,.1));}
+}
+.nav-logo-bracket{
+  stroke:rgba(230,230,230,.85);stroke-width:3.2;
+  stroke-linecap:round;stroke-linejoin:round;fill:none;
+  stroke-dasharray:46;stroke-dashoffset:46;
+  animation:logo-draw .65s cubic-bezier(.4,0,.2,1) forwards;
+}
+.nav-logo-tick{
+  stroke:rgba(230,230,230,.32);stroke-width:2;
+  stroke-linecap:round;fill:none;
+  stroke-dasharray:8;stroke-dashoffset:8;
+  animation:logo-draw .35s ease-out forwards;
+}
+.nav-logo-dot{fill:rgba(230,230,230,.4);animation:logo-pop .22s ease-out .78s both;}
+.lb1{animation-delay:.00s}.lb2{animation-delay:.11s}
+.lb3{animation-delay:.22s}.lb4{animation-delay:.33s}
+.lt1{animation-delay:.48s}.lt2{animation-delay:.53s}
+.lt3{animation-delay:.58s}.lt4{animation-delay:.63s}
+@keyframes logo-draw{to{stroke-dashoffset:0;}}
+@keyframes logo-pop{
+  0%  {opacity:0;transform:scale(0);transform-origin:50% 50%;}
+  70% {opacity:1;transform:scale(1.4);transform-origin:50% 50%;}
+  100%{transform:scale(1);transform-origin:50% 50%;}
+}
+.nav-logo-text{
+  font-family:var(--mono);font-size:.7rem;font-weight:400;
+  letter-spacing:.5em;padding-left:.5em;
+  color:rgba(230,230,230,.72);text-transform:uppercase;
+  animation:logo-fade .45s ease-out .85s both;
+}
+@keyframes logo-fade{
+  from{opacity:0;transform:translateX(-4px);}
+  to  {opacity:1;transform:translateX(0);}
 }
 .nav-tabs{display:flex;gap:1px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);padding:3px;}
 .nav-tab{
@@ -322,21 +352,22 @@ textarea{resize:vertical;min-height:52px}
 /* Submit */
 .btn-submit{
   width:100%;padding:12px;
-  background:rgba(79,70,229,.85);
-  border:1px solid rgba(79,70,229,.4);
-  border-radius:var(--r);color:#fff;
-  font-family:var(--mono);font-size:.72rem;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;
-  cursor:pointer;transition:all var(--tr);margin-top:4px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r);color:rgba(230,230,230,.9);
+  font-family:var(--mono);font-size:.72rem;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s ease;margin-top:4px;
   display:flex;align-items:center;justify-content:center;gap:6px;
-  box-shadow:0 0 20px rgba(79,70,229,.15),inset 0 1px 0 rgba(255,255,255,.1);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
 }
 .btn-submit:hover{
-  background:rgba(79,70,229,.95);
-  box-shadow:0 0 30px rgba(79,70,229,.25),inset 0 1px 0 rgba(255,255,255,.15);
-  transform:translateY(-1px);
+  background:rgba(255,255,255,.1);
+  border-color:rgba(255,255,255,.22);
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(255,255,255,.04);
 }
-.btn-submit:active{opacity:.8;transform:none}
+.btn-submit:active{opacity:.75;transform:translateY(1px)}
 
 /* Psycho / Setup score bars */
 .score-bar-wrap{
@@ -770,7 +801,7 @@ textarea{resize:vertical;min-height:52px}
   .charts-grid{grid-template-columns:1fr}
   .analysis-grid{grid-template-columns:1fr}
   .nav{padding:0 12px}
-  .nav-brand{display:none}
+  .nav-logo-text{display:none}
   .page{padding:12px}
   .period-date-input{width:100px}
   .scores-dual{grid-template-columns:1fr}
@@ -790,7 +821,20 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- ============================================================ NAV -->
 <nav class="nav">
-  <div class="nav-brand"><span class="nav-brand-dot"></span>Guard</div>
+  <div class="nav-brand">
+    <svg class="nav-logo-mark" width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="nav-logo-bracket lb1" d="M38 17 L17 17 L17 38"/>
+      <path class="nav-logo-bracket lb2" d="M62 17 L83 17 L83 38"/>
+      <path class="nav-logo-bracket lb3" d="M17 62 L17 83 L38 83"/>
+      <path class="nav-logo-bracket lb4" d="M83 62 L83 83 L62 83"/>
+      <line class="nav-logo-tick lt1" x1="50" y1="17" x2="50" y2="23"/>
+      <line class="nav-logo-tick lt2" x1="50" y1="83" x2="50" y2="77"/>
+      <line class="nav-logo-tick lt3" x1="17" y1="50" x2="23" y2="50"/>
+      <line class="nav-logo-tick lt4" x1="83" y1="50" x2="77" y2="50"/>
+      <circle class="nav-logo-dot" cx="50" cy="50" r="2.8"/>
+    </svg>
+    <span class="nav-logo-text">Guard</span>
+  </div>
   <div class="nav-tabs">
     <button class="nav-tab active" data-page="page-log"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log Trade</button>
     <button class="nav-tab" data-page="page-history">Historique</button>
@@ -929,24 +973,7 @@ textarea{resize:vertical;min-height:52px}
         </div>
         <div class="field form-col-span-2 card">
           <div class="field-label">Confluences</div>
-          <!-- Container généré dynamiquement par renderConfluenceGroups() -->
           <div class="confluence-container" id="confluence-container"></div>
-
-          <!-- Hint catégories manquantes — texte uniquement -->
-          <div style="margin-top:5px">
-            <span id="cov-missing-hint"></span>
-          </div>
-
-          <!-- Feedback grade live -->
-          <div class="setup-feedback" id="setup-feedback">
-            <span id="setup-feedback-text"></span>
-          </div>
-
-          <!-- Suggestion TP dynamique -->
-          <div id="tp-suggestion" style="display:none"></div>
-
-          <!-- Decision Paths — options basées sur données -->
-          <div id="decision-box" style="display:none"></div>
         </div>
 
         <!-- SÉPARATEUR -->
@@ -981,8 +1008,12 @@ textarea{resize:vertical;min-height:52px}
           </div>
         </div>
 
-        <div class="field form-col-span-4">
-          <div class="field-label">État émotionnel</div>
+        <div class="form-col-span-4">
+          <div class="emotion-exit">
+            <div class="field-label" style="display:flex;align-items:center;gap:5px;color:var(--blue-l)">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="opacity:.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              État émotionnel — Entrée
+            </div>
           <div class="toggle-group" data-group="emotion">
             <button class="tgl" data-val="Calme"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" opacity=".5"/></svg>Calme</button>
             <button class="tgl" data-val="Confiance"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="18 15 12 9 6 15"/></svg>Confiance</button>
@@ -990,6 +1021,7 @@ textarea{resize:vertical;min-height:52px}
             <button class="tgl" data-val="Stress"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stress</button>
             <button class="tgl" data-val="Fatigue"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Fatigue</button>
             <button class="tgl" data-val="Revenge"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Revenge</button>
+          </div>
           </div>
         </div>
 
@@ -1009,6 +1041,16 @@ textarea{resize:vertical;min-height:52px}
           </div>
         </div>
 
+        <!-- TRIGGERS — sous les scores -->
+        <div class="form-col-span-4" id="triggers-wrap" style="display:flex;flex-direction:column;gap:6px">
+          <span id="cov-missing-hint"></span>
+          <div class="setup-feedback" id="setup-feedback">
+            <span id="setup-feedback-text"></span>
+          </div>
+          <div id="tp-suggestion" style="display:none"></div>
+          <div id="decision-box" style="display:none"></div>
+        </div>
+
         <!-- TILT MONITOR -->
         <div class="form-col-span-4" id="tilt-monitor" style="display:none">
           <div class="tilt-monitor-wrap tilt-stable" id="tilt-monitor-inner">
@@ -1021,21 +1063,6 @@ textarea{resize:vertical;min-height:52px}
               <div class="tilt-bar-wrap"><div class="tilt-bar-fill" id="tilt-bar-fill"></div></div>
             </div>
             <div class="tilt-monitor-msg" id="tilt-monitor-msg"></div>
-          </div>
-        </div>
-
-        <!-- ÉMOTION SORTIE — visible uniquement si trade clôturé -->
-        <div class="form-col-span-4" id="emotion-exit-block" style="display:none">
-          <div class="emotion-exit">
-            <div class="field-label" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" class="icon icon-brain"><path d="M12 3a4 4 0 00-4 4v1a3 3 0 00-2 3v2a3 3 0 003 3h6a3 3 0 003-3v-2a3 3 0 00-2-3V7a4 4 0 00-4-4z"/></svg> État mental après le trade</div>
-            <div class="toggle-group" data-group="emotionExit">
-              <button class="tgl" data-val="Calme"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" opacity=".5"/></svg>Calme</button>
-              <button class="tgl" data-val="Confiance"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="18 15 12 9 6 15"/></svg>Confiance</button>
-              <button class="tgl" data-val="FOMO"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="18 15 12 9 6 15"/><polyline points="18 20 12 14 6 20"/></svg>FOMO</button>
-              <button class="tgl" data-val="Stress"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stress</button>
-              <button class="tgl" data-val="Fatigue"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Fatigue</button>
-              <button class="tgl" data-val="Revenge"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Revenge</button>
-            </div>
           </div>
         </div>
 
@@ -1057,10 +1084,26 @@ textarea{resize:vertical;min-height:52px}
           <div class="advanced-toggle" id="advanced-toggle">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="adv-arrow" style="transition:transform .2s ease;flex-shrink:0;opacity:.6"><polyline points="9 18 15 12 9 6"/></svg>
             <span>Options avancées</span>
-            <span style="color:var(--t4);font-size:.58rem;margin-left:4px">Partiels TP</span>
+            <span style="color:var(--t4);font-size:.58rem;margin-left:4px">État mental sortie · Partiels TP</span>
           </div>
           <div class="advanced-content" id="advanced-content">
 
+            <!-- ÉMOTION SORTIE -->
+            <div id="emotion-exit-block">
+              <div class="emotion-exit">
+                <div class="field-label" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" class="icon icon-brain"><path d="M12 3a4 4 0 00-4 4v1a3 3 0 00-2 3v2a3 3 0 003 3h6a3 3 0 003-3v-2a3 3 0 00-2-3V7a4 4 0 00-4-4z"/></svg> État mental après le trade</div>
+                <div class="toggle-group" data-group="emotionExit">
+                  <button class="tgl" data-val="Calme"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" opacity=".5"/></svg>Calme</button>
+                  <button class="tgl" data-val="Confiance"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="18 15 12 9 6 15"/></svg>Confiance</button>
+                  <button class="tgl" data-val="FOMO"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="18 15 12 9 6 15"/><polyline points="18 20 12 14 6 20"/></svg>FOMO</button>
+                  <button class="tgl" data-val="Stress"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stress</button>
+                  <button class="tgl" data-val="Fatigue"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Fatigue</button>
+                  <button class="tgl" data-val="Revenge"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Revenge</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PARTIELS TP -->
             <div class="field" id="partials-section">
               <div class="field-label">Prises de profits partielles <span style="color:var(--t3);font-size:.52rem;font-weight:400">(optionnel)</span></div>
               <div class="partials-list" id="partials-list"></div>
@@ -1069,7 +1112,6 @@ textarea{resize:vertical;min-height:52px}
                 R pondéré : <span id="partial-r-result">--</span> &nbsp;·&nbsp; Total : <span id="partial-size-total">--</span>
               </div>
             </div>
-
 
           </div>
         </div>
@@ -1876,8 +1918,6 @@ function updateStatusSection(){
   if(rs) rs.classList.toggle('result-dim', isOpen);
   const ol = $('result-optional-label');
   if(ol) ol.style.display = isOpen ? 'inline' : 'none';
-  const eb = $('emotion-exit-block');
-  if(eb) eb.style.display = isOpen ? 'none' : 'block';
 }
 
 /* ============================================================
@@ -2272,11 +2312,12 @@ function resetForm(){
   displayWarning(null);
   setToggleVal('emotionExit', '');
   clearPartials();
-  refreshSetupDisplay(); // reset affichage score + coverage
-  // Tout cacher — formulaire propre, pas de scoring visible
-  // Tout cacher — formulaire propre
+  refreshSetupDisplay();
   const tm = $('tilt-monitor'); if(tm) tm.style.display = 'none';
-  // scores-dual-wrap reste visible (barres réinitialisées par refreshSetupDisplay)
+  // Fermer l'accordéon au reset
+  const tog = $('advanced-toggle');
+  const cnt = $('advanced-content');
+  if(tog && cnt){ tog.classList.remove('open'); cnt.classList.remove('open'); }
 }
 
 /* ============================================================
@@ -2324,6 +2365,20 @@ function enterEditMode(trade, mode = 'edit'){
   if(trade.partials && trade.partials.length){
     trade.partials.forEach(p => addPartialRow(p));
   }
+
+  // Auto-ouvrir l'accordéon si le trade a des données avancées
+  const tog = $('advanced-toggle');
+  const cnt = $('advanced-content');
+  if(tog && cnt){
+    const hasAdvanced = (trade.emotionExit) || (trade.partials && trade.partials.length);
+    if(hasAdvanced && !tog.classList.contains('open')){
+      tog.classList.add('open');
+      cnt.classList.add('open');
+      if($('partials-list') && $('partials-list').children.length === 0 && !trade.partials?.length){
+        addPartialRow();
+      }
+    }
+  }
   const ICON_PENCIL = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;opacity:.7"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
   const ICON_LOCK   = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;opacity:.7"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
   const ICON_PLUS   = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
@@ -2337,6 +2392,13 @@ function enterEditMode(trade, mode = 'edit'){
   updateStatusSection();
 
   if(mode === 'close'){
+    // Ouvrir l'accordéon en mode clôture
+    const tog = $('advanced-toggle');
+    const cnt = $('advanced-content');
+    if(tog && cnt && !tog.classList.contains('open')){
+      tog.classList.add('open');
+      cnt.classList.add('open');
+    }
     setTimeout(() => {
       $('emotion-exit-block')?.scrollIntoView({ behavior:'smooth', block:'center' });
     }, 200);
@@ -3573,8 +3635,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const cnt = $('advanced-content');
   if(tog && cnt){
     tog.addEventListener('click', () => {
+      const isOpening = !tog.classList.contains('open');
       tog.classList.toggle('open');
       cnt.classList.toggle('open');
+      // Auto-insère le premier partial si la liste est vide à l'ouverture
+      if(isOpening && $('partials-list') && $('partials-list').children.length === 0){
+        addPartialRow();
+      }
     });
   }
 });
@@ -3583,8 +3650,12 @@ if(document.readyState !== 'loading'){
   const cnt = $('advanced-content');
   if(tog && cnt){
     tog.addEventListener('click', () => {
+      const isOpening = !tog.classList.contains('open');
       tog.classList.toggle('open');
       cnt.classList.toggle('open');
+      if(isOpening && $('partials-list') && $('partials-list').children.length === 0){
+        addPartialRow();
+      }
     });
   }
 }
