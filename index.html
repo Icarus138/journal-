@@ -791,6 +791,89 @@ textarea{resize:vertical;min-height:52px}
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+/* ============================================================
+   ANTIFRAGILE PANEL — module comportemental pre-trade
+============================================================ */
+.af-overlay{
+  position:fixed;inset:0;z-index:550;
+  background:rgba(4,6,12,.92);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  animation:overlay-in .18s ease;
+}
+.af-modal{
+  background:rgba(8,10,18,.98);
+  border-radius:14px;width:100%;max-width:400px;
+  overflow:hidden;
+  animation:modal-in .2s cubic-bezier(.16,1,.3,1);
+  box-shadow:0 24px 64px rgba(0,0,0,.65);
+}
+.af-header{
+  padding:15px 18px 13px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.af-title{
+  font-family:var(--mono);font-size:.62rem;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;line-height:1.3;
+}
+.af-subtitle{
+  font-family:var(--mono);font-size:.56rem;
+  color:var(--t3);letter-spacing:.06em;margin-top:4px;
+}
+.af-badge{
+  font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;
+  color:var(--t3);white-space:nowrap;padding-top:2px;flex-shrink:0;
+}
+.af-body{padding:14px 18px 10px;display:flex;flex-direction:column;gap:5px}
+.af-stat-row{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:6px;
+  background:rgba(255,255,255,.025);
+}
+.af-stat-row.af-highlight{background:rgba(158,90,90,.06)}
+.af-stat-row.af-positive{background:rgba(90,158,122,.05)}
+.af-stat-text{font-family:var(--mono);font-size:.7rem;line-height:1.45;letter-spacing:.02em}
+.af-footer{
+  display:flex;gap:8px;padding:12px 18px 14px;
+  border-top:1px solid rgba(255,255,255,.04);
+  background:rgba(255,255,255,.012);
+}
+.af-btn{
+  flex:1;padding:10px;border-radius:var(--r);
+  font-family:var(--mono);font-size:.62rem;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:opacity .15s;
+}
+.af-btn:hover:not(:disabled){opacity:.8}
+.af-btn:disabled{cursor:not-allowed}
+.af-btn-cancel{
+  background:rgba(255,255,255,.03);color:var(--t2);
+  border:1px solid rgba(255,255,255,.07);
+}
+.af-btn-proceed{border:1px solid transparent}
+.af-btn-proceed.level-high{
+  background:rgba(158,90,90,.08);color:var(--loss);
+  border-color:rgba(158,90,90,.25);
+}
+.af-btn-proceed.level-warning{
+  background:rgba(184,146,58,.07);color:var(--be);
+  border-color:rgba(184,146,58,.22);
+}
+.af-btn-proceed.level-positive{
+  background:rgba(90,158,122,.08);color:var(--win);
+  border-color:rgba(90,158,122,.25);
+}
+/* Friction timer bar */
+.af-friction-bar{
+  height:2px;background:rgba(255,255,255,.06);
+  border-radius:0;overflow:hidden;
+}
+.af-friction-fill{
+  height:100%;background:var(--loss);
+  transition:width linear;width:100%;
+}
+
 /* ============================================================ RESPONSIVE */
 @media(max-width:768px){
   .stats-row{grid-template-columns:repeat(3,1fr)}
@@ -801,7 +884,6 @@ textarea{resize:vertical;min-height:52px}
   .charts-grid{grid-template-columns:1fr}
   .analysis-grid{grid-template-columns:1fr}
   .nav{padding:0 12px}
-  .nav-logo-text{display:none}
   .page{padding:12px}
   .period-date-input{width:100px}
   .scores-dual{grid-template-columns:1fr}
@@ -4356,10 +4438,256 @@ function showDecisionGate(level, reasons){
 }
 
 /* ============================================================
+   MODULE ANTIFRAGILE — Comportemental pre-trade v1
+   Règles :
+   - Ne modifie aucune fonction existante
+   - S'injecte AVANT l'intercepteur tilt existant
+   - Données réelles uniquement (aucune projection)
+   - localStorage clé séparée tj_af_v1
+============================================================ */
+const AF_KEY = 'tj_af_v1';
+
+function _afLoad()  { try { return JSON.parse(localStorage.getItem(AF_KEY)) || {ignored:0}; } catch { return {ignored:0}; } }
+function _afSave(s) { try { localStorage.setItem(AF_KEY, JSON.stringify(s)); } catch {} }
+function _afGetIgnored()    { return _afLoad().ignored; }
+function _afIncIgnored()    { const s=_afLoad(); s.ignored++; _afSave(s); }
+function _afResetIgnored()  { _afSave({ignored:0}); }
+
+/**
+ * getRecentMistakeImpact(type, limit = 5)
+ * type examples: 'emotion:FOMO' | 'emotion:Revenge' | 'grade:D' | 'plan:Non'
+ * Retourne {totalTrades, winrate, totalR, avgR} ou null si données insuffisantes.
+ */
+function getRecentMistakeImpact(type, limit = 5) {
+  const [key, val] = type.split(':');
+  const closed = trades.filter(t => {
+    if(t.status !== 'closed' || !t.result) return false;
+    if(key === 'emotion') return (t.emotion === val || t.emotionEntry === val);
+    if(key === 'grade')   return t.setupGrade === val;
+    if(key === 'plan')    return t.plan === val;
+    return false;
+  }).slice(0, limit);
+
+  if(!closed.length) return null;
+  const decisive = closed.filter(t => t.result==='Win'||t.result==='Loss');
+  const wins     = closed.filter(t => t.result==='Win').length;
+  const totalR   = closed.reduce((s,t) => s + signedR(t), 0);
+  return {
+    totalTrades : closed.length,
+    winrate     : decisive.length ? Math.round(wins/decisive.length*100) : 0,
+    totalR      : parseFloat(totalR.toFixed(2)),
+    avgR        : parseFloat((totalR/closed.length).toFixed(2)),
+  };
+}
+
+/* Analyse les déclencheurs antifragiles pour un trade en cours */
+function _afAnalyze(emotion, grade, plan) {
+  const ignored  = _afGetIgnored();
+  const triggers = [];
+
+  // ── 1. Accumulation d'alertes ignorées ──────────────────────
+  if(ignored >= 3) {
+    const recent = trades.filter(t=>t.status==='closed').slice(0,5);
+    const tR     = parseFloat(recent.reduce((s,t)=>s+signedR(t),0).toFixed(2));
+    triggers.push({ type:'accumulation', priority:4, ignored, totalR:tR, count:recent.length });
+  }
+
+  // ── 2. Émotions à risque + stats réelles ────────────────────
+  const riskEmotions = ['FOMO','Revenge','Stress'];
+  if(riskEmotions.includes(emotion)) {
+    const imp = getRecentMistakeImpact(`emotion:${emotion}`, 5);
+    if(imp && imp.totalTrades >= 2)
+      triggers.push({ type:'emotion', priority: imp.winrate<35?3:2, emotion, impact:imp });
+  }
+
+  // ── 3. Grade setup faible ───────────────────────────────────
+  if(['C','D'].includes(grade)) {
+    const imp = getRecentMistakeImpact(`grade:${grade}`, 5);
+    if(imp && imp.totalTrades >= 2)
+      triggers.push({ type:'grade', priority:2, grade, impact:imp });
+  }
+
+  // ── 4. Hors plan répété ─────────────────────────────────────
+  if(plan === 'Non') {
+    const imp = getRecentMistakeImpact('plan:Non', 5);
+    if(imp && imp.totalTrades >= 2 && imp.winrate < 45)
+      triggers.push({ type:'plan', priority:1, impact:imp });
+  }
+
+  // ── 5. Signal POSITIF — bon pattern confirmé ────────────────
+  if(!triggers.length && ['Calme','Confiance'].includes(emotion) && ['A+','A'].includes(grade)) {
+    const imp = getRecentMistakeImpact(`emotion:${emotion}`, 5);
+    if(imp && imp.totalTrades >= 2 && imp.winrate >= 55 && imp.avgR > 0)
+      triggers.push({ type:'positive', priority:0, emotion, grade, impact:imp });
+  }
+
+  return triggers.sort((a,b) => b.priority - a.priority);
+}
+
+/* ── Friction timer sur le bouton procéder ─────────────────── */
+function _afDisableWithCountdown(btn, ms, finalLabel) {
+  if(ms <= 0) { btn.textContent = finalLabel; btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer'; return; }
+  btn.disabled = true; btn.style.cursor='not-allowed'; btn.style.opacity='.4';
+  // Barre de friction
+  const bar  = btn.closest('.af-modal')?.querySelector('.af-friction-fill');
+  let   rem  = Math.ceil(ms/1000);
+  btn.textContent = `Lecture en cours... (${rem}s)`;
+  if(bar) { bar.style.transitionDuration = ms+'ms'; requestAnimationFrame(()=>{ bar.style.width='0%'; }); }
+  const iv = setInterval(() => {
+    rem--;
+    if(rem <= 0) {
+      clearInterval(iv);
+      btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
+      btn.textContent = finalLabel;
+    } else {
+      btn.textContent = `Lecture en cours... (${rem}s)`;
+    }
+  }, 1000);
+}
+
+/**
+ * showAntifragilePanel(trigger)
+ * Retourne Promise<{proceed:bool}>
+ */
+function showAntifragilePanel(trigger) {
+  return new Promise(resolve => {
+    const existing = document.getElementById('af-overlay');
+    if(existing) existing.remove();
+
+    const isPositive = trigger.type === 'positive';
+    const isHigh     = trigger.priority >= 3;
+    const FRICTION   = isHigh ? 3500 : trigger.priority >= 2 ? 2000 : 0;
+
+    // ── Contenu selon type ──────────────────────────────────
+    let title, subtitle, rows = [];
+    const rFmt = v => (v>=0?'+':'')+v.toFixed(2)+'R';
+
+    if(trigger.type === 'accumulation') {
+      title    = `${trigger.ignored} alertes ignorées`;
+      subtitle = `${trigger.count} derniers trades · résultat cumulé`;
+      rows = [
+        { text:`Résultat cumulé : ${rFmt(trigger.totalR)}`, hl: trigger.totalR < 0 },
+        { text:'Tu continues malgré les signaux répétés.', hl: false },
+        { text:'Ce comportement amplifie les pertes évitables.', hl: true },
+      ];
+    } else if(trigger.type === 'emotion') {
+      const {emotion,impact:i} = trigger;
+      title    = `${emotion} détecté`;
+      subtitle = `${i.totalTrades} derniers trades en état ${emotion}`;
+      rows = [
+        { text:`Winrate : ${i.winrate}%`,    hl: i.winrate < 45 },
+        { text:`Total : ${rFmt(i.totalR)}`,  hl: i.totalR < 0  },
+        { text:`R moyen : ${rFmt(i.avgR)}`,  hl: i.avgR < 0    },
+      ];
+      if(i.winrate < 35) rows.push({ text:'Pattern perdant confirmé sur ton historique.', hl:true });
+    } else if(trigger.type === 'grade') {
+      const {grade,impact:i} = trigger;
+      title    = `Setup ${grade} — edge faible`;
+      subtitle = `${i.totalTrades} derniers trades en grade ${grade}`;
+      rows = [
+        { text:`Winrate : ${i.winrate}%`,   hl: i.winrate < 45 },
+        { text:`Total : ${rFmt(i.totalR)}`, hl: i.totalR < 0   },
+        { text:`R moyen : ${rFmt(i.avgR)}`, hl: i.avgR < 0     },
+      ];
+    } else if(trigger.type === 'plan') {
+      const {impact:i} = trigger;
+      title    = 'Trade hors plan';
+      subtitle = `${i.totalTrades} derniers trades hors plan`;
+      rows = [
+        { text:`Winrate : ${i.winrate}%`,   hl: i.winrate < 45 },
+        { text:`Total : ${rFmt(i.totalR)}`, hl: i.totalR < 0   },
+      ];
+    } else if(isPositive) {
+      const {emotion,grade,impact:i} = trigger;
+      title    = 'Pattern aligné';
+      subtitle = `${i.totalTrades} trades · ${emotion} · Grade ${grade}`;
+      rows = [
+        { text:`Winrate : ${i.winrate}%`,   hl:false, pos:true },
+        { text:`R moyen : ${rFmt(i.avgR)}`, hl:false, pos:true },
+        { text:'Ce pattern est rentable sur ton historique.', hl:false, pos:true },
+      ];
+    }
+
+    // ── Couleurs selon niveau ────────────────────────────────
+    const borderC  = isPositive ? 'rgba(90,158,122,.2)' : isHigh ? 'rgba(158,90,90,.28)' : 'rgba(184,146,58,.22)';
+    const accentC  = isPositive ? 'var(--win)' : isHigh ? 'var(--loss)' : 'var(--be)';
+    const headerBg = isPositive ? 'rgba(90,158,122,.04)' : isHigh ? 'rgba(158,90,90,.05)' : 'rgba(184,146,58,.04)';
+    const proceedLvl = isPositive ? 'level-positive' : isHigh ? 'level-high' : 'level-warning';
+    const ignored  = _afGetIgnored();
+
+    // ── Lignes stats ─────────────────────────────────────────
+    const rowsHTML = rows.map(r => `
+      <div class="af-stat-row ${r.hl?'af-highlight':''} ${r.pos?'af-positive':''}">
+        <span class="af-stat-text" style="color:${r.hl?accentC:r.pos?'var(--win)':'var(--t2)'}">${r.text}</span>
+      </div>`).join('');
+
+    // ── Render ───────────────────────────────────────────────
+    const overlay = document.createElement('div');
+    overlay.id    = 'af-overlay';
+    overlay.className = 'af-overlay';
+    overlay.innerHTML = `
+      <div class="af-modal" style="border:1px solid ${borderC}">
+        ${FRICTION > 0 ? `<div class="af-friction-bar"><div class="af-friction-fill"></div></div>` : ''}
+        <div class="af-header" style="background:${headerBg};border-bottom-color:${isPositive?'rgba(90,158,122,.15)':isHigh?'rgba(158,90,90,.18)':'rgba(184,146,58,.16)'}">
+          <div>
+            <div class="af-title" style="color:${accentC}">${title}</div>
+            <div class="af-subtitle">${subtitle}</div>
+          </div>
+          ${!isPositive?`<div class="af-badge">${ignored} ignoré${ignored>1?'s':''}</div>`:''}
+        </div>
+        <div class="af-body">${rowsHTML}</div>
+        <div class="af-footer">
+          ${!isPositive?`<button class="af-btn af-btn-cancel" id="af-cancel">Annuler</button>`:''}
+          <button class="af-btn af-btn-proceed ${proceedLvl}" id="af-proceed" disabled style="opacity:.4;cursor:not-allowed">
+            ${FRICTION>0 ? `Lecture en cours...` : isPositive ? 'Continuer' : 'Je comprends'}
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const proceedBtn = overlay.querySelector('#af-proceed');
+    const cancelBtn  = overlay.querySelector('#af-cancel');
+
+    _afDisableWithCountdown(proceedBtn, FRICTION, isPositive ? 'Continuer' : 'Je comprends — continuer');
+
+    cancelBtn?.addEventListener('click', () => { overlay.remove(); resolve({proceed:false}); });
+
+    proceedBtn.addEventListener('click', () => {
+      if(proceedBtn.disabled) return;
+      overlay.remove();
+      if(isPositive) _afResetIgnored();
+      else           _afIncIgnored();
+      resolve({proceed:true});
+    });
+
+    overlay.addEventListener('click', e => {
+      if(e.target === overlay) { overlay.remove(); resolve({proceed:false}); }
+    });
+  });
+}
+
+/* ============================================================
    ENREGISTREMENT / MISE À JOUR
 ============================================================ */
 $('btn-submit').addEventListener('click', async () => {
   let _overrideReason = null;
+
+  // ── ANTIFRAGILE — confrontation comportementale pre-trade ──
+  if(formMode === 'create'){
+    const _afConf    = getConfluences();
+    const _afRR      = parseFloat($('f-rr-plan').value) || 0;
+    const { setupGrade: _afGrade } = calculateSetupScore({ conf:_afConf, rrPlan:_afRR });
+    const _afTriggers = _afAnalyze(
+      getToggleVal('emotion'),
+      _afGrade,
+      getToggleVal('plan')
+    );
+    if(_afTriggers.length > 0){
+      const _afResult = await showAntifragilePanel(_afTriggers[0]);
+      if(!_afResult.proceed) return;
+    }
+  }
 
   // ── PRE-TRADE INTERCEPTOR + TILT — un seul modal, zéro confirm() ──
   if(formMode === 'create' && isTiltReady()){
