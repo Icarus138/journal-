@@ -896,8 +896,8 @@ textarea{resize:vertical;min-height:52px}
         <div class="field form-col-span-2">
           <div class="field-label">Statut du trade</div>
           <div class="toggle-group" data-group="status">
-            <button class="tgl active" data-val="closed"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Clôturé</button>
-            <button class="tgl" data-val="open"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;opacity:.7"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg>En cours</button>
+            <button class="tgl" data-val="closed"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Clôturé</button>
+            <button class="tgl active" data-val="open"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;opacity:.7"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg>En cours</button>
           </div>
         </div>
         <div class="form-col-span-2"></div>
@@ -2293,9 +2293,9 @@ function resetForm(){
   $('f-pnl').value        = '';
   $('f-note').value       = '';
 
-  // Remet tous les toggles à zéro, sauf status qui revient à "closed"
+  // Remet tous les toggles à zéro, sauf status qui revient à "open"
   $$('[data-group] .tgl').forEach(b => b.classList.remove('active'));
-  setToggleVal('status', 'closed');
+  setToggleVal('status', 'open');
 
   // Réinitialiser les confluences
   renderConfluenceGroups([]);
