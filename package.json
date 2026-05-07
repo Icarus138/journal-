@@ -1,0 +1,16 @@
+{
+  "name": "journal-trade",
+  "version": "1.0.0",
+  "description": "Guard — Trading Journal",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  }
+}

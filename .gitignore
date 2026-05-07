@@ -8,7 +8,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Node (pour outillage futur)
+# Node
 node_modules/
 dist/
+package-lock.json
 .env
