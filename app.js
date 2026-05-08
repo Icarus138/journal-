@@ -1,5 +1,3 @@
-import Chart from 'chart.js/auto'
-
 /* ============================================================
    CHART.JS — CONFIG COSMIQUE GLOBALE
    Palette : accent #4F46E5 · win #5a9e7a · loss #9e5a5a · be #b8923a
@@ -3882,6 +3880,65 @@ function renderEdgeInsights(filtered){
     `<tr><td colspan="4" style="text-align:center;color:var(--t4)">Minimum 5 trades par grade requis.</td></tr>`;
 }
 
+
+/* ============================================================
+   PARTIAL TP — Prises de profit partielles
+============================================================ */
+
+/**
+ * computeRealizedR(partials)
+ * Calcule le R pondéré à partir des partiels normalisés.
+ */
+function computeRealizedR(partials){
+  if(!partials || !partials.length) return null;
+  let total = 0;
+  partials.forEach(p => { total += p.size * p.R; });
+  return Number(total.toFixed(2));
+}
+
+/**
+ * normalizePartials(partials)
+ * Normalise les tailles pour que leur somme = 1.
+ */
+function normalizePartials(partials){
+  if(!partials || !partials.length) return [];
+  const totalSize = partials.reduce((s,p) => s + (p.size || 0), 0);
+  if(totalSize === 0) return partials;
+  return partials.map(p => ({ ...p, size: p.size / totalSize }));
+}
+
+/**
+ * finalizeTrade(trade)
+ * Applique les partiels sur le trade avant sauvegarde.
+ * Met à jour realizedR et exitDate.
+ */
+function finalizeTrade(trade){
+  if(trade.partials && trade.partials.length > 0){
+    const valid = trade.partials.filter(p => p.size > 0);
+    if(valid.length > 0){
+      trade.partials = normalizePartials(valid);
+      const computed  = computeRealizedR(trade.partials);
+      if(computed !== null) trade.realizedR = computed;
+    }
+  }
+  return trade;
+}
+
+/**
+ * analyzeEmotionShift(trades)
+ * Compare l'émotion d'entrée vs sortie.
+ * Retourne les trades avec les deux renseignés.
+ */
+function analyzeEmotionShift(trades){
+  return trades
+    .filter(t => t.status === 'closed' && t.emotionEntry && t.emotionExit)
+    .map(t => ({
+      entry    : t.emotionEntry || t.emotion,
+      exit     : t.emotionExit,
+      R        : signedR(t),
+      shifted  : (t.emotionEntry || t.emotion) !== t.emotionExit,
+    }));
+}
 
 /* ============================================================
    SIGNED R — priorité à realizedR (partials)
