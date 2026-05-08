@@ -57,27 +57,7 @@ Chart.defaults.plugins.tooltip.bodyFont        = C.font;
 /* ============================================================
    CONSTANTES & ÉTAT
 ============================================================ */
-const LS_KEY = 'tj_trades_v1';
-let trades = [];
-let USER_STATS   = null; // Stats adaptatives — recalculées après chaque mutation
-let USER_PROFILE = null; // Forces/faiblesses par type de setup
-
-// Historique
-let historySortAsc = false;
-let historyFilterStatus = '';
-let historyFilterGrade  = '';
-
-// Formulaire
-let editingTradeId = null;
-let formMode = 'create'; // 'create' | 'edit' | 'close'
-
-// Dashboard période
-let periodMode   = 'preset';
-let periodPreset = 'all';
-let periodMonthSel   = '';
-let periodYearSel    = '';
-let periodCustomFrom = '';
-let periodCustomTo   = '';
+import { state, LS_KEY } from './state.js'
 
 const MONTH_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
@@ -275,7 +255,7 @@ function getActiveConfluenceDefs(settings = {}){
 
 // ── Groupes dynamiques issus des settings ───────────────────
 // Calculé au chargement, mis à jour si settings changent
-let _activeDefs = getActiveConfluenceDefs(loadSettings());
+state.activeDefs = getActiveConfluenceDefs(loadSettings());
 
 /* ============================================================
    CONFLUENCE UI
@@ -305,7 +285,7 @@ const GROUP_CSS = {
 function renderConfluenceGroups(selected = [], settings = null){
   const defs = settings
     ? getActiveConfluenceDefs(settings)
-    : _activeDefs;
+    : state.activeDefs;
 
   // Reconstruire les groupes depuis les defs actives
   const groups = {};
@@ -441,10 +421,10 @@ function calculateSetupScore(trade){
     optimizationMessage = ' Setup sniper validé (structure + contexte) — envisage de laisser courir ou d\'augmenter ton TP';
 
     // Confirmation par stats personnelles si disponibles
-    if(typeof computeUserStats === 'function' && typeof trades !== 'undefined'){
+    if(typeof computeUserStats === 'function' && typeof state.trades !== 'undefined'){
       const setupKey  = trade.setup || null;
       const gradeKey  = 'A+';
-      const s = USER_STATS?.grades?.[gradeKey];
+      const s = state.USER_STATS?.grades?.[gradeKey];
       if(s && s.total >= 5 && s.winrate > 60){
         optimizationMessage += `\n Confirmé par tes stats : WR ${s.winrate.toFixed(0)}%`;
       }
@@ -500,7 +480,7 @@ function updateSetupScore(){
 
   // ── Stats — calculées une seule fois, partagées ──────────────
   const setupKey = $('f-setup') ? $('f-setup').value : '';
-  const tpStats  = computeUserStats(trades, { setup: setupKey, grade: setupGrade });
+  const tpStats  = computeUserStats(state.trades, { setup: setupKey, grade: setupGrade });
   const globalS  = tpStats?.global?.total >= 5 ? { ...tpStats.global, fallback: tpStats.fallback } : null;
 
   // ── Decision paths ───────────────────────────────────────────
@@ -517,7 +497,7 @@ function updateSetupScore(){
     displayWarning({ level:'good', message: optimizationMessage });
   } else {
     const tmpTrade    = { conf:tmp.conf, rrPlan:tmp.rrPlan, setupScore, setupGrade };
-    const baseWarning = generateSmartWarning(tmpTrade, trades);
+    const baseWarning = generateSmartWarning(tmpTrade, state.trades);
     const adaptFeedback = getAdaptiveFeedback({
       grade  : setupGrade,
       rr     : tmp.rrPlan,
@@ -616,7 +596,7 @@ function displayTPSuggestion(suggestion){
 /**
  * getDecisionPaths(trade, tpStats)
  * Retourne des options actionnables ou null si aucune action requise.
- * Basé uniquement sur données réelles (min 5 trades).
+ * Basé uniquement sur données réelles (min 5 state.trades).
  */
 function getDecisionPaths(trade, tpStats){
   const global  = tpStats?.global;
@@ -628,7 +608,7 @@ function getDecisionPaths(trade, tpStats){
   if(count >= 5 && winrate < 40){
     return {
       type: 'danger',
-      message: `${trade.setup || 'Ce setup'} — ${winrate.toFixed(0)}% de réussite sur ${count} trades`,
+      message: `${trade.setup || 'Ce setup'} — ${winrate.toFixed(0)}% de réussite sur ${count} state.trades`,
       options: [
         { label:'Skip le trade',                 impact:'Préserve ton capital',          action:'skip'              },
         { label:'Réduire le risque (−50%)',       impact:'Limiter la perte potentielle',  action:'reduce_risk'       },
@@ -772,8 +752,8 @@ function resetForm(){
 /* ============================================================
 ============================================================ */
 function enterEditMode(trade, mode = 'edit'){
-  editingTradeId = trade.id;
-  formMode = mode;
+  state.editingTradeId = trade.id;
+  state.formMode = mode;
 
   // Switch vers la page formulaire
   switchToTab('page-log');
@@ -855,8 +835,8 @@ function enterEditMode(trade, mode = 'edit'){
 }
 
 function exitEditMode(){
-  editingTradeId = null;
-  formMode = 'create';
+  state.editingTradeId = null;
+  state.formMode = 'create';
   $('edit-banner-container').style.display = 'none';
   $('form-panel-title').innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;opacity:.7"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Nouveau trade`;
   $('btn-submit').innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Enregistrer le trade`;
@@ -869,7 +849,7 @@ $('cancel-edit-btn').addEventListener('click', exitEditMode);
    STOCKAGE
 ============================================================ */
 function saveTrades(){
-  localStorage.setItem(LS_KEY, JSON.stringify(trades));
+  localStorage.setItem(LS_KEY, JSON.stringify(state.trades));
   refreshUserStats(); // recalcul adaptatif après chaque mutation
 }
 
@@ -877,11 +857,11 @@ function loadTrades(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     const parsed = JSON.parse(raw);
-    trades = Array.isArray(parsed) ? parsed : [];
-  } catch(e){ trades = []; }
+    state.trades = Array.isArray(parsed) ? parsed : [];
+  } catch(e){ state.trades = []; }
 
   // S'assurer que tous les champs de base sont présents (sans migration forcée)
-  trades = trades.map(t => ({
+  state.trades = state.trades.map(t => ({
     id      : t.id || Date.now() + Math.random(),
     date    : t.date    || '',
     time    : t.time    || '',
@@ -925,13 +905,13 @@ function loadTrades(){
    MIGRATION SÉCURISÉE
 ============================================================ */
 function migrateTradesData(){
-  if(!trades.length) return;
+  if(!state.trades.length) return;
 
   // Version du scoring actuel — incrémenter à chaque changement de logique
   const SCORING_VERSION = 6; // v6 = modèle /10 par catégorie
 
   // Migration nécessaire si : score manquant, gap manquant, OU version de scoring obsolète
-  const needsMigration = trades.some(t =>
+  const needsMigration = state.trades.some(t =>
     t.setupScore === null ||
     t.setupScore === undefined ||
     t.setupGrade === null ||
@@ -944,11 +924,11 @@ function migrateTradesData(){
   // Backup AVANT migration (une seule fois)
   localStorage.setItem(
     'backup_trades_before_migration_' + Date.now(),
-    JSON.stringify(trades)
+    JSON.stringify(state.trades)
   );
 
   let migratedCount = 0;
-  trades = trades.map(t => {
+  state.trades = state.trades.map(t => {
     const needsRecalc =
       t.setupScore === null || t.setupScore === undefined ||
       t.setupGrade === null || t.setupGrade === undefined ||
@@ -993,15 +973,15 @@ function migrateTradesData(){
  */
 function updateTrade(id, fields){
   const numId = Number(id);
-  const idx = trades.findIndex(t => Number(t.id) === numId);
+  const idx = state.trades.findIndex(t => Number(t.id) === numId);
   if(idx === -1) return false;
 
   // Merge : les nouveaux champs écrasent les anciens, l'id est préservé
-  trades[idx] = {
-    ...trades[idx],    // tous les champs existants préservés
+  state.trades[idx] = {
+    ...state.trades[idx],    // tous les champs existants préservés
     ...fields,         // nouveaux champs / valeurs modifiées
-    id        : trades[idx].id,  // id immuable
-    createdAt : trades[idx].createdAt, // date de création immuable
+    id        : state.trades[idx].id,  // id immuable
+    createdAt : state.trades[idx].createdAt, // date de création immuable
     updatedAt : new Date().toISOString(),
   };
   saveTrades();
@@ -1011,7 +991,7 @@ function updateTrade(id, fields){
 async function deleteTrade(id){
   const ok = await showConfirmModal('Supprimer ce trade définitivement ?', 'Supprimer', true);
   if(!ok) return;
-  trades = trades.filter(t => Number(t.id) !== Number(id));
+  state.trades = state.trades.filter(t => Number(t.id) !== Number(id));
   saveTrades();
   updateMiniStats();
   updatePeriodSelectors();
@@ -1058,11 +1038,11 @@ function analyzeJournal(tradeSet){
 
   const todayTrades = closed.filter(t => t.date === todayISO());
   if(todayTrades.length > 5)
-    issues.push({ color:'var(--be)', text:`<strong>Overtrading détecté : ${todayTrades.length} trades aujourd'hui.</strong> Au-delà de 5, la qualité de décision décline.` });
+    issues.push({ color:'var(--be)', text:`<strong>Overtrading détecté : ${todayTrades.length} state.trades aujourd'hui.</strong> Au-delà de 5, la qualité de décision décline.` });
 
   const noPlan = closed.filter(t => t.plan === 'Non');
   if(noPlan.length > closed.length * 0.3)
-    issues.push({ color:'var(--loss)', text:`<strong>${noPlan.length} trades hors plan (${(noPlan.length/closed.length*100).toFixed(0)}%).</strong> Trop de déviation — revoir le process de validation pré-trade.` });
+    issues.push({ color:'var(--loss)', text:`<strong>${noPlan.length} state.trades hors plan (${(noPlan.length/closed.length*100).toFixed(0)}%).</strong> Trop de déviation — revoir le process de validation pré-trade.` });
 
   return issues;
 }
@@ -1075,15 +1055,15 @@ function analyzeJournal(tradeSet){
    TILT SYSTEM — Décision & Protection comportementale
    ─────────────────────────────────────────────────────────────
    Deux couches séparées :
-   1. computeTiltScore (0–5, 3 derniers trades) → décision temps réel
-   2. calculateTiltScore (0–100, 10 derniers trades) → dashboard analytique
+   1. computeTiltScore (0–5, 3 derniers state.trades) → décision temps réel
+   2. calculateTiltScore (0–100, 10 derniers state.trades) → dashboard analytique
 ============================================================ */
 
 /* ── COUCHE 1 : Comportemental — rapide, actionnable ──────── */
 
 /**
  * computeTiltScore(tradeSet)
- * Score 0–5 basé sur les 3 derniers trades clôturés.
+ * Score 0–5 basé sur les 3 derniers state.trades clôturés.
  * Rapide à déclencher — détecte la dérive en cours, pas historique.
  */
 function computeTiltScore(tradeSet){
@@ -1134,7 +1114,7 @@ function getTiltMessage(tiltScore, tradeSet){
   const causes = [];
   if(losses >= 2)    causes.push(`${losses} pertes récentes`);
   if(offPlan >= 1)   causes.push('hors plan');
-  if(todayCount >= 5) causes.push(`${todayCount} trades aujourd'hui`);
+  if(todayCount >= 5) causes.push(`${todayCount} state.trades aujourd'hui`);
   const causeStr = causes.join(' · ');
 
   if(tiltScore >= 4){
@@ -1219,9 +1199,9 @@ function updateTiltDisplay(){
   }
 
   // Conditions remplies → calculer et afficher
-  const score   = computeTiltScore(trades);
+  const score   = computeTiltScore(state.trades);
   const state   = getTiltState(score);
-  const message = getTiltMessage(score, trades);
+  const message = getTiltMessage(score, state.trades);
   displayTilt(score, state, message);
 }
 
@@ -1229,7 +1209,7 @@ function updateTiltDisplay(){
 
 /**
  * calculateTiltScore(tradeSet) — conservé pour le dashboard
- * Score 0–100 sur les 10 derniers trades — corrélation tilt vs R.
+ * Score 0–100 sur les 10 derniers state.trades — corrélation tilt vs R.
  */
 function calculateTiltScore(tradeSet){
   const closed = tradeSet
@@ -1470,7 +1450,7 @@ function refreshSetupDisplay(){
 /**
  * getStatsBySetupGrade(tradeSet)
  * Retourne pour chaque grade A+/A/B/C/D :
- *   { n, winrate, avgR } — sur trades clôturés uniquement.
+ *   { n, winrate, avgR } — sur state.trades clôturés uniquement.
  */
 function getStatsBySetupGrade(tradeSet){
   const closed = tradeSet.filter(t => t.status === 'closed' && t.setupGrade && t.result);
@@ -1504,11 +1484,11 @@ function getStatsBySetupGrade(tradeSet){
 
 /**
  * computeUserStats(tradeSet, filters = {})
- * Analyse les trades clôturés et retourne des stats par grade, émotion,
+ * Analyse les state.trades clôturés et retourne des stats par grade, émotion,
  * type de setup (t.setup), et globales.
  *
  * filters : { setup, emotionEntry } — optionnel, filtre avant calcul.
- * Ignore les trades ouverts et ceux sans rrReal.
+ * Ignore les state.trades ouverts et ceux sans rrReal.
  */
 function computeUserStats(tradeSet, filters = {}){
   const stats = {
@@ -1526,7 +1506,7 @@ function computeUserStats(tradeSet, filters = {}){
 
   tradeSet.forEach(t => {
     if(t.status !== 'closed' || !t.result) return;
-    if(t.rrReal == null) return; // ignorer trades sans RR réel
+    if(t.rrReal == null) return; // ignorer state.trades sans RR réel
 
     // Appliquer filtres optionnels
     // IMPORTANT : hiérarchie setupGrade > quality > skip
@@ -1538,7 +1518,7 @@ function computeUserStats(tradeSet, filters = {}){
         // setupGrade prioritaire — source de vérité système
         if(t.setupGrade !== filters.grade) return;
       } else if(t.quality){
-        // Fallback anciens trades : quality utilisée en remplacement
+        // Fallback anciens state.trades : quality utilisée en remplacement
         usedFallback = true;
         if(t.quality !== filters.grade) return;
       } else {
@@ -1603,14 +1583,14 @@ function computeUserStats(tradeSet, filters = {}){
   Object.values(stats.emotions).forEach(deriveWR);
   Object.values(stats.setups).forEach(deriveWR);
 
-  stats.fallback = usedFallback; // true = anciens trades (quality) inclus dans le filtre grade
+  stats.fallback = usedFallback; // true = anciens state.trades (quality) inclus dans le filtre grade
   return stats;
 }
 
 /**
  * computeUserProfile(tradeSet)
  * Identifie les forces et faiblesses par type de setup (t.setup).
- * Requiert ≥ 5 trades par setup pour être inclus.
+ * Requiert ≥ 5 state.trades par setup pour être inclus.
  *
  * Force    : winrate > 60% ET avgR > 1.5
  * Faiblesse: winrate < 40% OU avgR < 1
@@ -1641,11 +1621,11 @@ function computeUserProfile(tradeSet){
 
 /**
  * refreshUserStats()
- * Point d'entrée unique — appelé après chaque mutation de `trades`.
+ * Point d'entrée unique — appelé après chaque mutation de `state.trades`.
  */
 function refreshUserStats(){
-  USER_STATS   = computeUserStats(trades);
-  USER_PROFILE = computeUserProfile(trades);
+  state.USER_STATS   = computeUserStats(state.trades);
+  state.USER_PROFILE = computeUserProfile(state.trades);
 }
 
 /**
@@ -1682,24 +1662,24 @@ function getRRRecommendation(grade, userStats){
  *
  * Priorités :
  *  1. Combo dangereux : setup-type + émotion → WR < 35%
- *  2. Setup-type faible (t.setup) depuis USER_PROFILE
+ *  2. Setup-type faible (t.setup) depuis state.USER_PROFILE
  *  3. Grade faible/fort  (setupGrade)
  *  4. État émotionnel
  *  5. Setup haute probabilité
  *  6. Réduction risk auto si setup faible
  *
- * Requiert ≥ 5 trades par catégorie (bruit limité).
+ * Requiert ≥ 5 state.trades par catégorie (bruit limité).
  */
 function getAdaptiveFeedback({ grade, rr, emotion, conf = [], setup = '' }){
-  if(!USER_STATS) return null;
+  if(!state.USER_STATS) return null;
   // A+ : pas de warning générique — feedback data-driven uniquement
   if(grade === 'A+'){
-    const filteredStats = computeUserStats(trades, { setup, grade: 'A+' });
+    const filteredStats = computeUserStats(state.trades, { setup, grade: 'A+' });
     const gradeS = filteredStats?.global?.total >= 5 ? filteredStats.global : null;
     if(gradeS){
       const wr      = gradeS.winrate.toFixed(0);
       const avg     = gradeS.avgR >= 0 ? '+' + gradeS.avgR.toFixed(2) : gradeS.avgR.toFixed(2);
-      const caveat  = filteredStats.fallback ? '\n[!] Basé partiellement sur anciens trades' : '';
+      const caveat  = filteredStats.fallback ? '\n[!] Basé partiellement sur anciens state.trades' : '';
       if(gradeS.winrate < 40){
         return {
           level  : 'bad',
@@ -1721,30 +1701,30 @@ function getAdaptiveFeedback({ grade, rr, emotion, conf = [], setup = '' }){
   const messages   = [];
   let   level      = 'uncertain';
 
-  const gradeStats   = grade   ? USER_STATS.grades[grade]     : null;
-  const emotionStats = emotion ? USER_STATS.emotions[emotion] : null;
-  const setupStats   = setup   ? USER_STATS.setups[setup]     : null;
+  const gradeStats   = grade   ? state.USER_STATS.grades[grade]     : null;
+  const emotionStats = emotion ? state.USER_STATS.emotions[emotion] : null;
+  const setupStats   = setup   ? state.USER_STATS.setups[setup]     : null;
 
   // ── 1. Combo dangereux : setup-type + émotion ─────────────
   // Ex : "Breakout + FOMO → WR 20%"
   if(setup && emotion){
-    const comboStats = computeUserStats(trades, { setup, emotionEntry: emotion });
+    const comboStats = computeUserStats(state.trades, { setup, emotionEntry: emotion });
     if(comboStats.global.total >= MIN_SAMPLE && comboStats.global.winrate < 35){
       const wr  = comboStats.global.winrate.toFixed(0);
       const avg = comboStats.global.avgR.toFixed(2);
       messages.push(
         `[!!] Combo dangereux : ${setup} + ${emotion}\n` +
-        `   WR : ${wr}% · R moyen : ${avg}R sur ${comboStats.global.total} trades\n` +
+        `   WR : ${wr}% · R moyen : ${avg}R sur ${comboStats.global.total} state.trades\n` +
         `   → Pattern de perte récurrent sur tes données`
       );
       level = 'bad';
     }
   }
 
-  // ── 2. Setup-type faible/fort (USER_PROFILE) ──────────────
-  if(setup && USER_PROFILE){
-    const isWeak   = USER_PROFILE.weaknesses.find(s => s.setup === setup);
-    const isStrong = USER_PROFILE.strengths.find(s  => s.setup === setup);
+  // ── 2. Setup-type faible/fort (state.USER_PROFILE) ──────────────
+  if(setup && state.USER_PROFILE){
+    const isWeak   = state.USER_PROFILE.weaknesses.find(s => s.setup === setup);
+    const isStrong = state.USER_PROFILE.strengths.find(s  => s.setup === setup);
     if(isWeak){
       messages.push(
         `[!] Setup ${setup} à éviter\n` +
@@ -1782,7 +1762,7 @@ function getAdaptiveFeedback({ grade, rr, emotion, conf = [], setup = '' }){
       if(level !== 'bad') level = 'good';
     } else {
       // RR sous-optimal
-      const rrOpt = getRRRecommendation(grade, USER_STATS);
+      const rrOpt = getRRRecommendation(grade, state.USER_STATS);
       if(rr > 0 && rr < rrOpt - 0.3 && !isHighProbabilitySetup(conf)){
         messages.push(`[!] RR ${rr} < ton optimal sur ${grade} (${rrOpt}R)`);
         if(level === 'uncertain') level = 'bad';
@@ -1803,7 +1783,7 @@ function getAdaptiveFeedback({ grade, rr, emotion, conf = [], setup = '' }){
 
   // ── 5. Setup haute probabilité ────────────────────────────
   if(isHighProbabilitySetup(conf)){
-    const rrOpt = getRRRecommendation(grade, USER_STATS);
+    const rrOpt = getRRRecommendation(grade, state.USER_STATS);
     if(rr > 0 && rr < rrOpt - 0.2){
       messages.push(`[▲] Setup haute proba — vise ${rrOpt}R (ton optimal ${grade})`);
     } else {
@@ -1821,8 +1801,8 @@ function getAdaptiveFeedback({ grade, rr, emotion, conf = [], setup = '' }){
   }
 
   // ── Fallback global ───────────────────────────────────────
-  if(messages.length === 0 && USER_STATS.global.total >= 10 && USER_STATS.global.winrate < 40){
-    messages.push(` Winrate global bas (${USER_STATS.global.winrate.toFixed(0)}%) — attends les A+/A`);
+  if(messages.length === 0 && state.USER_STATS.global.total >= 10 && state.USER_STATS.global.winrate < 40){
+    messages.push(` Winrate global bas (${state.USER_STATS.global.winrate.toFixed(0)}%) — attends les A+/A`);
     level = 'bad';
   }
 
@@ -1862,7 +1842,7 @@ function generateSmartWarning(trade, tradeSet){
   if(isWeak){
     let msg = `[!] Setup ${grade} → WR historique : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)}`;
     if(ref) msg += `\nComparaison : Setup ${refGrade} → ${wrFmt(ref.winrate)} WR / ${rFmt(ref.avgR)}`;
-    msg += `\n→ Tu trades un setup statistiquement sous-performant sur tes données.`;
+    msg += `\n→ Tu state.trades un setup statistiquement sous-performant sur tes données.`;
     return { level:'bad', message:msg };
   }
 
@@ -1870,13 +1850,13 @@ function generateSmartWarning(trade, tradeSet){
   const isStrong = ['A+','A'].includes(grade) && current.avgR > 0.2 && current.winrate >= 50;
   if(isStrong){
     let msg = ` Setup ${grade} → WR : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)}`;
-    if(current.n < 10) msg += ` (${current.n} trades — sample limité)`;
+    if(current.n < 10) msg += ` (${current.n} state.trades — sample limité)`;
     msg += `\n→ Conditions favorables selon tes données.`;
     return { level:'good', message:msg };
   }
 
   // ── Cas intermédiaire : setup B ou résultats mitigés ───────
-  let msg = ` Setup ${grade} → WR : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)} (${current.n} trades)`;
+  let msg = ` Setup ${grade} → WR : ${wrFmt(current.winrate)} · R moyen : ${rFmt(current.avgR)} (${current.n} state.trades)`;
   if(ref) msg += `\nMeilleur référence : Setup ${refGrade} → ${wrFmt(ref.winrate)} / ${rFmt(ref.avgR)}`;
   return { level:'uncertain', message:msg };
 }
@@ -1967,12 +1947,12 @@ function finalizeTrade(trade){
 }
 
 /**
- * analyzeEmotionShift(trades)
- * Retourne les glissements émotionnels entrée→sortie sur trades clôturés.
+ * analyzeEmotionShift(state.trades)
+ * Retourne les glissements émotionnels entrée→sortie sur state.trades clôturés.
  * Utilisé dans generateInsights pour détecter les dérives.
  */
-function analyzeEmotionShift(trades){
-  return trades
+function analyzeEmotionShift(state.trades){
+  return state.trades
     .filter(t => t.status === 'closed' && t.emotionEntry && t.emotionExit && t.result)
     .map(t => ({
       entry  : t.emotionEntry,
@@ -1984,10 +1964,9 @@ function analyzeEmotionShift(trades){
 
 /* ── Gestion UI partiels ──────────────────────────────────── */
 
-let _partialRows = []; // état local du form
 
 function addPartialRow(data = {}){
-  const idx  = _partialRows.length;
+  const idx  = state.partialRows.length;
   const id   = `partial-${idx}`;
   const list = $('partials-list');
   if(!list) return;
@@ -2011,12 +1990,12 @@ function addPartialRow(data = {}){
     <button class="btn-remove-partial" type="button" data-idx="${idx}">×</button>`;
 
   list.appendChild(row);
-  _partialRows.push(row);
+  state.partialRows.push(row);
 
   // Listener suppression
   row.querySelector('.btn-remove-partial').addEventListener('click', function(){
     row.remove();
-    _partialRows = _partialRows.filter(r => r !== row);
+    state.partialRows = state.partialRows.filter(r => r !== row);
     updatePartialComputed();
   });
 
@@ -2073,7 +2052,7 @@ function getPartialsFromForm(){
 function clearPartials(){
   const list = $('partials-list');
   if(list) list.innerHTML = '';
-  _partialRows = [];
+  state.partialRows = [];
   const el = $('partial-computed');
   if(el) el.style.display = 'none';
 }
@@ -2178,8 +2157,8 @@ function buildTradeFromForm(existingId = null){
   trade.executionFeedback = evaluateExecution(trade);
 
   // Tilt au moment du trade — deux couches
-  const tiltAnalytic = calculateTiltScore(trades);  // 0–100 pour dashboard
-  const tiltBehav    = computeTiltScore(trades);     // 0–5 pour décision
+  const tiltAnalytic = calculateTiltScore(state.trades);  // 0–100 pour dashboard
+  const tiltBehav    = computeTiltScore(state.trades);     // 0–5 pour décision
   trade.tiltScore  = tiltAnalytic;
   trade.tiltLevel  = getTiltLevel(tiltAnalytic).level;
   trade.tiltState  = getTiltState(tiltBehav);        // STABLE/WARNING/HIGH_RISK
@@ -2188,7 +2167,7 @@ function buildTradeFromForm(existingId = null){
   trade.setupEvaluationGap = calculateSetupEvaluationGap(trade);
 
   // Smart warning basé sur les stats historiques réelles
-  trade.warning = generateSmartWarning(trade, trades);
+  trade.warning = generateSmartWarning(trade, state.trades);
 
   if(!existingId){
     trade.id        = Date.now();
@@ -2215,7 +2194,7 @@ function detectRisk(trade, closedTrades){
 
   // ── Psychologie ────────────────────────────────────────────
   const badEmotions = {
-    Revenge   : { pts:35, label:'État Revenge — trades pris par réaction émotionnelle',   sev:'high' },
+    Revenge   : { pts:35, label:'État Revenge — state.trades pris par réaction émotionnelle',   sev:'high' },
     FOMO      : { pts:30, label:'État FOMO — entrée précipitée hors confirmation',         sev:'high' },
     Stress    : { pts:20, label:'État Stress — performance dégradée sous pression',       sev:'warn' },
     Fatigue   : { pts:20, label:'État Fatigue — jugement altéré, réflexes lents',         sev:'warn' },
@@ -2236,7 +2215,7 @@ function detectRisk(trade, closedTrades){
     reasons.push({ text:`RR prévu ${rr} — borderline, préférable ≥ 2`, sev:'warn' });
   }
 
-  // ── Comportement récent — 3 derniers trades ────────────────
+  // ── Comportement récent — 3 derniers state.trades ────────────────
   const last3 = closedTrades.slice(0, 3);
   const recentLosses = last3.filter(t => signedR(t) < 0).length;
   if(recentLosses >= 3){
@@ -2244,7 +2223,7 @@ function detectRisk(trade, closedTrades){
     reasons.push({ text:`3 pertes consécutives — stop-loss journée recommandé`, sev:'high' });
   } else if(recentLosses >= 2){
     score += 20;
-    reasons.push({ text:`2 pertes sur les 3 derniers trades — dérive possible`, sev:'warn' });
+    reasons.push({ text:`2 pertes sur les 3 derniers state.trades — dérive possible`, sev:'warn' });
   }
 
   // ── Hors plan ──────────────────────────────────────────────
@@ -2260,15 +2239,15 @@ function detectRisk(trade, closedTrades){
   }
 
   // ── Overtrading aujourd'hui ────────────────────────────────
-  const todayCount = trades.filter(t => t.date === todayISO()).length;
+  const todayCount = state.trades.filter(t => t.date === todayISO()).length;
   if(todayCount >= 5){
     score += 15;
-    reasons.push({ text:`${todayCount} trades aujourd'hui — overtrading détecté`, sev:'warn' });
+    reasons.push({ text:`${todayCount} state.trades aujourd'hui — overtrading détecté`, sev:'warn' });
   }
 
   // ── Setup haute probabilité — signal positif (non bloquant) ─
   if(isHighProbabilitySetup(trade.conf || [])){
-    const rrOpt = getRRRecommendation(trade.setupGrade, USER_STATS);
+    const rrOpt = getRRRecommendation(trade.setupGrade, state.USER_STATS);
     if((trade.rrPlan || 0) < rrOpt - 0.2){
       score += 15;
       reasons.push({ text:`Setup haute proba (HTF+MSS+Displ.) — RR ${trade.rrPlan} sous-exploite l'edge (optimal : ${rrOpt}R)`, sev:'warn' });
@@ -2276,8 +2255,8 @@ function detectRisk(trade, closedTrades){
   }
 
   // ── Pattern émotionnel perdant basé sur historique ─────────
-  if(USER_STATS?.emotions?.[trade.emotion]?.total >= 5){
-    const eWR = USER_STATS.emotions[trade.emotion].winrate;
+  if(state.USER_STATS?.emotions?.[trade.emotion]?.total >= 5){
+    const eWR = state.USER_STATS.emotions[trade.emotion].winrate;
     if(eWR < 35){
       score += 20;
       reasons.push({ text:`${trade.emotion} = pattern perdant sur tes données (${eWR.toFixed(0)}% WR)`, sev:'high' });
@@ -2295,7 +2274,7 @@ function detectRisk(trade, closedTrades){
 /**
  * getSetupStats(closedTrades, setupGrade)
  * Stats de performance réelle pour un grade de setup.
- * Requiert ≥ 5 trades pour être significatif.
+ * Requiert ≥ 5 state.trades pour être significatif.
  */
 function getSetupStats(closedTrades, setupGrade){
   const filtered = closedTrades.filter(t =>
@@ -2315,7 +2294,7 @@ function getSetupStats(closedTrades, setupGrade){
 /**
  * getEmotionStats(closedTrades, emotion)
  * Stats de performance par état émotionnel.
- * Requiert ≥ 5 trades pour être significatif.
+ * Requiert ≥ 5 state.trades pour être significatif.
  */
 function getEmotionStats(closedTrades, emotion){
   if(!emotion) return null;
@@ -2345,7 +2324,7 @@ function buildInterceptorStats(closedTrades, grade, emotion){
       { label:'Expectancy',     val: rFmt(st.exp),             color: st.exp >= 0  ? 'var(--win)' : 'var(--loss)' },
       { label:'R moyen',        val: rFmt(st.avgR),            color: st.avgR >= 0 ? 'var(--win)' : 'var(--loss)' },
     ];
-    if(st.maxL >= 2) globalRows.push({ label:'Série pertes max', val: st.maxL + ' trades', color:'var(--loss)' });
+    if(st.maxL >= 2) globalRows.push({ label:'Série pertes max', val: st.maxL + ' state.trades', color:'var(--loss)' });
     sections.push({ title: 'Performances globales', rows: globalRows });
   }
 
@@ -2354,7 +2333,7 @@ function buildInterceptorStats(closedTrades, grade, emotion){
     const ss = getSetupStats(closedTrades, grade);
     if(ss){
       const setupRows = [
-        { label:`Trades setup ${grade}`, val: ss.count + ' trades',          color:'var(--t2)' },
+        { label:`Trades setup ${grade}`, val: ss.count + ' state.trades',          color:'var(--t2)' },
         { label:'Winrate',               val: ss.winRate + '%',               color: ss.winRate >= 50 ? 'var(--win)' : 'var(--loss)' },
         { label:'R moyen',               val: rFmt(ss.avgR),                   color: ss.avgR >= 0     ? 'var(--win)' : 'var(--loss)' },
       ];
@@ -2367,7 +2346,7 @@ function buildInterceptorStats(closedTrades, grade, emotion){
     const es = getEmotionStats(closedTrades, emotion);
     if(es){
       const emotRows = [
-        { label:`Trades en ${emotion}`, val: es.count + ' trades',           color:'var(--t2)' },
+        { label:`Trades en ${emotion}`, val: es.count + ' state.trades',           color:'var(--t2)' },
         { label:'Winrate',              val: es.winRate + '%',                color: es.winRate >= 50 ? 'var(--win)' : 'var(--loss)' },
         { label:'R moyen',              val: rFmt(es.avgR),                    color: es.avgR >= 0     ? 'var(--win)' : 'var(--loss)' },
       ];
@@ -2451,7 +2430,7 @@ function showInterceptor(riskData, statsData, tiltData = null){
                 <span class="interceptor-stat-val" style="color:${s.color}">${s.val}</span>
               </div>`).join('')}
           </div>`).join('')
-      : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore assez de données (min. 5 trades).</div>`;
+      : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas encore assez de données (min. 5 state.trades).</div>`;
 
     const proceedLabel = level === 'warning' ? '→ Continuer' : '→ Confirmer';
 
@@ -2575,16 +2554,16 @@ function shouldTrigger(grade, coverage, rr, riskScore, tiltState, conf = [], emo
   if(tiltState === 'HIGH_RISK') return true;
 
   // ── Pattern émotionnel perdant récurrent ──────────────────
-  // Déclenche uniquement si historique suffisant (≥8 trades) ET WR < 35%
-  if(emotion && USER_STATS?.emotions?.[emotion]){
-    const es = USER_STATS.emotions[emotion];
+  // Déclenche uniquement si historique suffisant (≥8 state.trades) ET WR < 35%
+  if(emotion && state.USER_STATS?.emotions?.[emotion]){
+    const es = state.USER_STATS.emotions[emotion];
     if(es.total >= 8 && es.winrate < 35) return true;
   }
 
   // ── Grade récurrément perdant ─────────────────────────────
-  // Uniquement si ≥10 trades sur ce grade ET R moyen négatif
-  if(grade && USER_STATS?.grades?.[grade]){
-    const gs = USER_STATS.grades[grade];
+  // Uniquement si ≥10 state.trades sur ce grade ET R moyen négatif
+  if(grade && state.USER_STATS?.grades?.[grade]){
+    const gs = state.USER_STATS.grades[grade];
     if(gs.total >= 10 && gs.avgR < -0.2) return true;
   }
 
@@ -2600,12 +2579,12 @@ function shouldTrigger(grade, coverage, rr, riskScore, tiltState, conf = [], emo
 ============================================================ */
 
 /**
- * computeSetupPerfByType(trades, setup)
+ * computeSetupPerfByType(state.trades, setup)
  * Stats de performance réelle pour un type de setup (t.setup).
- * Retourne { count, totalR } ou null si < 5 trades.
+ * Retourne { count, totalR } ou null si < 5 state.trades.
  */
-function computeSetupPerfByType(trades, setup){
-  const filtered = trades.filter(t =>
+function computeSetupPerfByType(state.trades, setup){
+  const filtered = state.trades.filter(t =>
     t.setup === setup &&
     t.status === 'closed' &&
     t.rrReal != null
@@ -2616,12 +2595,12 @@ function computeSetupPerfByType(trades, setup){
 }
 
 /**
- * computePnLWithoutSetup(trades, setup)
+ * computePnLWithoutSetup(state.trades, setup)
  * Calcule le PnL total avec vs sans ce type de setup.
- * Retourne { with, without } ou null si < 5 trades fermés.
+ * Retourne { with, without } ou null si < 5 state.trades fermés.
  */
-function computePnLWithoutSetup(trades, setup){
-  const closedTrades = trades.filter(t =>
+function computePnLWithoutSetup(state.trades, setup){
+  const closedTrades = state.trades.filter(t =>
     t.status === 'closed' &&
     t.rrReal != null
   );
@@ -2681,14 +2660,14 @@ async function validateTradeBeforeSubmit(trade){
 
   // ── Performance réelle du setup (données utilisateur) ───────
   if(trade.setup){
-    const setupPerf = computeSetupPerfByType(trades, trade.setup);
-    const impact    = computePnLWithoutSetup(trades, trade.setup);
+    const setupPerf = computeSetupPerfByType(state.trades, trade.setup);
+    const impact    = computePnLWithoutSetup(state.trades, trade.setup);
 
     if(setupPerf){
       if(setupPerf.totalR < 0){
         const targetList = highReasons.length > 0 ? highReasons : medReasons;
         targetList.push({
-          text: `-${Math.abs(setupPerf.totalR).toFixed(1)}R sur ${setupPerf.count} trades avec ce setup`,
+          text: `-${Math.abs(setupPerf.totalR).toFixed(1)}R sur ${setupPerf.count} state.trades avec ce setup`,
           sev : 'warn',
         });
       }
@@ -2827,7 +2806,7 @@ function _afResetIgnored()  { _afSave({ignored:0}); }
  */
 function getRecentMistakeImpact(type, limit = 5) {
   const [key, val] = type.split(':');
-  const closed = trades.filter(t => {
+  const closed = state.trades.filter(t => {
     if(t.status !== 'closed' || !t.result) return false;
     if(key === 'emotion') return (t.emotion === val || t.emotionEntry === val);
     if(key === 'grade')   return t.setupGrade === val;
@@ -2854,7 +2833,7 @@ function _afAnalyze(emotion, grade, plan) {
 
   // ── 1. Accumulation d'alertes ignorées ──────────────────────
   if(ignored >= 3) {
-    const recent = trades.filter(t=>t.status==='closed').slice(0,5);
+    const recent = state.trades.filter(t=>t.status==='closed').slice(0,5);
     const tR     = parseFloat(recent.reduce((s,t)=>s+signedR(t),0).toFixed(2));
     triggers.push({ type:'accumulation', priority:4, ignored, totalR:tR, count:recent.length });
   }
@@ -2931,7 +2910,7 @@ function showAntifragilePanel(trigger) {
 
     if(trigger.type === 'accumulation') {
       title    = `${trigger.ignored} alertes ignorées`;
-      subtitle = `${trigger.count} derniers trades · résultat cumulé`;
+      subtitle = `${trigger.count} derniers state.trades · résultat cumulé`;
       rows = [
         { text:`Résultat cumulé : ${rFmt(trigger.totalR)}`, hl: trigger.totalR < 0 },
         { text:'Tu continues malgré les signaux répétés.', hl: false },
@@ -2940,7 +2919,7 @@ function showAntifragilePanel(trigger) {
     } else if(trigger.type === 'emotion') {
       const {emotion,impact:i} = trigger;
       title    = `${emotion} détecté`;
-      subtitle = `${i.totalTrades} derniers trades en état ${emotion}`;
+      subtitle = `${i.totalTrades} derniers state.trades en état ${emotion}`;
       rows = [
         { text:`Winrate : ${i.winrate}%`,    hl: i.winrate < 45 },
         { text:`Total : ${rFmt(i.totalR)}`,  hl: i.totalR < 0  },
@@ -2950,7 +2929,7 @@ function showAntifragilePanel(trigger) {
     } else if(trigger.type === 'grade') {
       const {grade,impact:i} = trigger;
       title    = `Setup ${grade} — edge faible`;
-      subtitle = `${i.totalTrades} derniers trades en grade ${grade}`;
+      subtitle = `${i.totalTrades} derniers state.trades en grade ${grade}`;
       rows = [
         { text:`Winrate : ${i.winrate}%`,   hl: i.winrate < 45 },
         { text:`Total : ${rFmt(i.totalR)}`, hl: i.totalR < 0   },
@@ -2959,7 +2938,7 @@ function showAntifragilePanel(trigger) {
     } else if(trigger.type === 'plan') {
       const {impact:i} = trigger;
       title    = 'Trade hors plan';
-      subtitle = `${i.totalTrades} derniers trades hors plan`;
+      subtitle = `${i.totalTrades} derniers state.trades hors plan`;
       rows = [
         { text:`Winrate : ${i.winrate}%`,   hl: i.winrate < 45 },
         { text:`Total : ${rFmt(i.totalR)}`, hl: i.totalR < 0   },
@@ -2967,7 +2946,7 @@ function showAntifragilePanel(trigger) {
     } else if(isPositive) {
       const {emotion,grade,impact:i} = trigger;
       title    = 'Pattern aligné';
-      subtitle = `${i.totalTrades} trades · ${emotion} · Grade ${grade}`;
+      subtitle = `${i.totalTrades} state.trades · ${emotion} · Grade ${grade}`;
       rows = [
         { text:`Winrate : ${i.winrate}%`,   hl:false, pos:true },
         { text:`R moyen : ${rFmt(i.avgR)}`, hl:false, pos:true },
@@ -3041,7 +3020,7 @@ $('btn-submit').addEventListener('click', async () => {
   let _overrideReason = null;
 
   // ── ANTIFRAGILE — confrontation comportementale pre-trade ──
-  if(formMode === 'create'){
+  if(state.formMode === 'create'){
     const _afConf    = getConfluences();
     const _afRR      = parseFloat($('f-rr-plan').value) || 0;
     const { setupGrade: _afGrade } = calculateSetupScore({ conf:_afConf, rrPlan:_afRR });
@@ -3057,8 +3036,8 @@ $('btn-submit').addEventListener('click', async () => {
   }
 
   // ── PRE-TRADE INTERCEPTOR + TILT — un seul modal, zéro confirm() ──
-  if(formMode === 'create' && isTiltReady()){
-    const closedTrades = trades.filter(t => t.status === 'closed');
+  if(state.formMode === 'create' && isTiltReady()){
+    const closedTrades = state.trades.filter(t => t.status === 'closed');
 
     const partialTrade = {
       emotion   : getToggleVal('emotion'),
@@ -3071,10 +3050,10 @@ $('btn-submit').addEventListener('click', async () => {
 
     const riskData  = detectRisk(partialTrade, closedTrades);
     riskData._grade = setupGrade;
-    const tiltNow   = computeTiltScore(trades);
+    const tiltNow   = computeTiltScore(state.trades);
     const tiltState = getTiltState(tiltNow);
     const tiltData  = tiltState !== 'STABLE'
-      ? { state: tiltState, message: getTiltMessage(tiltNow, trades) }
+      ? { state: tiltState, message: getTiltMessage(tiltNow, state.trades) }
       : null;
 
     // Trigger unifié — structure + grade + RR + risque + tilt
@@ -3093,25 +3072,25 @@ $('btn-submit').addEventListener('click', async () => {
     }
   }
 
-  if(formMode === 'create'){
+  if(state.formMode === 'create'){
     const trade = buildTradeFromForm();
     if(!trade) return;
     if(_overrideReason) trade.overrideReason = _overrideReason;
     const gateApproved = await validateTradeBeforeSubmit(trade);
     if(!gateApproved) return;
-    trades.unshift(trade);
+    state.trades.unshift(trade);
     saveTrades();
     updateMiniStats();
     updatePeriodSelectors();
     resetForm();
-    showToast('Trade #' + trades.length + ' enregistré');
+    showToast('Trade #' + state.trades.length + ' enregistré');
   } else {
-    const fields = buildTradeFromForm(editingTradeId);
+    const fields = buildTradeFromForm(state.editingTradeId);
     if(!fields) return;
-    if(!updateTrade(editingTradeId, fields)){
+    if(!updateTrade(state.editingTradeId, fields)){
       showToast('Erreur : trade introuvable'); return;
     }
-    const msg = formMode === 'close' ? 'Trade clôturé' : 'Trade mis à jour';
+    const msg = state.formMode === 'close' ? 'Trade clôturé' : 'Trade mis à jour';
     exitEditMode();
     updateMiniStats();
     updatePeriodSelectors();
@@ -3125,16 +3104,15 @@ $('btn-submit').addEventListener('click', async () => {
 ============================================================ */
 
 /* Références des 3 charts calibration */
-let _cCalBar = null, _cCalScatter = null, _cCalEquity = null;
 
 function destroyCalibrationCharts(){
-  [_cCalBar, _cCalScatter, _cCalEquity].forEach(c => { if(c){ c.destroy(); } });
-  _cCalBar = null; _cCalScatter = null; _cCalEquity = null;
+  [state.cCalBar, state.cCalScatter, state.cCalEquity].forEach(c => { if(c){ c.destroy(); } });
+  state.cCalBar = null; state.cCalScatter = null; state.cCalEquity = null;
 }
 
 /**
  * Calcule les stats par catégorie de calibration.
- * Entrée : array de trades clôturés avec quality + setupGrade + setupEvaluationGap.
+ * Entrée : array de state.trades clôturés avec quality + setupGrade + setupEvaluationGap.
  */
 function calculateCalibrationStats(calTrades){
   const groups = { aligned:[], overestimated:[], underestimated:[] };
@@ -3151,7 +3129,7 @@ function calculateCalibrationStats(calTrades){
     const avgP = pnls.length ? pnls.reduce((a,b)=>a+b,0)/pnls.length : null;
     const decisive = set.filter(t => t.result === 'Win' || t.result === 'Loss').length;
     const wr   = decisive === 0 ? 0 : set.filter(t=>t.result==='Win').length / decisive * 100;
-    return { n: set.length, avgR, avgP, wr, trades: set };
+    return { n: set.length, avgR, avgP, wr, state.trades: set };
   };
 
   return {
@@ -3199,14 +3177,14 @@ function generateCalibrationInsights(calStats, filtered){
   const domIsPositive = dominant.avgR > 0.05;
   const domIsNegative = dominant.avgR < -0.1;
 
-  let domText = `<strong>Ta catégorie la plus fréquente : setups ${dominant.label} (${domPct}%, ${dominant.n} trades · R moyen ${rFmt(dominant.avgR)}).</strong> `;
+  let domText = `<strong>Ta catégorie la plus fréquente : setups ${dominant.label} (${domPct}%, ${dominant.n} state.trades · R moyen ${rFmt(dominant.avgR)}).</strong> `;
 
   if(dominant.key === 'underestimated' && domIsPositive)
-    domText += `Ces trades sont positifs mais potentiellement sous-exploités — manque de conviction ou prudence excessive sur des setups objectivement solides.`;
+    domText += `Ces state.trades sont positifs mais potentiellement sous-exploités — manque de conviction ou prudence excessive sur des setups objectivement solides.`;
   else if(dominant.key === 'underestimated' && domIsNegative)
-    domText += `Malgré la fréquence, ces trades sont négatifs : le scoring calcule mieux la réalité que ton instinct ici.`;
+    domText += `Malgré la fréquence, ces state.trades sont négatifs : le scoring calcule mieux la réalité que ton instinct ici.`;
   else if(dominant.key === 'overestimated' && domIsNegative)
-    domText += `Signal d'alerte : tu trades trop souvent des setups que le scoring ne valide pas, avec un impact négatif. Filtrer en priorité.`;
+    domText += `Signal d'alerte : tu state.trades trop souvent des setups que le scoring ne valide pas, avec un impact négatif. Filtrer en priorité.`;
   else if(dominant.key === 'overestimated' && domIsPositive)
     domText += `L'impact reste positif sur cette période, mais surveille la tendance — la surévaluation peut créer un biais de confiance à terme.`;
   else if(dominant.key === 'aligned' && domIsPositive)
@@ -3222,13 +3200,13 @@ function generateCalibrationInsights(calStats, filtered){
   const mostDestruct = withR.length ? withR.reduce((a,b) => b.avgR < a.avgR ? b : a) : null;
   if(mostDestruct && mostDestruct.avgR < -0.1 && mostDestruct.key !== dominant.key){
     const dPct = pct(mostDestruct.n);
-    let leakText = `<strong>Leak prioritaire : setups ${mostDestruct.label} (${dPct}%, ${mostDestruct.n} trades · R moyen ${rFmt(mostDestruct.avgR)}).</strong> `;
+    let leakText = `<strong>Leak prioritaire : setups ${mostDestruct.label} (${dPct}%, ${mostDestruct.n} state.trades · R moyen ${rFmt(mostDestruct.avgR)}).</strong> `;
     if(mostDestruct.key === 'overestimated')
-      leakText += `Quand perception > scoring, les résultats sont négatifs. Ces trades doivent être filtrés ou tradés en taille réduite.`;
+      leakText += `Quand perception > scoring, les résultats sont négatifs. Ces state.trades doivent être filtrés ou tradés en taille réduite.`;
     else if(mostDestruct.key === 'underestimated')
-      leakText += `Tu entres sur des setups que toi-même tu juges insuffisants — l'instinct te freine mais tu trades quand même.`;
+      leakText += `Tu entres sur des setups que toi-même tu juges insuffisants — l'instinct te freine mais tu state.trades quand même.`;
     else
-      leakText += `Même alignés, ces trades détruisent de la valeur — revoir les critères de confluence.`;
+      leakText += `Même alignés, ces state.trades détruisent de la valeur — revoir les critères de confluence.`;
     insightItems.push({ color: 'var(--loss)', text: leakText });
     if(mostDestruct.key === 'overestimated')
       rules.push({ color:'var(--loss)', icon:'!', text:'Si qualité perçue > qualité calculée : trade interdit ou taille ×0.5.' });
@@ -3246,16 +3224,16 @@ function generateCalibrationInsights(calStats, filtered){
   const mostProfit = withR.length ? withR.reduce((a,b) => b.avgR > a.avgR ? b : a) : null;
   if(mostProfit && mostProfit.avgR > 0.1){
     const prPct = pct(mostProfit.n);
-    let profitText = `<strong>Meilleure performance : setups ${mostProfit.label} (${prPct}%, ${mostProfit.n} trades · R moyen ${rFmt(mostProfit.avgR)}).</strong> `;
+    let profitText = `<strong>Meilleure performance : setups ${mostProfit.label} (${prPct}%, ${mostProfit.n} state.trades · R moyen ${rFmt(mostProfit.avgR)}).</strong> `;
     if(mostProfit.key === 'aligned')
       profitText += `Quand perception et scoring sont cohérents, tes résultats sont nettement supérieurs. Ce pattern est à reproduire systématiquement.`;
     else if(mostProfit.key === 'underestimated')
-      profitText += `Tes meilleurs trades sont ceux que tu sous-estimes. Travailler la conviction et le sizing sur ces setups — tu pourrais en extraire bien plus.`;
+      profitText += `Tes meilleurs state.trades sont ceux que tu sous-estimes. Travailler la conviction et le sizing sur ces setups — tu pourrais en extraire bien plus.`;
     else if(mostProfit.key === 'overestimated')
       profitText += `Tes surévaluations restent positives sur cette période — surveille si c'est structurel ou un effet statistique court terme.`;
     insightItems.push({ color: mostProfit.color, text: profitText });
     if(mostProfit.key === 'aligned')
-      rules.push({ color:'var(--win)', icon:'·', text:'Priorité absolue aux trades où perception et scoring sont alignés.' });
+      rules.push({ color:'var(--win)', icon:'·', text:'Priorité absolue aux state.trades où perception et scoring sont alignés.' });
     else if(mostProfit.key === 'underestimated')
       rules.push({ color:'var(--blue)', icon:'↑', text:'Sur les sous-évalués positifs : travailler la conviction et le sizing progressif.' });
   }
@@ -3273,7 +3251,7 @@ function generateCalibrationInsights(calStats, filtered){
       const lossPct = Math.round(lowPsycho.filter(t => t.result === 'Loss').length / lowPsycho.length * 100);
       insightItems.push({
         color: rLow < 0 ? 'var(--loss)' : 'var(--be)',
-        text : `<strong>Score mental < 50 : ${lowPsycho.length} trades, R moyen ${rFmt(rLow)}</strong>` +
+        text : `<strong>Score mental < 50 : ${lowPsycho.length} state.trades, R moyen ${rFmt(rLow)}</strong>` +
           (rHigh !== null ? ` vs ${rFmt(rHigh)} quand score ≥ 65.` : '.') +
           (rLow < 0
             ? ` L'état mental influence directement la performance — ${lossPct}% de pertes dans cet état.`
@@ -3352,7 +3330,7 @@ function renderCalibrationCharts(filtered){
     const nValues  = cats.map(c => calStats[c.key]?.n || 0);
     const pnlVals  = cats.map(c => calStats[c.key]?.avgP != null ? parseFloat(calStats[c.key].avgP.toFixed(0)) : null);
 
-    _cCalBar = new Chart($('chart-cal-bar'), {
+    state.cCalBar = new Chart($('chart-cal-bar'), {
       type:'bar',
       data:{
         labels,
@@ -3406,7 +3384,7 @@ function renderCalibrationCharts(filtered){
       color: emotColors[t.emotion] || 'rgba(107,114,128,.6)',
     }));
 
-    _cCalScatter = new Chart($('chart-cal-scatter'), {
+    state.cCalScatter = new Chart($('chart-cal-scatter'), {
       type:'scatter',
       data:{
         datasets:[{
@@ -3454,7 +3432,7 @@ function renderCalibrationCharts(filtered){
 
   /* ── Chart 3 : Multi-line equity par calibration ───────────────────────── */
   if(calTrades.length >= 2){
-    // Ordonner tous les trades clôturés chronologiquement
+    // Ordonner tous les state.trades clôturés chronologiquement
     const chrono = sortedByDateTime(filtered, true);
 
     const buildEquity = (set) => {
@@ -3487,7 +3465,7 @@ function renderCalibrationCharts(filtered){
       { label:'Sous-éval.', data:buildEquity(underSet),    borderColor:C.accent.line, fill:false, borderWidth:2, pointRadius:0, tension:.3, _glowColor:C.accent.glow, _glowBlur:8 },
     ].filter(d => d.data.length > 0);
 
-    _cCalEquity = new Chart($('chart-cal-equity'), {
+    state.cCalEquity = new Chart($('chart-cal-equity'), {
       type:'line',
       data:{ labels: globalLabels, datasets },
       options:{
@@ -3514,8 +3492,6 @@ function renderCalibrationCharts(filtered){
 /* ============================================================
    TILT DASHBOARD — Corrélation tilt vs performance
 ============================================================ */
-let _chartTiltScatter = null;
-
 function renderTiltDashboard(filtered){
   // Trades clôturés avec tiltScore enregistré
   const withTilt = filtered.filter(t => t.tiltScore != null && t.result);
@@ -3570,7 +3546,7 @@ function renderTiltDashboard(filtered){
   }).join('');
 
   // Scatter tilt score vs R réel
-  if(_chartTiltScatter){ _chartTiltScatter.destroy(); _chartTiltScatter = null; }
+  if(state.chartTiltScatter){ state.chartTiltScatter.destroy(); state.chartTiltScatter = null; }
   const scatterEl = $('chart-tilt-scatter');
   if(scatterEl && withTilt.length >= 3){
     const points = withTilt.map(t => ({
@@ -3582,7 +3558,7 @@ function renderTiltDashboard(filtered){
             t.tiltScore >= 30 ? 'rgba(184,146,58,.75)'  :
                                 'rgba(90,158,122,.75)',
     }));
-    _chartTiltScatter = new Chart(scatterEl, {
+    state.chartTiltScatter = new Chart(scatterEl, {
       type:'scatter',
       data:{ datasets:[{
         label:'Trades', data:points,
@@ -3631,13 +3607,13 @@ function renderTiltDashboard(filtered){
 
 /* ============================================================
    EDGE DETECTION — Setups profitables vs à éviter
-   Basé uniquement sur trades clôturés, ≥ 5 par grade.
+   Basé uniquement sur state.trades clôturés, ≥ 5 par grade.
 ============================================================ */
 
 /**
  * computeSetupPerformance(closedTrades)
- * Groupe les trades par setupGrade, calcule les stats.
- * Ignore les grades avec < 5 trades.
+ * Groupe les state.trades par setupGrade, calcule les stats.
+ * Ignore les grades avec < 5 state.trades.
  */
 function computeSetupPerformance(closedTrades){
   const groups = {};
@@ -3694,12 +3670,12 @@ function generateEdgeInsights(closedTrades){
  * Affiche le panel edge detection dans le dashboard.
  */
 /**
- * computeEmotionShiftStats(trades)
+ * computeEmotionShiftStats(state.trades)
  * Analyse l'impact de l'évolution émotionnelle (entrée→sortie) sur le R réel.
- * Requiert emotionEntry + emotionExit + rrReal sur au moins 5 trades clôturés.
+ * Requiert emotionEntry + emotionExit + rrReal sur au moins 5 state.trades clôturés.
  */
-function computeEmotionShiftStats(trades){
-  const closed = trades.filter(t =>
+function computeEmotionShiftStats(state.trades){
+  const closed = state.trades.filter(t =>
     t.status === 'closed' &&
     t.emotionEntry &&
     t.emotionExit &&
@@ -3854,7 +3830,7 @@ function renderEdgeInsights(filtered){
         <span class="badge ${gradeBadgeMap[e.grade]||''}">${e.grade}</span>
         <span style="font-family:var(--mono);font-size:.68rem;color:${color};font-weight:700">${e.winRate}% WR</span>
         <span style="font-family:var(--mono);font-size:.68rem;color:${color}">${rFmt(e.avgR)}</span>
-        <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-left:auto">${e.count} trades</span>
+        <span style="font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-left:auto">${e.count} state.trades</span>
       </div>`;
   };
 
@@ -3879,7 +3855,7 @@ function renderEdgeInsights(filtered){
     : `<div style="font-family:var(--mono);font-size:.65rem;color:var(--t4)">Pas de setup à éviter identifié.</div>`;
 
   $('edge-all-tbody').innerHTML = allHTML ||
-    `<tr><td colspan="4" style="text-align:center;color:var(--t4)">Minimum 5 trades par grade requis.</td></tr>`;
+    `<tr><td colspan="4" style="text-align:center;color:var(--t4)">Minimum 5 state.trades par grade requis.</td></tr>`;
 }
 
 
@@ -3966,8 +3942,8 @@ function calcStats(tradeSet){
    MINI STATS (page log)
 ============================================================ */
 function updateMiniStats(){
-  const closedTrades = trades.filter(t => t.status === 'closed');
-  const openCount    = trades.filter(t => t.status === 'open').length;
+  const closedTrades = state.trades.filter(t => t.status === 'closed');
+  const openCount    = state.trades.filter(t => t.status === 'open').length;
   const st = calcStats(closedTrades);
   if(!st){
     $('s-total').textContent    = '0';
@@ -4010,7 +3986,7 @@ function renderHistory(){
   const filterStatus = $('f-filter-status').value;
   const filterGrade  = $('f-filter-grade').value;
 
-  let filtered = trades.filter(t => {
+  let filtered = state.trades.filter(t => {
     if(filterResult && t.result !== filterResult) return false;
     if(filterAsset  && t.asset  !== filterAsset)  return false;
     if(filterType   && t.type   !== filterType)   return false;
@@ -4022,17 +3998,17 @@ function renderHistory(){
     return true;
   });
 
-  filtered = sortedByDateTime(filtered, historySortAsc);
+  filtered = sortedByDateTime(filtered, state.historySortAsc);
 
   $('hist-count').textContent = filtered.length + ' trade' + (filtered.length !== 1 ? 's' : '');
 
   const sortBtn = $('btn-sort-dir');
   if(sortBtn){
-    sortBtn.textContent = historySortAsc ? '↑ Ancien → Récent' : '↓ Récent → Ancien';
-    sortBtn.classList.toggle('sort-asc', historySortAsc);
+    sortBtn.textContent = state.historySortAsc ? '↑ Ancien → Récent' : '↓ Récent → Ancien';
+    sortBtn.classList.toggle('sort-asc', state.historySortAsc);
   }
 
-  const assets = [...new Set(trades.map(t => t.asset).filter(Boolean))];
+  const assets = [...new Set(state.trades.map(t => t.asset).filter(Boolean))];
   const sel = $('f-filter-asset');
   const cur = sel.value;
   sel.innerHTML = '<option value="">Tous actifs</option>' +
@@ -4150,13 +4126,13 @@ function renderHistory(){
 
   $$('.btn-edit').forEach(btn => {
     btn.addEventListener('click', function(){
-      const t = trades.find(x => Number(x.id) === Number(this.dataset.id));
+      const t = state.trades.find(x => Number(x.id) === Number(this.dataset.id));
       if(t) enterEditMode(t, 'edit');
     });
   });
   $$('.btn-close-trade').forEach(btn => {
     btn.addEventListener('click', function(){
-      const t = trades.find(x => Number(x.id) === Number(this.dataset.id));
+      const t = state.trades.find(x => Number(x.id) === Number(this.dataset.id));
       if(t) enterEditMode(t, 'close');
     });
   });
@@ -4169,7 +4145,7 @@ function renderHistory(){
   $(id).addEventListener('change', renderHistory);
 });
 $('btn-sort-dir').addEventListener('click', function(){
-  historySortAsc = !historySortAsc;
+  state.historySortAsc = !state.historySortAsc;
   renderHistory();
 });
 
@@ -4177,11 +4153,11 @@ $('btn-sort-dir').addEventListener('click', function(){
    EXPORT CSV
 ============================================================ */
 $('btn-export-csv').addEventListener('click', () => {
-  if(!trades.length){ showToast('Aucun trade à exporter'); return; }
+  if(!state.trades.length){ showToast('Aucun trade à exporter'); return; }
   const headers = ['Date','Heure','Actif','Type','Direction','Setup','Qualité','SetupGrade','SetupScore',
                    'RR Prévu','Risque%','Statut','Résultat','RR Réel','R signé','PnL',
                    'Plan','Émotion entrée','Émotion sortie','Psycho%','Confluences','Note','Override Reason'];
-  const rows = trades.map(t => [
+  const rows = state.trades.map(t => [
     t.date, t.time, t.asset, t.type, t.dir, t.setup, t.quality, t.setupGrade, t.setupScore,
     t.rrPlan, t.risk, t.status, t.result, t.rrReal, signedR(t).toFixed(2), t.pnl,
     t.plan, t.emotionEntry||t.emotion, t.emotionExit||'', t.psycho,
@@ -4196,14 +4172,14 @@ $('btn-export-csv').addEventListener('click', () => {
 });
 
 $('btn-export-json').addEventListener('click', () => {
-  if(!trades.length){ showToast('Aucun trade à exporter'); return; }
-  const data = { version:2, exportedAt:new Date().toISOString(), count:trades.length, trades };
+  if(!state.trades.length){ showToast('Aucun trade à exporter'); return; }
+  const data = { version:2, exportedAt:new Date().toISOString(), count:state.trades.length, state.trades };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'trading-journal-backup-'+todayISO()+'.json';
   a.click();
-  showToast('Backup JSON exporté ('+trades.length+' trades)');
+  showToast('Backup JSON exporté ('+state.trades.length+' state.trades)');
 });
 
 $('btn-import-json').addEventListener('click', () => {
@@ -4217,21 +4193,21 @@ $('file-import-json').addEventListener('change', function(){
   reader.onload = async e => {
     try{
       const raw = JSON.parse(e.target.result);
-      let imp = Array.isArray(raw) ? raw : raw.trades;
+      let imp = Array.isArray(raw) ? raw : raw.state.trades;
       if(!imp||!imp.length){ showToast('Fichier vide ou invalide'); return; }
       const ok = await showConfirmModal(
         `Importer ${imp.length} trade(s) ? Un backup sera créé. Cette action REMPLACE l'historique actuel.`,
         'Importer', true
       );
       if(!ok) return;
-      localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(trades));
-      trades = imp;
+      localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(state.trades));
+      state.trades = imp;
       saveTrades();
       migrateTradesData();
       updateMiniStats();
       updatePeriodSelectors();
       renderHistory();
-      showToast(`Import OK — ${trades.length} trades chargés`, 3000);
+      showToast(`Import OK — ${state.trades.length} state.trades chargés`, 3000);
     } catch(err){ showToast('Fichier JSON invalide'); }
   };
   reader.readAsText(this.files[0]);
@@ -4258,21 +4234,21 @@ $('btn-restore-backup').addEventListener('click', async () => {
   const idx = parseInt(choice)-1;
   if(isNaN(idx)||idx<0||idx>=backups.length){ showToast('Numéro invalide'); return; }
   const ok = await showConfirmModal(
-    `Restaurer ce backup (${backups[idx].count} trades) ? L'état actuel sera sauvegardé d'abord.`,
+    `Restaurer ce backup (${backups[idx].count} state.trades) ? L'état actuel sera sauvegardé d'abord.`,
     'Restaurer', false
   );
   if(!ok) return;
-  localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(trades));
-  trades = backups[idx].data;
+  localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(state.trades));
+  state.trades = backups[idx].data;
   saveTrades(); migrateTradesData(); updateMiniStats(); updatePeriodSelectors(); renderHistory();
-  showToast(`Backup restauré — ${trades.length} trades`, 3000);
+  showToast(`Backup restauré — ${state.trades.length} state.trades`, 3000);
 });
 
 $('btn-clear-all').addEventListener('click', async () => {
-  const ok = await showConfirmModal('Effacer TOUS les trades ? Un backup sera créé.', 'Effacer', true);
+  const ok = await showConfirmModal('Effacer TOUS les state.trades ? Un backup sera créé.', 'Effacer', true);
   if(!ok) return;
-  localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(trades));
-  trades = []; saveTrades(); updateMiniStats(); updatePeriodSelectors(); renderHistory();
+  localStorage.setItem('backup_trades_before_migration_'+Date.now(), JSON.stringify(state.trades));
+  state.trades = []; saveTrades(); updateMiniStats(); updatePeriodSelectors(); renderHistory();
   showToast('Historique effacé (backup créé)');
 });
 
@@ -4283,14 +4259,14 @@ function updatePeriodSelectors(){
   const mSel = $('period-month-sel');
   const ySel = $('period-year-sel');
   if(!mSel||!ySel) return;
-  const months = [...new Set(trades.map(t=>t.date?t.date.slice(0,7):null).filter(Boolean))].sort().reverse();
-  const years  = [...new Set(trades.map(t=>t.date?t.date.slice(0,4):null).filter(Boolean))].sort().reverse();
+  const months = [...new Set(state.trades.map(t=>t.date?t.date.slice(0,7):null).filter(Boolean))].sort().reverse();
+  const years  = [...new Set(state.trades.map(t=>t.date?t.date.slice(0,4):null).filter(Boolean))].sort().reverse();
   mSel.innerHTML = '<option value="">Mois...</option>' + months.map(m=>{
     const [y,mo] = m.split('-');
-    return `<option value="${m}"${m===periodMonthSel?' selected':''}>${MONTH_FR[parseInt(mo)-1]} ${y}</option>`;
+    return `<option value="${m}"${m===state.periodMonthSel?' selected':''}>${MONTH_FR[parseInt(mo)-1]} ${y}</option>`;
   }).join('');
   ySel.innerHTML = '<option value="">Année...</option>' + years.map(y=>
-    `<option value="${y}"${y===periodYearSel?' selected':''}>${y}</option>`
+    `<option value="${y}"${y===state.periodYearSel?' selected':''}>${y}</option>`
   ).join('');
 }
 
@@ -4299,14 +4275,14 @@ function setPeriodActiveState(){
   const mSel=$('period-month-sel'), ySel=$('period-year-sel');
   const pFrom=$('period-from'), pTo=$('period-to');
   [mSel,ySel,pFrom,pTo].forEach(el=>el&&el.classList.remove('sel-active'));
-  if(periodMode==='preset'){
-    const btn=document.querySelector(`.period-btn[data-period="${periodPreset}"]`);
+  if(state.periodMode==='preset'){
+    const btn=document.querySelector(`.period-btn[data-period="${state.periodPreset}"]`);
     if(btn) btn.classList.add('active');
-  } else if(periodMode==='month'&&mSel) mSel.classList.add('sel-active');
-  else if(periodMode==='year'&&ySel)    ySel.classList.add('sel-active');
-  else if(periodMode==='custom'){
-    if(periodCustomFrom&&pFrom) pFrom.classList.add('sel-active');
-    if(periodCustomTo&&pTo)     pTo.classList.add('sel-active');
+  } else if(state.periodMode==='month'&&mSel) mSel.classList.add('sel-active');
+  else if(state.periodMode==='year'&&ySel)    ySel.classList.add('sel-active');
+  else if(state.periodMode==='custom'){
+    if(state.periodCustomFrom&&pFrom) pFrom.classList.add('sel-active');
+    if(state.periodCustomTo&&pTo)     pTo.classList.add('sel-active');
   }
 }
 
@@ -4319,26 +4295,26 @@ function getWeekBounds(){
 
 function filterByActivePeriod(tradeSet){
   if(!tradeSet||!tradeSet.length) return [];
-  if(periodMode==='preset'){
-    if(periodPreset==='all') return tradeSet;
+  if(state.periodMode==='preset'){
+    if(state.periodPreset==='all') return tradeSet;
     const now=new Date();
     return tradeSet.filter(t=>{
       if(!t.date) return false;
       const d=new Date(t.date+'T12:00:00');
-      if(periodPreset==='day')   return t.date===todayISO();
-      if(periodPreset==='week')  { const {from,to}=getWeekBounds(); return d>=from&&d<=to; }
-      if(periodPreset==='month') return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
-      if(periodPreset==='year')  return d.getFullYear()===now.getFullYear();
+      if(state.periodPreset==='day')   return t.date===todayISO();
+      if(state.periodPreset==='week')  { const {from,to}=getWeekBounds(); return d>=from&&d<=to; }
+      if(state.periodPreset==='month') return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+      if(state.periodPreset==='year')  return d.getFullYear()===now.getFullYear();
       return true;
     });
   }
-  if(periodMode==='month') return periodMonthSel?tradeSet.filter(t=>t.date&&t.date.slice(0,7)===periodMonthSel):tradeSet;
-  if(periodMode==='year')  return periodYearSel ?tradeSet.filter(t=>t.date&&t.date.slice(0,4)===periodYearSel) :tradeSet;
-  if(periodMode==='custom'){
+  if(state.periodMode==='month') return state.periodMonthSel?tradeSet.filter(t=>t.date&&t.date.slice(0,7)===state.periodMonthSel):tradeSet;
+  if(state.periodMode==='year')  return state.periodYearSel ?tradeSet.filter(t=>t.date&&t.date.slice(0,4)===state.periodYearSel) :tradeSet;
+  if(state.periodMode==='custom'){
     return tradeSet.filter(t=>{
       if(!t.date) return false;
-      if(periodCustomFrom&&t.date<periodCustomFrom) return false;
-      if(periodCustomTo  &&t.date>periodCustomTo)   return false;
+      if(state.periodCustomFrom&&t.date<state.periodCustomFrom) return false;
+      if(state.periodCustomTo  &&t.date>state.periodCustomTo)   return false;
       return true;
     });
   }
@@ -4346,35 +4322,35 @@ function filterByActivePeriod(tradeSet){
 }
 
 function periodLabel(){
-  if(periodMode==='preset'){ const l={all:'total',day:"aujourd'hui",week:'cette semaine',month:'ce mois',year:'cette année'}; return l[periodPreset]||''; }
-  if(periodMode==='month'&&periodMonthSel){ const [y,mo]=periodMonthSel.split('-'); return MONTH_FR[parseInt(mo)-1]+' '+y; }
-  if(periodMode==='year'&&periodYearSel) return periodYearSel;
-  if(periodMode==='custom') return (periodCustomFrom?fmtDate(periodCustomFrom):'...')+' → '+(periodCustomTo?fmtDate(periodCustomTo):'...');
+  if(state.periodMode==='preset'){ const l={all:'total',day:"aujourd'hui",week:'cette semaine',month:'ce mois',year:'cette année'}; return l[state.periodPreset]||''; }
+  if(state.periodMode==='month'&&state.periodMonthSel){ const [y,mo]=state.periodMonthSel.split('-'); return MONTH_FR[parseInt(mo)-1]+' '+y; }
+  if(state.periodMode==='year'&&state.periodYearSel) return state.periodYearSel;
+  if(state.periodMode==='custom') return (state.periodCustomFrom?fmtDate(state.periodCustomFrom):'...')+' → '+(state.periodCustomTo?fmtDate(state.periodCustomTo):'...');
   return '';
 }
 
 $$('.period-btn').forEach(btn=>{
   btn.addEventListener('click',function(){
-    periodMode='preset'; periodPreset=this.dataset.period;
-    periodMonthSel=''; periodYearSel=''; periodCustomFrom=''; periodCustomTo='';
+    state.periodMode='preset'; state.periodPreset=this.dataset.period;
+    state.periodMonthSel=''; state.periodYearSel=''; state.periodCustomFrom=''; state.periodCustomTo='';
     [$('period-month-sel'),$('period-year-sel'),$('period-from'),$('period-to')].forEach(el=>el&&(el.value=''));
     setPeriodActiveState(); renderDashboard();
   });
 });
 $('period-month-sel').addEventListener('change',function(){
-  if(this.value){ periodMode='month';periodMonthSel=this.value;periodYearSel='';periodCustomFrom='';periodCustomTo='';$('period-year-sel').value='';$('period-from').value='';$('period-to').value=''; }
-  else{ periodMode='preset';periodPreset='all';periodMonthSel=''; }
+  if(this.value){ state.periodMode='month';state.periodMonthSel=this.value;state.periodYearSel='';state.periodCustomFrom='';state.periodCustomTo='';$('period-year-sel').value='';$('period-from').value='';$('period-to').value=''; }
+  else{ state.periodMode='preset';state.periodPreset='all';state.periodMonthSel=''; }
   setPeriodActiveState(); renderDashboard();
 });
 $('period-year-sel').addEventListener('change',function(){
-  if(this.value){ periodMode='year';periodYearSel=this.value;periodMonthSel='';periodCustomFrom='';periodCustomTo='';$('period-month-sel').value='';$('period-from').value='';$('period-to').value=''; }
-  else{ periodMode='preset';periodPreset='all';periodYearSel=''; }
+  if(this.value){ state.periodMode='year';state.periodYearSel=this.value;state.periodMonthSel='';state.periodCustomFrom='';state.periodCustomTo='';$('period-month-sel').value='';$('period-from').value='';$('period-to').value=''; }
+  else{ state.periodMode='preset';state.periodPreset='all';state.periodYearSel=''; }
   setPeriodActiveState(); renderDashboard();
 });
 function onCustomDateChange(){
-  periodCustomFrom=$('period-from').value; periodCustomTo=$('period-to').value;
-  if(!periodCustomFrom&&!periodCustomTo){ periodMode='preset';periodPreset='all'; }
-  else{ periodMode='custom';periodMonthSel='';periodYearSel='';$('period-month-sel').value='';$('period-year-sel').value=''; }
+  state.periodCustomFrom=$('period-from').value; state.periodCustomTo=$('period-to').value;
+  if(!state.periodCustomFrom&&!state.periodCustomTo){ state.periodMode='preset';state.periodPreset='all'; }
+  else{ state.periodMode='custom';state.periodMonthSel='';state.periodYearSel='';$('period-month-sel').value='';$('period-year-sel').value=''; }
   setPeriodActiveState(); renderDashboard();
 }
 $('period-from').addEventListener('change',onCustomDateChange);
@@ -4383,7 +4359,6 @@ $('period-to').addEventListener('change',onCustomDateChange);
 /* ============================================================
    GRAPHIQUES — variables globales
 ============================================================ */
-let chartPie=null, chartBar=null, chartEquity=null;
 
 /* ============================================================
    GENERATE INSIGHTS
@@ -4404,7 +4379,7 @@ function generateInsights(st, tradeSet, calTrades = []){
   const calmeT = tradeSet.filter(t=>t.emotion==='Calme'||t.emotion==='Confiance');
   if(fomoT.length>=2&&calmeT.length>=2){
     const rF=avgR(fomoT), rC=avgR(calmeT);
-    insights.push({ color:rF<rC?'var(--loss)':'var(--be)', text:`<strong>FOMO (${fomoT.length} trades) : ${rFmt(rF)}</strong> vs calme : ${rFmt(rC)}.`+(rF<rC?` -${(rC-rF).toFixed(2)}R/trade en FOMO.`:' Impact FOMO limité.') });
+    insights.push({ color:rF<rC?'var(--loss)':'var(--be)', text:`<strong>FOMO (${fomoT.length} state.trades) : ${rFmt(rF)}</strong> vs calme : ${rFmt(rC)}.`+(rF<rC?` -${(rC-rF).toFixed(2)}R/trade en FOMO.`:' Impact FOMO limité.') });
   }
 
   /* Emotion shift — entrée vs sortie */
@@ -4417,7 +4392,7 @@ function generateInsights(st, tradeSet, calTrades = []){
     });
     if(degraded.length >= 2){
       const rDeg = avgR(tradeSet.filter(t => degraded.some(d => d.R === signedR(t))));
-      insights.push({ color:'var(--be)', text:`<strong>Dégradation émotionnelle sur ${degraded.length} trades</strong> : état positif à l'entrée → négatif à la sortie. Gestion de position à revoir.` });
+      insights.push({ color:'var(--be)', text:`<strong>Dégradation émotionnelle sur ${degraded.length} state.trades</strong> : état positif à l'entrée → négatif à la sortie. Gestion de position à revoir.` });
     }
   }
 
@@ -4438,8 +4413,8 @@ function generateInsights(st, tradeSet, calTrades = []){
   /* A+ vs C/D */
   const apT=tradeSet.filter(t=>(t.setupGrade||t.quality)==='A+');
   const cdT=tradeSet.filter(t=>['C','D'].includes(t.setupGrade||t.quality));
-  if(apT.length>=2){ const s=calcStats(apT); insights.push({color:s.wr>=60?'var(--violet)':'var(--be)',text:`<strong>A+ : ${s.wr.toFixed(0)}% WR, ${rFmt(s.avgR)}</strong> sur ${apT.length} trades.`}); }
-  if(cdT.length>=2){ const r=avgR(cdT); insights.push({color:'var(--loss)',text:`<strong>C/D : ${(cdT.length/tradeSet.length*100).toFixed(0)}% des trades, R moyen ${rFmt(r)}.</strong>`+(r<0?' Ces setups coûtent de l\'argent.':'')}); }
+  if(apT.length>=2){ const s=calcStats(apT); insights.push({color:s.wr>=60?'var(--violet)':'var(--be)',text:`<strong>A+ : ${s.wr.toFixed(0)}% WR, ${rFmt(s.avgR)}</strong> sur ${apT.length} state.trades.`}); }
+  if(cdT.length>=2){ const r=avgR(cdT); insights.push({color:'var(--loss)',text:`<strong>C/D : ${(cdT.length/tradeSet.length*100).toFixed(0)}% des state.trades, R moyen ${rFmt(r)}.</strong>`+(r<0?' Ces setups coûtent de l\'argent.':'')}); }
 
   /* WR */
   if(st.wr>=65&&st.total>=8) insights.push({color:'var(--win)',text:`<strong>Winrate solide à ${st.wr.toFixed(0)}%</strong> — sélection de setups excellente.`});
@@ -4463,7 +4438,7 @@ function generateInsights(st, tradeSet, calTrades = []){
   const withPartials = tradeSet.filter(t=>t.partials&&t.partials.length>1);
   if(withPartials.length>=3){
     const rPart = avgR(withPartials);
-    insights.push({color:'var(--t2)',text:`<strong>${withPartials.length} trades avec TP partiels — R moyen : ${rFmt(rPart)}.</strong>`});
+    insights.push({color:'var(--t2)',text:`<strong>${withPartials.length} state.trades avec TP partiels — R moyen : ${rFmt(rPart)}.</strong>`});
   }
 
   /* Calibration */
@@ -4473,9 +4448,9 @@ function generateInsights(st, tradeSet, calTrades = []){
     const align=calTrades.filter(t=>t.setupEvaluationGap==='aligned');
     if(over.length>=2){
       const rO=avgR(over);
-      insights.push({color:'var(--loss)',text:`<strong>Surévaluation : ${over.length} trades, R moyen ${rFmt(rO)}.</strong>`+(rO<0?' Ces trades coûtent.':'')});
+      insights.push({color:'var(--loss)',text:`<strong>Surévaluation : ${over.length} state.trades, R moyen ${rFmt(rO)}.</strong>`+(rO<0?' Ces state.trades coûtent.':'')});
     }
-    if(align.length>=2){ const s=calcStats(align); if(s) insights.push({color:s.exp>=0?'var(--win)':'var(--be)',text:`<strong>Alignés (${align.length} trades) : ${s.wr.toFixed(0)}% WR, ${rFmt(s.exp)} expectancy.</strong>`}); }
+    if(align.length>=2){ const s=calcStats(align); if(s) insights.push({color:s.exp>=0?'var(--win)':'var(--be)',text:`<strong>Alignés (${align.length} state.trades) : ${s.wr.toFixed(0)}% WR, ${rFmt(s.exp)} expectancy.</strong>`}); }
   }
 
   /* ── Glissement émotionnel entrée → sortie ──────────────── */
@@ -4493,7 +4468,7 @@ function renderDashboard(){
   updatePeriodSelectors();
   setPeriodActiveState();
 
-  const chronoTrades = sortedByDateTime(trades, true);
+  const chronoTrades = sortedByDateTime(state.trades, true);
   const allFiltered  = filterByActivePeriod(chronoTrades);
   const filtered     = allFiltered.filter(t=>t.status==='closed');
   const openFiltered = allFiltered.filter(t=>t.status==='open');
@@ -4514,9 +4489,9 @@ function renderDashboard(){
     $('quality-tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t4)">Aucun trade clôturé sur cette période</td></tr>';
     $('insight-list').innerHTML='<div class="empty-state" style="padding:20px 0">Aucun trade clôturé sur cette période.</div>';
     ['d-best','d-worst','d-streak-w','d-streak-l','d-avgw','d-avgloss','d-best-setup','d-best-asset','d-off-plan','d-wr-plan'].forEach(id=>{const el=$(id);if(el){el.textContent='--';el.style.color='';}});
-    if(chartPie){chartPie.destroy();chartPie=null;}
-    if(chartBar){chartBar.destroy();chartBar=null;}
-    if(chartEquity){chartEquity.destroy();chartEquity=null;}
+    if(state.chartPie){state.chartPie.destroy();state.chartPie=null;}
+    if(state.chartBar){state.chartBar.destroy();state.chartBar=null;}
+    if(state.chartEquity){state.chartEquity.destroy();state.chartEquity=null;}
     ['pnl-total','pnl-avg','pnl-best-trade','pnl-worst-trade'].forEach(id=>{const el=$(id);if(el){el.textContent='--';el.style.color='';}});
     ['pnl-best-trade-info','pnl-worst-trade-info'].forEach(id=>{const el=$(id);if(el)el.textContent='--';});
     if(window._chartPnlEq){window._chartPnlEq.destroy();window._chartPnlEq=null;}
@@ -4543,8 +4518,8 @@ function renderDashboard(){
 
   $('d-best').textContent       = (st.best>=0?'+':'')+st.best.toFixed(2)+'R'; $('d-best').style.color='var(--win)';
   $('d-worst').textContent      = st.worst.toFixed(2)+'R'; $('d-worst').style.color='var(--loss)';
-  $('d-streak-w').textContent   = st.maxW+' trades';
-  $('d-streak-l').textContent   = st.maxL+' trades'; $('d-streak-l').style.color=st.maxL>=3?'var(--loss)':'var(--t1)';
+  $('d-streak-w').textContent   = st.maxW+' state.trades';
+  $('d-streak-l').textContent   = st.maxL+' state.trades'; $('d-streak-l').style.color=st.maxL>=3?'var(--loss)':'var(--t1)';
   $('d-avgw').textContent       = '+'+st.avgW.toFixed(2)+'R'; $('d-avgw').style.color='var(--win)';
   $('d-avgloss').textContent    = '-'+st.avgL.toFixed(2)+'R'; $('d-avgloss').style.color='var(--loss)';
   $('d-best-setup').textContent = st.bestSetup;
@@ -4554,8 +4529,8 @@ function renderDashboard(){
   $('d-wr-plan').textContent    = st.wrOnPlan!=null?st.wrOnPlan.toFixed(0)+'%':'--';
 
   /* Pie — doughnut cosmique */
-  if(chartPie) chartPie.destroy();
-  chartPie = new Chart($('chart-pie'),{
+  if(state.chartPie) state.chartPie.destroy();
+  state.chartPie = new Chart($('chart-pie'),{
     type:'doughnut',
     data:{
       labels:['Win','Loss','BE'],
@@ -4584,10 +4559,10 @@ function renderDashboard(){
   const dayR={};
   filtered.forEach(t=>{const d=t.date||'?';if(!dayR[d])dayR[d]=0;dayR[d]+=signedR(t);});
   const allDays=Object.keys(dayR).sort();
-  const days=(periodMode==='preset'&&periodPreset==='all')?allDays.slice(-20):allDays;
+  const days=(state.periodMode==='preset'&&state.periodPreset==='all')?allDays.slice(-20):allDays;
   const dayVals=days.map(d=>parseFloat(dayR[d].toFixed(2)));
-  if(chartBar) chartBar.destroy();
-  chartBar = new Chart($('chart-bar'),{
+  if(state.chartBar) state.chartBar.destroy();
+  state.chartBar = new Chart($('chart-bar'),{
     type:'bar',
     data:{
       labels:days.map(d=>d.slice(5)),
@@ -4615,8 +4590,8 @@ function renderDashboard(){
   filtered.forEach((t,i)=>{cumR+=signedR(t);eqLabels.push('#'+(i+1));eqData.push(parseFloat(cumR.toFixed(2)));});
   const lastEq=eqData[eqData.length-1]??0;
   const eqPalette = lastEq>=0 ? C.win : C.loss;
-  if(chartEquity) chartEquity.destroy();
-  chartEquity = new Chart($('chart-equity'),{
+  if(state.chartEquity) state.chartEquity.destroy();
+  state.chartEquity = new Chart($('chart-equity'),{
     type:'line',
     data:{
       labels:eqLabels,
@@ -4700,7 +4675,7 @@ function renderDashboard(){
   const dayPnl={};
   filtered.forEach(t=>{const d=t.date||'?';if(!dayPnl[d])dayPnl[d]=0;dayPnl[d]+=(t.pnl||0);});
   const pnlDaysAll=Object.keys(dayPnl).sort();
-  const pnlDays=(periodMode==='preset'&&periodPreset==='all')?pnlDaysAll.slice(-20):pnlDaysAll;
+  const pnlDays=(state.periodMode==='preset'&&state.periodPreset==='all')?pnlDaysAll.slice(-20):pnlDaysAll;
   const pnlDayVals=pnlDays.map(d=>parseFloat(dayPnl[d].toFixed(2)));
   if(window._chartPnlBar) window._chartPnlBar.destroy();
   window._chartPnlBar=new Chart($('chart-pnl-bar'),{
@@ -4746,7 +4721,7 @@ function renderDashboard(){
     $('panel-calibration').style.display='';
   } else {
     $('panel-calibration').style.display=calTrades.length===0?'none':'';
-    if($('cal-tbody')) $('cal-tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--t4)">Renseigne la qualité perçue sur au moins 2 trades clôturés.</td></tr>`;
+    if($('cal-tbody')) $('cal-tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--t4)">Renseigne la qualité perçue sur au moins 2 state.trades clôturés.</td></tr>`;
     ['cal-aligned-pct','cal-over-pct','cal-under-pct'].forEach(id=>{const el=$(id);if(el)el.textContent='--';});
     ['cal-aligned-n','cal-over-n','cal-under-n'].forEach(id=>{const el=$(id);if(el)el.textContent='--';});
   }
@@ -4839,7 +4814,7 @@ $('btn-save-settings')?.addEventListener('click', () => {
   });
 
   saveSettings(settings);
-  _activeDefs = getActiveConfluenceDefs(settings); // mettre à jour defs actives
+  state.activeDefs = getActiveConfluenceDefs(settings); // mettre à jour defs actives
   renderConfluenceGroups([]); // reconstruire le UI
 
   const msg = $('settings-saved-msg');
@@ -4851,7 +4826,7 @@ $('btn-reset-settings')?.addEventListener('click', async () => {
   const ok = await showConfirmModal('Réinitialiser toutes les personnalisations ?', 'Réinitialiser', true);
   if(!ok) return;
   localStorage.removeItem(SETTINGS_KEY);
-  _activeDefs = getActiveConfluenceDefs({});
+  state.activeDefs = getActiveConfluenceDefs({});
   renderConfluenceGroups([]);
   renderSettingsUI();
   showToast('Confluences réinitialisées');
