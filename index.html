@@ -6811,5 +6811,30 @@ renderConfluenceGroups([]); // construire le UI confluences structuré
 renderSetupDropdown();      // construire le dropdown setups avec labels perso
 refreshSetupDisplay();      // initialiser les barres (tout vide = D)
 </script>
+
+<!-- ============================================================
+     GUARD JOURNAL — NOUVELLE ARCHITECTURE (chargée après l'app)
+     Ces scripts coexistent avec le code existant sans le modifier.
+============================================================ -->
+<script src="core/eventBus.js"></script>
+<script src="data/migrations.js"></script>
+<script src="data/storage.js"></script>
+<script>
+  // Initialisation silencieuse de la nouvelle couche
+  // L'app existante continue de fonctionner normalement.
+  // GuardJournal.Storage et GuardJournal.EventBus sont désormais disponibles.
+  if (window.GuardJournal) {
+    const bus = GuardJournal.EventBus;
+    // Écouter les migrations futures pour log discret
+    bus.on(bus.EVENTS.MIGRATION_DONE, function(d) {
+      console.info('[Guard] Migration schéma v' + d.from + ' → v' + d.to + ', ' + d.applied.length + ' étape(s)');
+    });
+    bus.on(bus.EVENTS.BACKUP_CREATED, function(d) {
+      console.info('[Guard] Backup créé (' + d.count + ' trades) → ' + d.key);
+    });
+    bus.emit(bus.EVENTS.APP_READY, { version: '2.0-alpha', timestamp: Date.now() });
+    console.info('[Guard Journal] Architecture v2 chargée. GuardJournal disponible en console.');
+  }
+</script>
 </body>
 </html>
