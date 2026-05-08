@@ -7,5 +7,9 @@ export default defineConfig({
     rollupOptions: {
       input: 'index.html'
     }
+  },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.js'],
   }
 })
